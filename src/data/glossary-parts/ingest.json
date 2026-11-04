@@ -1,0 +1,416 @@
+[
+ {
+  "id": "lakeflow-connect",
+  "term": "Lakeflow Connect",
+  "full": "",
+  "aliases": [
+   "managed connector",
+   "managed connectors"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Bộ connector managed của Databricks để ingest từ database, SaaS, file và message bus vào streaming table.",
+  "means": [
+   "Database connector dùng CDC cho SQL Server, MySQL, PostgreSQL, Oracle.",
+   "Đề chọn nó khi có cụm LEAST operational overhead.",
+   "Chạy trên Lakeflow pipelines, quản lý bằng Unity Catalog."
+  ],
+  "related": [
+   "ingestion-gateway",
+   "query-based-connector",
+   "uc-connection"
+  ],
+  "src": {
+   "label": "What is Lakeflow Connect?",
+   "url": "https://docs.databricks.com/aws/en/ingestion/overview"
+  }
+ },
+ {
+  "id": "ingestion-gateway",
+  "term": "Ingestion gateway",
+  "full": "",
+  "aliases": [
+   "gateway",
+   "staging volume"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Pipeline chạy liên tục trên classic compute, lấy snapshot và change log từ database nguồn rồi ghi vào staging volume.",
+  "means": [
+   "Dừng gateway lâu hơn log retention thì mất change, phải full refresh.",
+   "Tính tiền cả khi ingestion pipeline idle.",
+   "Staging volume tự xoá data sau 30 ngày."
+  ],
+  "related": [
+   "lakeflow-connect",
+   "change-tracking"
+  ],
+  "src": {
+   "label": "Managed database connectors",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+  }
+ },
+ {
+  "id": "change-tracking",
+  "term": "Change tracking",
+  "full": "",
+  "aliases": [
+   "change tracking",
+   "CT"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Cơ chế nhẹ của SQL Server ghi nhận row nào đã đổi, cần primary key, không giữ từng operation.",
+  "means": [
+   "Connector ưu tiên change tracking khi table bật cả CT và CDC.",
+   "Không hỗ trợ SCD Type 2; cần CDC để giữ history."
+  ],
+  "related": [
+   "ingestion-gateway",
+   "lakeflow-connect"
+  ],
+  "src": {
+   "label": "Configure SQL Server for ingestion",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup"
+  }
+ },
+ {
+  "id": "query-based-connector",
+  "term": "Query-based connector",
+  "full": "",
+  "aliases": [
+   "query-based connectors",
+   "cursor column"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Connector Lakeflow Connect đọc database theo cursor column tăng dần, không cần CDC, gateway hay staging volume.",
+  "means": [
+   "Chạy theo lịch, chỉ lấy trạng thái mới nhất của row đã đổi.",
+   "Hợp khi nguồn không bật được CDC."
+  ],
+  "related": [
+   "lakeflow-connect"
+  ],
+  "src": {
+   "label": "Query-based connectors",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/query-based-overview"
+  }
+ },
+ {
+  "id": "opensharing",
+  "term": "OpenSharing",
+  "full": "",
+  "aliases": [
+   "Delta Sharing",
+   "share",
+   "recipient"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Protocol mở của Databricks để share data và AI asset chỉ đọc với tổ chức khác, tên cũ là Delta Sharing.",
+  "means": [
+   "Đổi tên tháng 06/2026, do Linux Foundation host.",
+   "Share là securable trong Unity Catalog; recipient chỉ nhận `SELECT`.",
+   "Là nền của Marketplace và Clean Rooms."
+  ],
+  "related": [
+   "d2d-sharing",
+   "d2o-sharing",
+   "with-history",
+   "clean-rooms"
+  ],
+  "src": {
+   "label": "What is OpenSharing?",
+   "url": "https://docs.databricks.com/aws/en/opensharing/"
+  }
+ },
+ {
+  "id": "d2d-sharing",
+  "term": "Databricks-to-Databricks sharing",
+  "full": "",
+  "aliases": [
+   "Databricks-to-Databricks",
+   "D2D",
+   "sharing identifier"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Protocol OpenSharing giữa hai metastore Unity Catalog, recipient xác định bằng sharing identifier `<cloud>:<region>:<uuid>`.",
+  "means": [
+   "Không có token để quản lý; chạy cross-cloud.",
+   "Share thêm được volume, model, notebook.",
+   "Recipient tạo catalog bằng `CREATE CATALOG ... USING SHARE`."
+  ],
+  "related": [
+   "opensharing",
+   "d2o-sharing"
+  ],
+  "src": {
+   "label": "Create data recipients (Databricks-to-Databricks)",
+   "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient"
+  }
+ },
+ {
+  "id": "d2o-sharing",
+  "term": "Databricks-to-Open sharing",
+  "full": "",
+  "aliases": [
+   "Databricks-to-Open",
+   "open sharing",
+   "credential file",
+   "bearer token"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Protocol OpenSharing cho recipient không có Unity Catalog, authenticate bằng bearer token hoặc OIDC federation.",
+  "means": [
+   "Credential file tải được một lần từ activation link.",
+   "Chỉ share data dạng bảng.",
+   "Token cũ không hạn tự hết hạn ngày 08/12/2026."
+  ],
+  "related": [
+   "opensharing",
+   "d2d-sharing"
+  ],
+  "src": {
+   "label": "Create recipients with bearer tokens (Databricks-to-Open)",
+   "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient-token"
+  }
+ },
+ {
+  "id": "with-history",
+  "term": "WITH HISTORY",
+  "full": "",
+  "aliases": [
+   "WITHOUT HISTORY",
+   "history sharing"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Tuỳ chọn khi thêm table vào share để recipient time travel, streaming read và chạy transaction.",
+  "means": [
+   "Mặc định từ Databricks Runtime 16.2.",
+   "Muốn recipient đọc CDF thì bật CDF trước khi share."
+  ],
+  "related": [
+   "opensharing"
+  ],
+  "src": {
+   "label": "Create shares for OpenSharing",
+   "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
+  }
+ },
+ {
+  "id": "clean-rooms",
+  "term": "Clean Rooms",
+  "full": "",
+  "aliases": [
+   "clean room",
+   "central clean room"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Môi trường serverless do Databricks quản lý để nhiều bên chạy code đã approve trên data của nhau mà không thấy row.",
+  "means": [
+   "Mọi collaborator ngang quyền; notebook cần bên kia approve.",
+   "Tối đa 10 collaborator; data share qua OpenSharing tới central clean room."
+  ],
+  "related": [
+   "opensharing"
+  ],
+  "src": {
+   "label": "What is Databricks Clean Rooms?",
+   "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+  }
+ },
+ {
+  "id": "lakehouse-federation",
+  "term": "Lakehouse Federation",
+  "full": "",
+  "aliases": [
+   "query federation",
+   "catalog federation"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Nền tảng federation của Databricks cho phép query database và catalog bên ngoài qua foreign catalog, chỉ đọc.",
+  "means": [
+   "Query federation đẩy query qua JDBC; catalog federation đọc thẳng object storage.",
+   "Không copy data; volume lớn thì docs khuyên Lakeflow Connect."
+  ],
+  "related": [
+   "foreign-catalog",
+   "uc-connection"
+  ],
+  "src": {
+   "label": "Connect to external databases and catalogs",
+   "url": "https://docs.databricks.com/aws/en/query-federation/"
+  }
+ },
+ {
+  "id": "foreign-catalog",
+  "term": "Foreign catalog",
+  "full": "",
+  "aliases": [
+   "foreign catalogs",
+   "CREATE FOREIGN CATALOG"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Securable trong Unity Catalog mirror một database bên ngoài, tạo từ connection, quản lý quyền như catalog thường.",
+  "means": [
+   "Cần `CREATE CATALOG` và `CREATE FOREIGN CATALOG` trên connection.",
+   "Metadata tự refresh lúc query; `REFRESH FOREIGN` để refresh chủ động."
+  ],
+  "related": [
+   "lakehouse-federation",
+   "uc-connection"
+  ],
+  "src": {
+   "label": "What is query federation?",
+   "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+  }
+ },
+ {
+  "id": "uc-connection",
+  "term": "Unity Catalog connection",
+  "full": "",
+  "aliases": [
+   "connection",
+   "CREATE CONNECTION",
+   "USE CONNECTION"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Securable lưu host và credential của hệ thống ngoài, dùng cho Lakehouse Federation và Lakeflow Connect.",
+  "means": [
+   "Tạo cần `CREATE CONNECTION` trên metastore.",
+   "Credential nên lấy từ secret; user query không thấy credential."
+  ],
+  "related": [
+   "foreign-catalog",
+   "lakeflow-connect"
+  ],
+  "src": {
+   "label": "Unity Catalog privileges and securable objects",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+  }
+ },
+ {
+  "id": "variant",
+  "term": "VARIANT",
+  "full": "",
+  "aliases": [
+   "parse_json",
+   "variant_get",
+   "try_variant_get"
+  ],
+  "cat": "Spark & SQL",
+  "what": "Data type lưu dữ liệu bán cấu trúc dạng encoding tối ưu, query bằng path `:` hoặc `variant_get`.",
+  "means": [
+   "Path phân biệt hoa thường; kết quả cần cast `::STRING`.",
+   "Không làm partition, clustering key, GROUP BY, ORDER BY.",
+   "Tách field hay lọc thành cột thường."
+  ],
+  "related": [],
+  "src": {
+   "label": "Query variant data",
+   "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+  }
+ },
+ {
+  "id": "ai-functions",
+  "term": "AI Functions",
+  "full": "",
+  "aliases": [
+   "task-specific AI Functions",
+   "ai_classify",
+   "ai_analyze_sentiment"
+  ],
+  "cat": "Spark & SQL",
+  "what": "Hàm SQL built-in áp dụng LLM cho data, gồm hàm task-specific và hàm general-purpose `ai_query`.",
+  "means": [
+   "Task-specific không cần chọn model hay viết prompt.",
+   "Không chạy trên Classic SQL warehouse; cần Databricks Runtime 15.4 LTS+."
+  ],
+  "related": [
+   "ai-query"
+  ],
+  "src": {
+   "label": "Transform unstructured data using AI Functions",
+   "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+  }
+ },
+ {
+  "id": "ai-query",
+  "term": "ai_query",
+  "full": "",
+  "aliases": [
+   "ai_query()",
+   "failOnError",
+   "responseFormat"
+  ],
+  "cat": "Spark & SQL",
+  "what": "AI Function general-purpose gọi Model Serving endpoint (foundation, external hoặc custom) cho từng row.",
+  "means": [
+   "`failOnError => false` trả response cùng errorMessage, không fail cả query.",
+   "`responseFormat` ép output theo JSON schema."
+  ],
+  "related": [
+   "ai-functions"
+  ],
+  "src": {
+   "label": "ai_query function",
+   "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+  }
+ },
+ {
+  "id": "expectations",
+  "term": "Expectations",
+  "full": "",
+  "aliases": [
+   "expectation",
+   "expect_or_drop",
+   "expect_or_fail",
+   "quarantine"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Constraint data quality trên dataset của Lakeflow pipeline, với action warn, drop hoặc fail cho row vi phạm.",
+  "means": [
+   "Warn giữ row, drop bỏ row, fail rollback update.",
+   "Quarantine dùng warn cộng cột cờ để tách row lỗi.",
+   "Constraint không gọi UDF hay subquery tới table khác."
+  ],
+  "related": [],
+  "src": {
+   "label": "Manage data quality with pipeline expectations",
+   "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+  }
+ },
+ {
+  "id": "integrated-cdc",
+  "term": "integrated CDC",
+  "full": "",
+  "aliases": [],
+  "cat": "Lakeflow & Streaming",
+  "what": "Kiến trúc SQL Server connector gộp extraction và apply vào một pipeline, không có gateway chạy liên tục.",
+  "means": [
+   "Pipeline tham chiếu `connection_name`, khai báo `connector_type: CDC`.",
+   "Kiến trúc gateway-based dùng gateway liên tục và `ingestion_gateway_id`."
+  ],
+  "related": [
+   "ingestion-gateway",
+   "uc-connection"
+  ],
+  "src": {
+   "label": "Microsoft SQL Server ingestion connector",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview"
+  }
+ },
+ {
+  "id": "automatic-cdf",
+  "term": "automatic change data feed",
+  "full": "",
+  "aliases": [],
+  "cat": "Delta & Iceberg",
+  "what": "Change data feed tính change lúc đọc từ row tracking hoặc row lineage, không cần bật từng table.",
+  "means": [
+   "Cần Databricks Runtime 19 trở lên và table trong Unity Catalog.",
+   "Ghi `MERGE`, `UPDATE` rẻ hơn CDF cũ vì không ghi change lúc write."
+  ],
+  "related": [],
+  "src": {
+   "label": "Change data feed",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ }
+]

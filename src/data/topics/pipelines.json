@@ -1,0 +1,1693 @@
+{
+ "id": "pipelines",
+ "title": "Lakeflow Pipelines, streaming & CDC",
+ "domain": [
+  "S1"
+ ],
+ "icon": "dbx-spark-declarative-pipelines",
+ "summary": "Câu hỏi về pipeline streaming với Lakeflow Pipelines và Auto Loader, streaming table hay materialized view, AUTO CDC cho SCD, Structured Streaming hay Declarative Pipelines, watermark và exactly-once.",
+ "sections": [
+  {
+   "id": "names",
+   "title": "Lakeflow Pipelines: tên cũ và API mới",
+   "icon": "dbx-spark-declarative-pipelines",
+   "task": "1.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Tên trong đề và tên cũ",
+     "columns": [
+      "Tên trong exam guide",
+      "Tên cũ hoặc tên khác",
+      "Điểm cần nhớ"
+     ],
+     "rows": [
+      [
+       "**Lakeflow Pipelines**",
+       "Delta Live Tables (DLT), rồi Lakeflow Declarative Pipelines (06/2025)",
+       "Docs hiện gọi là Lakeflow pipelines hoặc Spark Declarative Pipelines on Lakeflow"
+      ],
+      [
+       "**Apache Spark Declarative Pipelines (SDP)**",
+       "Không có, Databricks donate cho Apache Spark 06/2025",
+       "Có trong Apache Spark từ 4.1, module `pyspark.pipelines`"
+      ],
+      [
+       "**AUTO CDC**",
+       "APPLY CHANGES (`dlt.apply_changes`)",
+       "Cùng syntax; APPLY CHANGES vẫn chạy, Databricks khuyên dùng AUTO CDC"
+      ],
+      [
+       "`from pyspark import pipelines as dp`",
+       "`import dlt`",
+       "Module `dlt` vẫn dùng được; code mới dùng `dp`"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Databricks blog, What's New in Lakeflow Declarative Pipelines (07/2025)",
+       "url": "https://www.databricks.com/blog/whats-new-lakeflow-declarative-pipelines-july-2025"
+      },
+      {
+       "label": "Databricks blog, Declarative Pipelines to Apache Spark (06/2025)",
+       "url": "https://www.databricks.com/blog/bringing-declarative-pipelines-apache-spark-open-source-project"
+      },
+      {
+       "label": "Lakeflow pipelines Python reference",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+      },
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Flow và target trong một pipeline",
+     "img": "https://docs.databricks.com/aws/en/assets/images/dlt-core-concepts-6bc9894d3682035cadac19f3980875ae.png",
+     "alt": "Pipeline concepts diagram: streaming and batch sources feed an append flow, an AUTO CDC flow and a materialized view flow that write to a sink, a streaming table and a materialized view",
+     "caption": "Đề hay hỏi target của từng loại flow: append flow ghi vào streaming table hoặc sink, AUTO CDC flow ghi vào streaming table, materialized view flow là batch và ghi vào materialized view.",
+     "credit": {
+      "label": "Databricks docs: Pipeline concepts",
+      "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Đổi syntax Python từ dlt sang dp",
+     "columns": [
+      "Việc",
+      "`dlt` (cũ)",
+      "`dp` (hiện tại)",
+      "Có trong Apache Spark"
+     ],
+     "rows": [
+      [
+       "Streaming table",
+       "`@dlt.table` trả streaming DataFrame",
+       "`@dp.table`",
+       "Có"
+      ],
+      [
+       "Materialized view",
+       "`@dlt.table` trả batch DataFrame",
+       "`@dp.materialized_view`",
+       "Có"
+      ],
+      [
+       "View trong pipeline",
+       "`@dlt.view`",
+       "`@dp.temporary_view`",
+       "Có"
+      ],
+      [
+       "Append flow",
+       "`@dlt.append_flow`",
+       "`@dp.append_flow`",
+       "Có"
+      ],
+      [
+       "Update flow",
+       "Không có",
+       "`@dp.update_flow`",
+       "Không"
+      ],
+      [
+       "CDC",
+       "`dlt.apply_changes()`",
+       "`dp.create_auto_cdc_flow()`",
+       "Không"
+      ],
+      [
+       "Expectations",
+       "`@dlt.expect`",
+       "`@dp.expect`",
+       "Không"
+      ],
+      [
+       "foreachBatch sink",
+       "Không có",
+       "`@dp.foreach_batch_sink`",
+       "Không"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Lakeflow pipelines Python reference",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Logic thừa trong hàm định nghĩa dataset",
+     "md": "- Pipeline đánh giá source code nhiều lần lúc planning và lúc chạy\n- Hàm định nghĩa dataset chỉ build và return một DataFrame\n- Không gọi `collect()`, `count()`, `toPandas()`, `save()`, `saveAsTable()`, `start()`, `toTable()` trong pipeline code\n- Monitoring tự viết đặt ở event hooks, không đặt trong dataset",
+     "src": [
+      {
+       "label": "Lakeflow pipelines Python reference",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "SQL giống nhau ở Lakeflow và Apache Spark",
+     "md": "- `CREATE STREAMING TABLE`, `CREATE MATERIALIZED VIEW`, `CREATE FLOW` chạy ở cả hai\n- Code dùng module open source chạy trên Databricks không cần sửa\n- Lakeflow Pipelines chạy trên Databricks Runtime và thêm feature production",
+     "src": [
+      {
+       "label": "Lakeflow pipelines Python reference",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+      },
+      {
+       "label": "Apache Spark Declarative Pipelines (Databricks docs)",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "updates",
+   "title": "Refresh, full refresh và reset checkpoint",
+   "icon": "dbx-spark-declarative-pipelines",
+   "task": "1.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Ba kiểu update của pipeline",
+     "columns": [
+      "Kiểu update",
+      "Materialized view",
+      "Streaming table"
+     ],
+     "rows": [
+      [
+       "**Refresh** (mặc định)",
+       "Tính lại theo query; incremental khi Databricks thấy rẻ hơn",
+       "Chỉ xử lý record mới qua các flow"
+      ],
+      [
+       "**Full refresh**",
+       "Tính lại toàn bộ; kết quả giống refresh",
+       "Xoá data và checkpoint, đọc lại toàn bộ nguồn"
+      ],
+      [
+       "**Reset streaming flow checkpoints**",
+       "Không áp dụng",
+       "Xoá checkpoint của flow được chọn, giữ data, đọc lại nguồn"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Run a pipeline update",
+       "url": "https://docs.databricks.com/aws/en/ldp/updates"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Đọc pipeline graph trong Lakeflow Pipelines Editor",
+     "img": "https://docs.databricks.com/aws/en/assets/images/dlt-multi-file-editor-dag-e426c4c8909a4f900ec1134a0f76ecd9.png",
+     "alt": "Lakeflow Pipelines Editor with the Pipeline graph tab showing views, streaming tables and materialized views with run time, output records and expectation counts",
+     "caption": "Pipeline graph ghi loại của từng dataset (View, Streaming table, Materialized view), thời gian chạy, số output record và số expectation; cạnh nối cho biết dataset nào phụ thuộc dataset nào.",
+     "credit": {
+      "label": "Databricks docs: Develop and debug ETL pipelines with the Lakeflow Pipelines Editor",
+      "url": "https://docs.databricks.com/aws/en/ldp/multi-file-editor"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Reset checkpoint một flow qua REST API",
+     "lang": "text",
+     "code": "curl -X POST \\\n  -H \"Authorization: Bearer $TOKEN\" \\\n  -d '{\n    \"reset_checkpoint_selection\": [\"main.bronze.events\"],\n    \"full_refresh_selection\": [\"main.gold.daily_kpis\"]\n  }' \\\n  https://<host>/api/2.0/pipelines/<pipeline-id>/updates",
+     "notes": [
+      {
+       "line": 4,
+       "md": "Tên flow phải đủ 3 phần `catalog.schema.flow`; flow mặc định mang tên target table"
+      },
+      {
+       "line": 5,
+       "md": "`full_refresh_selection` chỉ full refresh table được liệt kê; flow còn lại chạy REFRESH"
+      }
+     ],
+     "src": [
+      {
+       "label": "Run a pipeline update",
+       "url": "https://docs.databricks.com/aws/en/ldp/updates"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "bronze table fed by Kafka with 7-day retention must never be fully refreshed by mistake",
+       "pick": "`pipelines.reset.allowed` = `false` trên table",
+       "why": "Full refresh xoá data rồi đọc lại Kafka; record đã hết retention bị mất khỏi target.",
+       "src": {
+        "label": "Run a pipeline update",
+        "url": "https://docs.databricks.com/aws/en/ldp/updates"
+       }
+      },
+      {
+       "says": "add a new source to a streaming table without a full refresh",
+       "pick": "Thêm append flow",
+       "why": "Docs nêu append flow là cách thêm data vào streaming table có sẵn mà không full refresh.",
+       "src": {
+        "label": "Run a pipeline update",
+        "url": "https://docs.databricks.com/aws/en/ldp/updates"
+       }
+      },
+      {
+       "says": "files removed by a lifecycle policy, logic changed, keep old rows",
+       "pick": "Không full refresh; logic mới chỉ áp cho row mới",
+       "why": "Full refresh bỏ khỏi target mọi file không còn trong source directory.",
+       "src": {
+        "label": "Run a pipeline update",
+        "url": "https://docs.databricks.com/aws/en/ldp/updates"
+       }
+      },
+      {
+       "says": "catch wrong table or column names before materializing anything",
+       "pick": "Dry run (Public Preview)",
+       "why": "Resolve định nghĩa dataset và flow nhưng không materialize hay publish dataset nào.",
+       "src": {
+        "label": "Run a pipeline update",
+        "url": "https://docs.databricks.com/aws/en/ldp/updates"
+       }
+      },
+      {
+       "says": "reprocess the source for one flow but keep rows already written",
+       "pick": "`reset_checkpoint_selection` qua REST API",
+       "why": "Chỉ xoá checkpoint của flow được chọn, data trong streaming table giữ nguyên.",
+       "src": {
+        "label": "Run a pipeline update",
+        "url": "https://docs.databricks.com/aws/en/ldp/updates"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Standalone dataset luôn chạy triggered",
+     "md": "- Refresh standalone materialized view và streaming table luôn dùng triggered mode\n- Continuous mode chỉ có cho pipeline\n- Materialized view cho kết quả như nhau dù refresh hay full refresh",
+     "src": [
+      {
+       "label": "Triggered vs. continuous pipeline mode",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/pipeline-mode"
+      },
+      {
+       "label": "Run a pipeline update",
+       "url": "https://docs.databricks.com/aws/en/ldp/updates"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Pipeline mới từ 07/2026",
+     "md": "- **Versionless mode** (07/2026): Databricks tự chọn Databricks Runtime cho pipeline\n- **Rewind** (Beta, 09/2026): snapshot dataset, source offset, operator state để quay lại và replay; cần channel PREVIEW\n- Run-as của pipeline nhận account group (09/2026)",
+     "src": [
+      {
+       "label": "Lakeflow pipelines release notes 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/dlt/2026"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "autoloader-prod",
+   "title": "Dùng Auto Loader trong production",
+   "icon": "dbx-auto-loader",
+   "task": "1.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Option và mode hay gặp",
+     "columns": [
+      "Option hoặc mode",
+      "Hành vi",
+      "Khi nào chọn"
+     ],
+     "rows": [
+      [
+       "**Directory listing** (default)",
+       "List file trong path để tìm file mới",
+       "Path nhỏ hoặc chưa bật được file events"
+      ],
+      [
+       "**File notification với file events**",
+       "Một queue cho mọi stream trên cùng external location; Databricks tự set up subscription",
+       "Databricks khuyên cho đa số workload; set `cloudFiles.useManagedFileEvents`"
+      ],
+      [
+       "`cloudFiles.schemaLocation`",
+       "Lưu schema đã infer trong thư mục `_schemas`",
+       "Bắt buộc khi chạy ngoài pipeline; trong pipeline thì tự quản lý"
+      ],
+      [
+       "`addNewColumns` (default khi không đưa schema)",
+       "Stream fail với `UnknownFieldException`, restart thì chạy với schema mới",
+       "Chạy trong job hoặc pipeline có retry"
+      ],
+      [
+       "`addNewColumnsWithTypeWidening`",
+       "Thêm cột mới và nới type (int sang long, float sang double), không rewrite data",
+       "Public Preview, Databricks Runtime 16.4 trở lên"
+      ],
+      [
+       "`rescue`",
+       "Không evolve schema, không fail; cột mới vào `_rescued_data`",
+       "Stream không được dừng vì schema đổi"
+      ],
+      [
+       "`failOnNewColumns`",
+       "Fail và không chạy lại tới khi sửa schema",
+       "Schema là contract, cần người duyệt"
+      ],
+      [
+       "`none` (default khi đưa schema)",
+       "Bỏ qua cột mới, không fail",
+       "Chỉ cần các cột đã biết"
+      ],
+      [
+       "`cloudFiles.cleanSource`",
+       "`MOVE` hoặc `DELETE` file sau khi xử lý",
+       "Giảm cost discovery khi buộc dùng directory listing"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Auto Loader file notification mode",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode"
+      },
+      {
+       "label": "Auto Loader schema inference and evolution",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema"
+      },
+      {
+       "label": "Auto Loader for production",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/production"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "File events so với classic file notification",
+     "img": "https://docs.databricks.com/aws/en/assets/images/file-events-vs-classic-file-events-761dedde768661a357b53a42602e862c.png",
+     "alt": "Side-by-side diagram: in file events mode one managed file events service and one queue serve several Auto Loader streams; in classic file notification mode each stream has its own event subscription and queue",
+     "caption": "File events: managed file events service giữ một event subscription và một queue, nhiều Auto Loader stream dùng chung. Classic file notification: mỗi stream tự có event subscription và queue riêng.",
+     "credit": {
+      "label": "Databricks docs: Auto Loader with file events overview",
+      "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-events-explained"
+     }
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "millions of files per hour, MINIMIZE file discovery cost",
+       "pick": "File notification mode với file events",
+       "why": "Không phải list thư mục; một queue dùng chung cho mọi stream trên external location.",
+       "src": {
+        "label": "Auto Loader file notification mode",
+        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode"
+       }
+      },
+      {
+       "says": "new columns must never stop the stream and must not be lost",
+       "pick": "`cloudFiles.schemaEvolutionMode` = `rescue`",
+       "why": "Stream không fail; cột mới nằm trong `_rescued_data` để xem lại sau.",
+       "src": {
+        "label": "Auto Loader schema inference and evolution",
+        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema"
+       }
+      },
+      {
+       "says": "no low-latency need, MINIMIZE compute cost",
+       "pick": "Auto Loader trong job với `Trigger.AvailableNow`",
+       "why": "Chạy theo lịch, xử lý hết file có sẵn rồi dừng; không giữ compute chạy liên tục.",
+       "src": {
+        "label": "Auto Loader for production",
+        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/production"
+       }
+      },
+      {
+       "says": "JSON or CSV columns all arrive as STRING",
+       "pick": "Behavior mặc định; dùng schema hints hoặc `cloudFiles.inferColumnTypes`",
+       "why": "Auto Loader infer mọi cột JSON, CSV, XML là string để tránh lỗi type mismatch.",
+       "src": {
+        "label": "Auto Loader schema inference and evolution",
+        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Auto Loader không giữ thứ tự file",
+     "md": "- Cả directory listing lẫn file notification đều không đảm bảo thứ tự\n- Với AUTO CDC, delete được giữ dạng tombstone, mặc định 2 ngày\n- Tăng `pipelines.cdc.tombstoneGCThresholdInSeconds` nếu file có thể tới trễ hơn",
+     "src": [
+      {
+       "label": "What is Auto Loader?",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "st-vs-mv",
+   "title": "Chọn streaming table hay materialized view",
+   "icon": "arrows-split",
+   "task": "1.6",
+   "blocks": [
+    {
+     "type": "compare",
+     "title": "Hai loại dataset chính",
+     "items": [
+      {
+       "name": "Streaming table",
+       "icon": "table-import",
+       "tag": "streaming target",
+       "points": [
+        "Mỗi row từ append-only source xử lý **đúng một lần**",
+        "Hợp ingest từ Auto Loader, Kafka và transform latency thấp",
+        "Đổi query chỉ áp cho row mới; row cũ cần **full refresh**",
+        "Join với dimension không tính lại khi dimension đổi",
+        "Là target duy nhất của AUTO CDC"
+       ]
+      },
+      {
+       "name": "Materialized view",
+       "icon": "refresh",
+       "tag": "batch target",
+       "points": [
+        "Kết quả luôn đúng với nguồn tại lúc refresh, kể cả data tới trễ",
+        "Hợp aggregate, join, nguồn có update và delete",
+        "**Incremental refresh** chỉ trên serverless, nếu query hỗ trợ",
+        "Latency giây tới phút, không dành cho low-latency",
+        "Nhiều consumer đọc kết quả đã tính sẵn"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Pipeline concepts",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+      },
+      {
+       "label": "Streaming tables",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+      },
+      {
+       "label": "Materialized views",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/materialized-views"
+      },
+      {
+       "label": "Incremental refresh for materialized views",
+       "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "docs",
+     "title": "Streaming table xử lý mỗi row một lần",
+     "img": "https://docs.databricks.com/aws/en/assets/images/st-timeline-66e27f41aa9ecd88f7bfca561f7367eb.png",
+     "alt": "Timeline of a streaming table: the query changes from LOWER to UPPER at t2, row 1 arrives again but is not reprocessed, so ZACH is never produced",
+     "caption": "Đổi query từ LOWER sang UPPER chỉ áp cho row mới; Row 1 đã xử lý nên ZACH không bao giờ xuất hiện. Muốn áp logic mới cho row cũ thì phải full refresh.",
+     "credit": {
+      "label": "Databricks docs: Streaming tables",
+      "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+     }
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "ingest files or Kafka events, each record processed once",
+       "pick": "Streaming table",
+       "why": "Nguồn không giữ history như Kafka, hoặc file ingest bằng Auto Loader, không hợp với materialized view.",
+       "src": {
+        "label": "Incremental refresh for materialized views",
+        "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+       }
+      },
+      {
+       "says": "aggregate must reflect updates and deletes to earlier data",
+       "pick": "Materialized view",
+       "why": "Materialized view tính lại phần bị ảnh hưởng; streaming table chỉ thấy row append.",
+       "src": {
+        "label": "Pipeline concepts",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+       }
+      },
+      {
+       "says": "full recompute would be cost-prohibitive on a huge source",
+       "pick": "Streaming table",
+       "why": "Docs khuyên streaming table khi full refresh quá đắt, vì nó đảm bảo exactly-once.",
+       "src": {
+        "label": "Incremental refresh for materialized views",
+        "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+       }
+      },
+      {
+       "says": "join must stay correct when the dimension table changes",
+       "pick": "Materialized view",
+       "why": "Streaming table không recompute join khi dimension đổi; materialized view thì có.",
+       "src": {
+        "label": "Streaming tables",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+       }
+      },
+      {
+       "says": "intermediate step that nobody outside the pipeline reads",
+       "pick": "Temporary view",
+       "why": "Không materialize nên không tốn storage và compute; chỉ dùng trong pipeline.",
+       "src": {
+        "label": "Pipeline concepts",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+       }
+      },
+      {
+       "says": "SQL analyst wants hourly refresh without managing a pipeline",
+       "pick": "Standalone materialized view với `SCHEDULE EVERY 1 HOUR`",
+       "why": "Databricks tạo pipeline ẩn để refresh; tạo từ SQL warehouse.",
+       "src": {
+        "label": "Standalone pipelines",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/standalone-pipelines"
+       }
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Cách refresh và cost",
+     "columns": [
+      "Cách chạy",
+      "Hành vi",
+      "Hợp với"
+     ],
+     "rows": [
+      [
+       "**Triggered** pipeline (default)",
+       "Refresh mọi dataset với data có lúc bắt đầu rồi dừng",
+       "Update mỗi 10 phút, hàng giờ, hàng ngày; cost thấp"
+      ],
+      [
+       "**Continuous** qua continuous job",
+       "Chạy liên tục, xử lý data khi tới",
+       "Latency 10 giây tới vài phút; compute luôn chạy"
+      ],
+      [
+       "`SCHEDULE EVERY n HOUR` hoặc `TRIGGER ON UPDATE`",
+       "Lịch refresh của standalone streaming table hoặc materialized view; luôn chạy triggered",
+       "Làm việc từ Databricks SQL"
+      ],
+      [
+       "`REFRESH MATERIALIZED VIEW mv FULL`",
+       "Xoá kết quả và checkpoint, tính lại từ toàn bộ nguồn",
+       "Đổi logic UDF hoặc sửa dữ liệu sai"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Triggered vs. continuous pipeline mode",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/pipeline-mode"
+      },
+      {
+       "label": "CREATE MATERIALIZED VIEW",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-materialized-view"
+      },
+      {
+       "label": "Standalone pipelines",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/standalone-pipelines"
+      },
+      {
+       "label": "Incremental refresh for materialized views",
+       "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Câu mẫu trong exam guide",
+     "md": "- Gold aggregate đọc bởi dashboard và phải phản ánh update tới trễ cho ngày cũ\n- Đáp án là materialized view\n- Bẫy: streaming table \"lowest-cost for any aggregation\", hoặc foreachBatch merge",
+     "src": [
+      {
+       "label": "Exam guide 09/10/2026, sample questions",
+       "url": "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Incremental refresh cần serverless",
+     "md": "- Materialized view trong pipeline classic compute luôn full recompute\n- Không cần bật change data feed cũ trên bảng nguồn\n- Một số phép cần row tracking trên bảng nguồn",
+     "src": [
+      {
+       "label": "Incremental refresh for materialized views",
+       "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "flows",
+   "title": "Flows: nhiều nguồn vào một streaming table",
+   "icon": "git-merge",
+   "task": "1.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Các loại flow",
+     "columns": [
+      "Flow",
+      "Hành vi",
+      "Ràng buộc"
+     ],
+     "rows": [
+      [
+       "**Default flow**",
+       "Tạo cùng streaming table hoặc materialized view, cùng tên với target",
+       "Materialized view chỉ có flow ngầm định"
+      ],
+      [
+       "**Append flow**",
+       "Ghi row mới của nguồn vào target mỗi update",
+       "Nhiều append flow ghi được vào một target"
+      ],
+      [
+       "**Append flow `ONCE`**",
+       "Batch query ghi một lần, dùng để backfill",
+       "Chạy lại chỉ khi full refresh"
+      ],
+      [
+       "**AUTO CDC flow**",
+       "Áp CDC event vào target theo key và sequence",
+       "Target chỉ nhận AUTO CDC flow khác; nguồn phải là streaming"
+      ],
+      [
+       "**Update flow** (Public Preview)",
+       "Ghi streaming aggregate toàn cục ra sink, chỉ row đổi",
+       "Chỉ Python"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Pipeline flows",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+      },
+      {
+       "label": "CREATE FLOW (pipelines)",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Nhiều flow ghi vào một streaming table",
+     "img": "https://docs.databricks.com/aws/en/assets/images/streaming-table-ingestion-36268f5d53fcfb68928d79d094eb2826.png",
+     "alt": "Diagram of S3, Kafka and Pub/Sub sources, each read by its own flow into one streaming table inside a pipeline",
+     "caption": "Mỗi nguồn một flow riêng, flow chỉ đọc data mới và cùng ghi vào một streaming table. Thêm nguồn là thêm flow, không cần UNION.",
+     "credit": {
+      "label": "Databricks docs: Streaming tables",
+      "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Thêm nguồn và backfill không cần full refresh",
+     "lang": "sql",
+     "code": "CREATE OR REFRESH STREAMING TABLE events;\n\n-- one append flow per source, no UNION needed\nCREATE FLOW kafka_eu AS INSERT INTO events BY NAME\nSELECT * FROM STREAM read_kafka(\n  bootstrapServers => 'broker:9092', subscribe => 'events_eu');\n\nCREATE FLOW kafka_us AS INSERT INTO events BY NAME\nSELECT * FROM STREAM read_kafka(\n  bootstrapServers => 'broker:9092', subscribe => 'events_us');\n\n-- one-time backfill, re-runs only on full refresh\nCREATE FLOW backfill_2025 AS INSERT ONCE INTO events BY NAME\nSELECT * FROM read_files('/Volumes/main/archive/events_2025/', format => 'parquet');",
+     "notes": [
+      {
+       "line": 4,
+       "md": "Mỗi nguồn một append flow; thêm topic mới mà không full refresh"
+      },
+      {
+       "line": 13,
+       "md": "`INSERT ONCE` chạy một lần cho dữ liệu lịch sử"
+      }
+     ],
+     "src": [
+      {
+       "label": "CREATE FLOW (pipelines)",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow"
+      },
+      {
+       "label": "Pipeline flows",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+      },
+      {
+       "label": "waitingforcode, Lakeflow SDP flows and private tables (05/2026)",
+       "url": "https://www.waitingforcode.com/databricks/lakeflow-spark-declarative-pipelines-flows-private-tables-configuration/read"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "tip",
+     "title": "Khi nào dùng flow riêng thay vì UNION",
+     "md": "- Thêm streaming source vào streaming table đang chạy mà không full refresh\n- Backfill dữ liệu lịch sử bị thiếu\n- Gộp nhiều nguồn mà không viết `UNION`",
+     "src": [
+      {
+       "label": "Pipeline flows",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "auto-cdc",
+   "title": "AUTO CDC cho SCD Type 1 và Type 2",
+   "icon": "history",
+   "task": "1.7",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Một CDC feed, hai target SCD",
+     "caption": "AUTO CDC dùng KEYS và SEQUENCE BY để áp event đúng thứ tự, kể cả event tới trễ.",
+     "dir": "RIGHT",
+     "groups": [
+      {
+       "id": "pl",
+       "label": "Lakeflow pipeline",
+       "kind": "workspace"
+      }
+     ],
+     "nodes": [
+      {
+       "id": "bronze",
+       "icon": "table-import",
+       "label": "bronze_cdc",
+       "sub": "CDC feed, append-only",
+       "group": "pl",
+       "info": "- Mỗi event là INSERT, UPDATE hoặc DELETE kèm cột thứ tự\n- Event có thể tới sai thứ tự và trùng lặp\n- AUTO CDC đọc nguồn này bằng `STREAM(...)`"
+      },
+      {
+       "id": "f1",
+       "icon": "git-merge",
+       "label": "AUTO CDC flow",
+       "sub": "SCD TYPE 1",
+       "group": "pl",
+       "info": "- Upsert theo `KEYS`, event có sequence lớn nhất thắng\n- Event cũ hơn state hiện tại bị bỏ\n- Hỗ trợ `APPLY AS TRUNCATE WHEN`"
+      },
+      {
+       "id": "f2",
+       "icon": "git-merge",
+       "label": "AUTO CDC flow",
+       "sub": "SCD TYPE 2",
+       "group": "pl",
+       "info": "- Mỗi thay đổi tạo version mới\n- `TRACK HISTORY ON` giới hạn cột sinh version\n- Không hỗ trợ truncate"
+      },
+      {
+       "id": "cur",
+       "icon": "table",
+       "label": "customers_current",
+       "sub": "chỉ giá trị mới",
+       "group": "pl",
+       "info": "- Một row mỗi key\n- Row bị delete biến mất khỏi bảng"
+      },
+      {
+       "id": "hist",
+       "icon": "history",
+       "label": "customers_history",
+       "sub": "giữ mọi version",
+       "group": "pl",
+       "info": "- Row đang hiệu lực có `__END_AT` là null\n- `__START_AT`, `__END_AT` cùng type với cột sequence\n- Muốn stream từ target thì đọc change feed của nó"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "bronze",
+       "to": "f1",
+       "label": "STREAM",
+       "style": "solid",
+       "tone": "primary"
+      },
+      {
+       "id": "e2",
+       "from": "bronze",
+       "to": "f2",
+       "label": "STREAM",
+       "style": "solid",
+       "tone": "primary"
+      },
+      {
+       "id": "e3",
+       "from": "f1",
+       "to": "cur",
+       "label": "upsert",
+       "style": "solid",
+       "tone": "primary"
+      },
+      {
+       "id": "e4",
+       "from": "f2",
+       "to": "hist",
+       "label": "đóng, mở version",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "steps": [
+      {
+       "title": "1. Đọc feed",
+       "md": "- Hai flow cùng đọc `bronze_cdc` bằng streaming read",
+       "hl": [
+        "e1",
+        "e2",
+        "bronze"
+       ]
+      },
+      {
+       "title": "2. SCD Type 1",
+       "md": "- Giữ giá trị mới nhất mỗi key\n- Event cũ hơn bị bỏ",
+       "hl": [
+        "e3",
+        "f1",
+        "cur"
+       ]
+      },
+      {
+       "title": "3. SCD Type 2",
+       "md": "- Đóng version cũ bằng `__END_AT`, mở version mới",
+       "hl": [
+        "e4",
+        "f2",
+        "hist"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      },
+      {
+       "label": "AUTO CDC INTO (pipelines)",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "SCD Type 2 bằng SQL",
+     "lang": "sql",
+     "code": "CREATE OR REFRESH STREAMING TABLE customers_history;\n\nCREATE FLOW customers_cdc AS AUTO CDC INTO customers_history\nFROM STREAM(bronze_customers_cdc)\nKEYS (customer_id)\nAPPLY AS DELETE WHEN op = 'DELETE'\nSEQUENCE BY STRUCT(commit_ts, commit_seq)\nCOLUMNS * EXCEPT (op, commit_ts, commit_seq)\nSTORED AS SCD TYPE 2\nTRACK HISTORY ON * EXCEPT (last_login);",
+     "notes": [
+      {
+       "line": 1,
+       "md": "Phải khai báo target streaming table trước"
+      },
+      {
+       "line": 7,
+       "md": "`STRUCT` sắp theo field đầu, hoà thì xét field sau"
+      },
+      {
+       "line": 10,
+       "md": "Đổi `last_login` cập nhật version hiện tại, không sinh version mới"
+      }
+     ],
+     "src": [
+      {
+       "label": "AUTO CDC INTO (pipelines)",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+      },
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "SCD Type 1 bằng Python",
+     "lang": "python",
+     "code": "from pyspark import pipelines as dp\nfrom pyspark.sql.functions import col, expr, struct\n\ndp.create_streaming_table(\"customers_current\")\n\ndp.create_auto_cdc_flow(\n    target=\"customers_current\",\n    source=\"bronze_customers_cdc\",\n    keys=[\"customer_id\"],\n    sequence_by=struct(\"commit_ts\", \"commit_seq\"),\n    apply_as_deletes=expr(\"op = 'DELETE'\"),\n    apply_as_truncates=expr(\"op = 'TRUNCATE'\"),\n    except_column_list=[\"op\", \"commit_ts\", \"commit_seq\"],\n    stored_as_scd_type=1,\n)",
+     "notes": [
+      {
+       "line": 4,
+       "md": "Target là streaming table, tạo bằng `create_streaming_table`"
+      },
+      {
+       "line": 14,
+       "md": "`stored_as_scd_type` mặc định là 1; Type 2 truyền 2"
+      }
+     ],
+     "src": [
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      },
+      {
+       "label": "create_auto_cdc_flow",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Kết quả với event tới sai thứ tự",
+     "columns": [
+      "Event của user 125",
+      "SCD Type 1",
+      "SCD Type 2"
+     ],
+     "rows": [
+      [
+       "INSERT Tijuana, seq 2",
+       "Tijuana",
+       "Version Tijuana, `__START_AT` 2"
+      ],
+      [
+       "UPDATE Guadalajara, seq 6 (tới trước)",
+       "Guadalajara",
+       "Version Guadalajara, `__START_AT` 6"
+      ],
+      [
+       "UPDATE Mexicali, seq 5 (tới sau)",
+       "Bỏ vì seq 5 < 6",
+       "Chèn version Mexicali từ 5 tới 6"
+      ],
+      [
+       "Bảng cuối",
+       "1 row Guadalajara",
+       "3 version: 2 tới 5, 5 tới 6, 6 tới null"
+      ]
+     ],
+     "src": [
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cdc-details",
+   "title": "Mệnh đề AUTO CDC và bẫy hay gặp",
+   "icon": "list-details",
+   "task": "1.7",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Mệnh đề SQL và tham số Python",
+     "columns": [
+      "SQL",
+      "Python",
+      "Tác dụng"
+     ],
+     "rows": [
+      [
+       "`KEYS (...)`",
+       "`keys`",
+       "Bắt buộc; cột xác định một row"
+      ],
+      [
+       "`SEQUENCE BY`",
+       "`sequence_by`",
+       "Bắt buộc; type sắp xếp được, không được null"
+      ],
+      [
+       "`APPLY AS DELETE WHEN`",
+       "`apply_as_deletes`",
+       "Event nào là delete"
+      ],
+      [
+       "`APPLY AS TRUNCATE WHEN`",
+       "`apply_as_truncates`",
+       "Xoá toàn bảng; chỉ SCD Type 1"
+      ],
+      [
+       "`IGNORE NULL UPDATES`",
+       "`ignore_null_updates`",
+       "Partial update: cột null giữ giá trị cũ; mặc định ghi đè bằng null"
+      ],
+      [
+       "`COLUMNS * EXCEPT (...)`",
+       "`except_column_list`",
+       "Bỏ cột metadata như `op`, `seq` khỏi target"
+      ],
+      [
+       "`STORED AS SCD TYPE 2`",
+       "`stored_as_scd_type=2`",
+       "Giữ history; mặc định Type 1"
+      ],
+      [
+       "`TRACK HISTORY ON`",
+       "`track_history_column_list`",
+       "Chỉ các cột này sinh version mới"
+      ],
+      [
+       "`AUTO CDC ONCE INTO`",
+       "`once=True`",
+       "Backfill một lần, chạy lại khi full refresh"
+      ],
+      [
+       "`STORED AS BITEMPORAL` + `SYSTEM SEQUENCE BY`",
+       "`stored_as_scd_type=\"bitemporal\"` + `system_sequence_by`",
+       "Beta; theo dõi cả business time và system time"
+      ]
+     ],
+     "src": [
+      {
+       "label": "AUTO CDC INTO (pipelines)",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+      },
+      {
+       "label": "create_auto_cdc_flow",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+      },
+      {
+       "label": "Change data capture and snapshots",
+       "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "source has no CDC feed, only periodic full snapshots",
+       "pick": "AUTO CDC FROM SNAPSHOT",
+       "why": "So sánh snapshot theo thứ tự để suy ra insert, update, delete; hỗ trợ SCD Type 1 và 2.",
+       "src": {
+        "label": "The AUTO CDC APIs",
+        "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+       }
+      },
+      {
+       "says": "keep full history of each customer attribute change",
+       "pick": "`STORED AS SCD TYPE 2`",
+       "why": "Mỗi thay đổi tạo row mới với `__START_AT`, `__END_AT`.",
+       "src": {
+        "label": "The AUTO CDC APIs",
+        "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+       }
+      },
+      {
+       "says": "two events share the same timestamp for a key",
+       "pick": "`SEQUENCE BY STRUCT(ts, id)`",
+       "why": "Struct sắp theo field đầu, hoà thì xét field tiếp theo.",
+       "src": {
+        "label": "The AUTO CDC APIs",
+        "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+       }
+      },
+      {
+       "says": "downstream must stream every change from the CDC target",
+       "pick": "Đọc change feed của target AUTO CDC",
+       "why": "Target có update và delete; docs chỉ cách stream là đọc change feed.",
+       "src": {
+        "label": "The AUTO CDC APIs",
+        "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+       }
+      },
+      {
+       "says": "change records carry only the modified columns",
+       "pick": "`IGNORE NULL UPDATES`",
+       "why": "Cột null trong event giữ giá trị đang có trong target.",
+       "src": {
+        "label": "AUTO CDC INTO (pipelines)",
+        "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+       }
+      },
+      {
+       "says": "MINIMAL code for SCD Type 2 versus MERGE in foreachBatch",
+       "pick": "AUTO CDC trong Lakeflow Pipelines",
+       "why": "Tự xử lý event sai thứ tự và trùng; không tự viết merge hay watermark.",
+       "src": {
+        "label": "Pipeline concepts",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Ràng buộc dễ bị hỏi",
+     "md": "- Target AUTO CDC là streaming table và chỉ nhận AUTO CDC flow khác\n- Nguồn phải là streaming source, kể cả flow `ONCE`\n- Giá trị `SEQUENCE BY` NULL không được hỗ trợ\n- Cần serverless hoặc edition Pro, Advanced\n- Delete giữ dạng tombstone, mặc định 2 ngày, chỉnh bằng `pipelines.cdc.tombstoneGCThresholdInSeconds`",
+     "src": [
+      {
+       "label": "Pipeline flows",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+      },
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      },
+      {
+       "label": "create_auto_cdc_flow",
+       "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+      },
+      {
+       "label": "Change data capture and snapshots",
+       "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+      },
+      {
+       "label": "What is Auto Loader?",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ss-vs-sdp",
+   "title": "Chọn Structured Streaming hay Declarative Pipelines",
+   "icon": "dbx-structured-streaming",
+   "task": "1.8",
+   "blocks": [
+    {
+     "type": "compare",
+     "title": "Procedural và declarative",
+     "items": [
+      {
+       "name": "Spark Structured Streaming",
+       "icon": "dbx-structured-streaming",
+       "tag": "procedural, Lakeflow Jobs",
+       "points": [
+        "Tự chọn trigger, output mode, checkpoint, sink",
+        "`foreachBatch` cho logic tuỳ ý và sink không có streaming writer",
+        "Tự xếp thứ tự task và retry bằng Lakeflow Jobs",
+        "Serverless job chỉ hỗ trợ `AvailableNow` và `Once`"
+       ]
+      },
+      {
+       "name": "Declarative Pipelines",
+       "icon": "dbx-spark-declarative-pipelines",
+       "tag": "SDP, Lakeflow Pipelines",
+       "points": [
+        "Khai báo dataset; engine suy ra DAG và chạy song song",
+        "Tự quản lý checkpoint, retry từ task tới flow tới pipeline",
+        "Lakeflow thêm AUTO CDC, expectations, event log, continuous mode",
+        "Code SDP chuyển được sang runtime SDP khác"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Procedural vs. declarative data processing",
+       "url": "https://docs.databricks.com/aws/en/data-engineering/procedural-vs-declarative"
+      },
+      {
+       "label": "Pipeline concepts",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+      },
+      {
+       "label": "Trigger intervals",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Apache Spark SDP và Lakeflow Pipelines",
+     "columns": [
+      "Khả năng",
+      "Apache Spark SDP",
+      "Lakeflow Pipelines"
+     ],
+     "rows": [
+      [
+       "Streaming table, materialized view, temporary view",
+       "Có",
+       "Có"
+      ],
+      [
+       "Append flow, sink Delta và Kafka",
+       "Có",
+       "Có"
+      ],
+      [
+       "AUTO CDC và AUTO CDC FROM SNAPSHOT",
+       "Không (theo docs Databricks)",
+       "Có"
+      ],
+      [
+       "Expectations",
+       "Không",
+       "Có"
+      ],
+      [
+       "Event log query được",
+       "Không",
+       "Có"
+      ],
+      [
+       "Update flow, foreachBatch sink",
+       "Không",
+       "Có"
+      ],
+      [
+       "Continuous mode",
+       "Không",
+       "Có"
+      ],
+      [
+       "Chạy bằng",
+       "CLI `spark-pipelines run` với file `spark-pipeline.yml`",
+       "Pipeline trên Databricks, thường serverless"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Apache Spark Declarative Pipelines (Databricks docs)",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines"
+      },
+      {
+       "label": "Spark Declarative Pipelines Programming Guide (Spark 4.1.0)",
+       "url": "https://spark.apache.org/docs/4.1.0/declarative-pipelines-programming-guide.html"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "many dependent streaming tables, LEAST operational overhead",
+       "pick": "Lakeflow Pipelines",
+       "why": "Engine tự suy ra dependency, quản lý checkpoint và retry; không tự nối task.",
+       "src": {
+        "label": "Pipeline concepts",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+       }
+      },
+      {
+       "says": "must run the same pipeline code on open-source Spark",
+       "pick": "Apache Spark Declarative Pipelines, tránh feature chỉ Lakeflow có",
+       "why": "AUTO CDC, expectations, event log không có trong SDP theo docs Databricks.",
+       "src": {
+        "label": "Apache Spark Declarative Pipelines (Databricks docs)",
+        "url": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines"
+       }
+      },
+      {
+       "says": "custom per-micro-batch logic or a sink without streaming support",
+       "pick": "Structured Streaming với `foreachBatch`",
+       "why": "Áp batch writer cho từng micro-batch; tự chịu trách nhiệm idempotency.",
+       "src": {
+        "label": "foreachBatch",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+       }
+      },
+      {
+       "says": "serverless job needs a stream that runs every minute",
+       "pick": "Pipeline serverless ở continuous mode, hoặc job lịch với `AvailableNow`",
+       "why": "Serverless notebook và job không hỗ trợ `processingTime`.",
+       "src": {
+        "label": "Trigger intervals",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+       }
+      },
+      {
+       "says": "sub-second end-to-end latency for operational events",
+       "pick": "Real-time mode",
+       "why": "Latency tail dưới 1 giây; continuous processing của Spark không được Databricks hỗ trợ.",
+       "src": {
+        "label": "Trigger intervals",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Spark 4.3.0 có Auto CDC open source",
+     "md": "- Spark 4.3.0 phát hành 30/10/2026; programming guide có mục Auto CDC, viết cho SCD Type 1, ghi Type 2 cũng được nhận\n- Docs Databricks và exam guide 09/10/2026 vẫn ghi AUTO CDC chỉ có trong Lakeflow\n- Đi thi: chọn theo docs Databricks",
+     "src": [
+      {
+       "label": "Spark Declarative Pipelines Programming Guide (Spark 4.3.0)",
+       "url": "https://spark.apache.org/docs/4.3.0/declarative-pipelines-programming-guide.html"
+      },
+      {
+       "label": "Apache Spark news, Spark 4.3.0 released",
+       "url": "https://spark.apache.org/news/index.html"
+      },
+      {
+       "label": "Pipeline concepts",
+       "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "stateful",
+   "title": "Watermark và output mode",
+   "icon": "clock",
+   "task": "1.12",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Output mode với aggregate có watermark",
+     "columns": [
+      "Mode",
+      "Ghi gì mỗi trigger",
+      "State",
+      "Sink Delta"
+     ],
+     "rows": [
+      [
+       "**Append** (default)",
+       "Row không còn đổi, sau khi watermark vượt cuối window",
+       "Bỏ state cũ sau ngưỡng",
+       "Hỗ trợ"
+      ],
+      [
+       "**Update**",
+       "Row đã đổi trong trigger, có thể đổi tiếp",
+       "Bỏ state cũ sau ngưỡng",
+       "Không hỗ trợ; dùng `foreachBatch` với `MERGE`"
+      ],
+      [
+       "**Complete**",
+       "Toàn bộ kết quả, chỉ cho aggregation",
+       "Không bỏ state",
+       "Hỗ trợ, ghi đè cả bảng"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Output modes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+      },
+      {
+       "label": "Watermarks",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Window 1 giờ, watermark 20 phút",
+     "lang": "python",
+     "code": "from pyspark.sql.functions import window, sum as fsum\n\nhourly = (orders\n    .withWatermark(\"event_ts\", \"20 minutes\")\n    .groupBy(window(\"event_ts\", \"1 hour\"), \"store_id\")\n    .agg(fsum(\"amount\").alias(\"revenue\")))\n\n(hourly.writeStream\n    .outputMode(\"append\")\n    .option(\"checkpointLocation\", \"/Volumes/main/chk/hourly_rev\")\n    .trigger(availableNow=True)\n    .toTable(\"main.gold.hourly_revenue\"))",
+     "notes": [
+      {
+       "line": 4,
+       "md": "Watermark = event time lớn nhất đã thấy trừ 20 phút"
+      },
+      {
+       "line": 9,
+       "md": "Append ghi window chỉ khi watermark vượt cuối window"
+      },
+      {
+       "line": 10,
+       "md": "Mỗi query một checkpoint riêng"
+      }
+     ],
+     "src": [
+      {
+       "label": "Watermarks",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+      },
+      {
+       "label": "Output modes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+      },
+      {
+       "label": "Structured Streaming checkpoints",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Ví dụ append mode",
+     "columns": [
+      "Event tới",
+      "Event time lớn nhất",
+      "Watermark",
+      "Append ghi ra"
+     ],
+     "rows": [
+      [
+       "9:40 và 10:05",
+       "10:05",
+       "9:45",
+       "Chưa ghi window nào"
+      ],
+      [
+       "10:25",
+       "10:25",
+       "10:05",
+       "Window 9:00 tới 10:00"
+      ],
+      [
+       "9:30 tới sau",
+       "10:25",
+       "10:05",
+       "Bị coi là trễ, có thể bị bỏ"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Output modes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+      },
+      {
+       "label": "Watermarks",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Đề nói gì thì chọn gì",
+     "rows": [
+      {
+       "says": "bound state growth caused by late events",
+       "pick": "`withWatermark` trên cột event time",
+       "why": "Watermark cho engine bỏ state quá ngưỡng trễ.",
+       "src": {
+        "label": "Watermarks",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+       }
+      },
+      {
+       "says": "stream-stream outer join",
+       "pick": "Watermark trên cả hai stream, append mode",
+       "why": "Outer join bắt buộc watermark; join chỉ hỗ trợ append mode.",
+       "src": {
+        "label": "Watermarks",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+       }
+      },
+      {
+       "says": "deduplicate by event id, duplicates arrive within hours",
+       "pick": "`dropDuplicatesWithinWatermark` với watermark lớn hơn khoảng cách duplicate",
+       "why": "Không có watermark thì state dedup tăng mãi.",
+       "src": {
+        "label": "Watermarks",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+       }
+      },
+      {
+       "says": "dashboard needs freshest running totals in a Kafka sink",
+       "pick": "Update mode",
+       "why": "Ghi mỗi khi aggregate đổi; Kafka hỗ trợ mọi output mode.",
+       "src": {
+        "label": "Output modes",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+       }
+      },
+      {
+       "says": "one stream lags; avoid marking its data late",
+       "pick": "Giữ `multipleWatermarkPolicy` = `min` (default)",
+       "why": "Global watermark đi theo stream chậm nhất; `max` giảm latency nhưng bỏ data stream chậm.",
+       "src": {
+        "label": "Watermarks",
+        "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Complete mode không thay materialized view",
+     "md": "- Complete mode giữ toàn bộ state, chậm khi data tăng\n- Databricks khuyên materialized view cho semantics tương tự với incremental processing",
+     "src": [
+      {
+       "label": "Output modes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "exactly-once",
+   "title": "foreachBatch, checkpoint và exactly-once",
+   "icon": "shield-check",
+   "task": "1.12",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Checkpoint chứa gì",
+     "columns": [
+      "Thành phần",
+      "Vai trò"
+     ],
+     "rows": [
+      [
+       "**Offsets**",
+       "Offset nguồn của từng micro-batch, để chạy tiếp đúng chỗ"
+      ],
+      [
+       "**Commits**",
+       "Micro-batch nào đã commit vào sink, cho exactly-once"
+      ],
+      [
+       "**State**",
+       "State store của aggregate, join, dedup"
+      ],
+      [
+       "**Metadata**",
+       "Query ID; config nằm trong offset log"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Structured Streaming checkpoints",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "MERGE và write idempotent trong foreachBatch",
+     "lang": "python",
+     "code": "from delta.tables import DeltaTable\n\nAPP_ID = \"orders_upsert_v1\"   # change it if the checkpoint is ever reset\n\ndef upsert(batch_df, batch_id):\n    if batch_df.isEmpty():\n        return\n    (DeltaTable.forName(spark, \"main.silver.orders\").alias(\"t\")\n        .merge(batch_df.alias(\"s\"), \"t.order_id = s.order_id\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute())\n    (batch_df.write.format(\"delta\")\n        .option(\"txnAppId\", APP_ID)\n        .option(\"txnVersion\", batch_id)\n        .mode(\"append\")\n        .saveAsTable(\"main.audit.orders_batches\"))\n\n(stream_df.writeStream\n    .foreachBatch(upsert)\n    .option(\"checkpointLocation\", \"/Volumes/main/chk/orders_upsert\")\n    .start())",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Checkpoint mới bắt đầu batch ID từ 0, nên phải đổi `txnAppId`"
+      },
+      {
+       "line": 6,
+       "md": "`foreachBatch` có thể nhận DataFrame rỗng"
+      },
+      {
+       "line": 15,
+       "md": "`txnVersion` gắn với `batch_id`: Delta bỏ write trùng khi retry"
+      }
+     ],
+     "src": [
+      {
+       "label": "foreachBatch",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+      },
+      {
+       "label": "Delta table streaming reads and writes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Đổi gì thì cần checkpoint mới",
+     "columns": [
+      "Thay đổi giữa hai lần chạy",
+      "Cùng checkpoint được không"
+     ],
+     "rows": [
+      [
+       "Thêm hoặc bỏ filter",
+       "Được"
+      ],
+      [
+       "Đổi rate limit như `maxFilesPerTrigger`, `maxOffsetsPerTrigger`",
+       "Được"
+      ],
+      [
+       "Đổi trigger interval",
+       "Được"
+      ],
+      [
+       "Đổi Kafka topic hoặc path Auto Loader",
+       "Không, cần checkpoint mới"
+      ],
+      [
+       "Đổi grouping key, aggregate, kiểu join, schema state",
+       "Không, cần checkpoint mới"
+      ],
+      [
+       "Đổi số hoặc thứ tự source",
+       "Không, trừ khi bật source evolution: Databricks Runtime 18.2+, đặt tên mọi source bằng `.name()`"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Structured Streaming checkpoints",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Exactly-once gồm ba phần",
+     "md": "- Source replay được, offset lưu trong checkpoint\n- Sink idempotent: Delta transaction log, hoặc `txnAppId` và `txnVersion` trong `foreachBatch`\n- `foreachBatch` tự nó chỉ đảm bảo at-least-once",
+     "src": [
+      {
+       "label": "foreachBatch",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+      },
+      {
+       "label": "Delta table streaming reads and writes",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake"
+      },
+      {
+       "label": "Structured Streaming checkpoints",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Đừng tự retry trong foreachBatch",
+     "md": "- Lỗi logic và lỗi schema: để query fail, Lakeflow Jobs retry cả batch\n- Mỗi query một checkpoint; hai query dùng chung là sai\n- Ghi nhiều sink trong một `foreachBatch` chạy tuần tự, tăng latency",
+     "src": [
+      {
+       "label": "foreachBatch",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+      },
+      {
+       "label": "Structured Streaming checkpoints",
+       "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

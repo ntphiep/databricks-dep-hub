@@ -1,0 +1,340 @@
+[
+ {
+  "id": "declarative-automation-bundles",
+  "term": "Declarative Automation Bundles",
+  "full": "",
+  "aliases": [
+   "Databricks Asset Bundles",
+   "DABs",
+   "bundle",
+   "bundles"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Công cụ infrastructure-as-code của Databricks CLI, mô tả job, pipeline và source code thành một project deploy được.",
+  "means": [
+   "Tên cũ là Databricks Asset Bundles (DABs).",
+   "Lệnh chính: `bundle init`, `validate`, `deploy`, `run`.",
+   "Đề hỏi cấu trúc project và deploy nhiều môi trường."
+  ],
+  "related": [
+   "databricks-yml"
+  ],
+  "src": {
+   "label": "What are Declarative Automation Bundles?",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/"
+  }
+ },
+ {
+  "id": "databricks-yml",
+  "term": "databricks.yml",
+  "full": "",
+  "aliases": [],
+  "cat": "DevOps & Ops",
+  "what": "File cấu hình gốc của bundle, khai báo `bundle`, `include`, `artifacts`, `variables`, `targets`.",
+  "means": [
+   "Mỗi bundle có đúng một file ở root.",
+   "`include` nạp các file `resources/*.yml`."
+  ],
+  "related": [
+   "declarative-automation-bundles"
+  ],
+  "src": {
+   "label": "Bundle configuration",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/settings"
+  }
+ },
+ {
+  "id": "serverless-environment",
+  "term": "serverless environment",
+  "full": "",
+  "aliases": [
+   "environment spec",
+   "base environment",
+   "environment_key",
+   "Environment side pane"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Cấu hình Python cho serverless notebook và job: environment version cộng danh sách dependency.",
+  "means": [
+   "Thay init script và cluster library trên serverless.",
+   "Được cache, đổi code package thì phải tăng version.",
+   "Python script và wheel task bắt buộc có environment."
+  ],
+  "related": [
+   "environment-version"
+  ],
+  "src": {
+   "label": "Configure the serverless environment",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+  }
+ },
+ {
+  "id": "environment-version",
+  "term": "environment version",
+  "full": "",
+  "aliases": [
+   "environment_version",
+   "environment versions"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Phiên bản client API của serverless, cố định Python và bộ package, hỗ trợ 3 năm.",
+  "means": [
+   "Databricks nâng server độc lập, code không phải sửa.",
+   "Version 6 phát hành 2026-09-03, Python 3.12.3."
+  ],
+  "related": [
+   "serverless-environment"
+  ],
+  "src": {
+   "label": "Serverless environment versions",
+   "url": "https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/"
+  }
+ },
+ {
+  "id": "performance-mode",
+  "term": "performance mode",
+  "full": "",
+  "aliases": [
+   "Performance optimized",
+   "standard mode",
+   "standard performance mode",
+   "performance_target"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Lựa chọn tốc độ hay cost cho serverless job và pipeline.",
+  "means": [
+   "Standard: khởi động 4 tới 6 phút, ít DBU hơn.",
+   "Performance optimized: khởi động nhanh, hợp SLA chặt.",
+   "Notebook không có standard mode."
+  ],
+  "related": [
+   "auto-optimization"
+  ],
+  "src": {
+   "label": "Run Lakeflow Jobs with serverless compute",
+   "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+  }
+ },
+ {
+  "id": "auto-optimization",
+  "term": "serverless auto-optimization",
+  "full": "",
+  "aliases": [
+   "auto-optimization"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Cơ chế serverless jobs tự tối ưu compute và retry task lỗi, bật mặc định.",
+  "means": [
+   "Tắt trong Retry Policy cho task không idempotent.",
+   "Job tạo bằng `jobs submit` không được auto-optimize."
+  ],
+  "related": [
+   "performance-mode"
+  ],
+  "src": {
+   "label": "Run Lakeflow Jobs with serverless compute",
+   "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+  }
+ },
+ {
+  "id": "uc-function",
+  "term": "Unity Catalog function",
+  "full": "",
+  "aliases": [
+   "Unity Catalog functions",
+   "Unity Catalog Python UDF",
+   "UC UDF"
+  ],
+  "cat": "Spark & SQL",
+  "what": "UDF SQL hoặc Python lưu trong Unity Catalog, gọi được từ notebook, job và SQL warehouse.",
+  "means": [
+   "Người gọi cần quyền `EXECUTE`.",
+   "`ENVIRONMENT` khai báo dependency và environment version.",
+   "Khác session-scoped UDF chỉ sống trong SparkSession."
+  ],
+  "related": [],
+  "src": {
+   "label": "UDFs in Unity Catalog",
+   "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+  }
+ },
+ {
+  "id": "lakeflow-jobs",
+  "term": "Lakeflow Jobs",
+  "full": "",
+  "aliases": [
+   "Lakeflow Job",
+   "Databricks Workflows"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Orchestrator của Databricks chạy task graph theo schedule, trigger hoặc lệnh API.",
+  "means": [
+   "Tên cũ là Databricks Workflows.",
+   "Tạo bằng UI, REST API 2.2, CLI, bundle hoặc SDK.",
+   "Một job có tối đa 1000 task."
+  ],
+  "related": [
+   "if-else-task",
+   "for-each-task",
+   "task-values"
+  ],
+  "src": {
+   "label": "Lakeflow Jobs",
+   "url": "https://docs.databricks.com/aws/en/jobs/"
+  }
+ },
+ {
+  "id": "if-else-task",
+  "term": "If/else condition task",
+  "full": "",
+  "aliases": [
+   "If/else",
+   "If/Else",
+   "condition_task"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Task rẽ nhánh job theo biểu thức so sánh hai operand.",
+  "means": [
+   "`==`, `!=` so chuỗi; `>`, `<` so số.",
+   "Task sau chọn nhánh bằng `outcome` true hoặc false."
+  ],
+  "related": [
+   "for-each-task",
+   "task-values"
+  ],
+  "src": {
+   "label": "Add branching logic with the If/else task",
+   "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+  }
+ },
+ {
+  "id": "for-each-task",
+  "term": "For each task",
+  "full": "",
+  "aliases": [
+   "For each",
+   "For Each",
+   "for_each_task"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Task chạy một nested task cho từng phần tử của mảng input.",
+  "means": [
+   "Input là JSON array, task value hoặc job parameter.",
+   "`{{input}}` là phần tử của iteration.",
+   "Không lồng For each trong For each."
+  ],
+  "related": [
+   "if-else-task",
+   "task-values"
+  ],
+  "src": {
+   "label": "Use a For each task to run another task in a loop",
+   "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+  }
+ },
+ {
+  "id": "task-values",
+  "term": "task values",
+  "full": "",
+  "aliases": [
+   "taskValues",
+   "dbutils.jobs.taskValues",
+   "task value"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Giá trị JSON một task đặt để task sau trong cùng job run đọc.",
+  "means": [
+   "Đặt bằng `dbutils.jobs.taskValues.set()`, tối đa 48 KiB.",
+   "Tham chiếu `{{tasks.<task>.values.<key>}}`."
+  ],
+  "related": [
+   "if-else-task",
+   "for-each-task"
+  ],
+  "src": {
+   "label": "Use task values to pass information between tasks",
+   "url": "https://docs.databricks.com/aws/en/jobs/task-values"
+  }
+ },
+ {
+  "id": "assertdataframeequal",
+  "term": "assertDataFrameEqual",
+  "full": "",
+  "aliases": [
+   "assertSchemaEqual",
+   "pyspark.testing"
+  ],
+  "cat": "Spark & SQL",
+  "what": "Hàm test của PySpark so sánh hai DataFrame, kèm schema và sai số float.",
+  "means": [
+   "Mặc định không xét thứ tự row.",
+   "`rtol`, `atol` cho so sánh gần đúng.",
+   "`assertSchemaEqual` chỉ so schema."
+  ],
+  "related": [
+   "databricks-connect"
+  ],
+  "src": {
+   "label": "PySpark API, assertDataFrameEqual",
+   "url": "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html"
+  }
+ },
+ {
+  "id": "databricks-connect",
+  "term": "Databricks Connect",
+  "full": "",
+  "aliases": [
+   "DatabricksSession",
+   "databricks-connect"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Client chạy code PySpark từ IDE hoặc pytest trên compute của workspace.",
+  "means": [
+   "Không cài chung với `pyspark`.",
+   "Template bundle dùng nó cho fixture `spark` trong test."
+  ],
+  "related": [
+   "assertdataframeequal"
+  ],
+  "src": {
+   "label": "Testing for Databricks Connect for Python",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/testing"
+  }
+ },
+ {
+  "id": "strict-isolation",
+  "term": "STRICT ISOLATION",
+  "full": "",
+  "aliases": [],
+  "cat": "Spark & SQL",
+  "what": "Characteristic của Unity Catalog Python UDF buộc UDF chạy trong environment riêng.",
+  "means": [
+   "Mặc định từ Databricks Runtime 18.1, UDF cùng owner và session dùng chung isolation environment.",
+   "Dùng khi UDF chạy `exec()`, ghi file local hay đổi biến môi trường."
+  ],
+  "related": [
+   "uc-function"
+  ],
+  "src": {
+   "label": "Unity Catalog Python UDFs",
+   "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+  }
+ },
+ {
+  "id": "ansi-mode",
+  "term": "ANSI mode",
+  "full": "",
+  "aliases": [],
+  "cat": "Spark & SQL",
+  "what": "Chế độ SQL theo chuẩn ANSI, báo lỗi runtime khi cast sai, overflow hay input hỏng.",
+  "means": [
+   "Bật mặc định trên serverless notebook và job.",
+   "Code cũ dựa vào cast trả NULL cần `try_cast`."
+  ],
+  "related": [],
+  "src": {
+   "label": "Serverless compute limitations",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+  }
+ }
+]

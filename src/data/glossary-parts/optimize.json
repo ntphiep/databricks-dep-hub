@@ -1,0 +1,278 @@
+[
+ {
+  "id": "predictive-optimization",
+  "term": "Predictive Optimization",
+  "full": "",
+  "aliases": [
+   "predictive optimization"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Feature tự chạy OPTIMIZE, VACUUM, ANALYZE trên UC managed table khi table cần, dùng serverless compute.",
+  "means": [
+   "Bật hoặc tắt theo account, catalog, schema, table với kế thừa.",
+   "Không chạy ZORDER, không chạy trên external table.",
+   "VACUUM giữ file tối thiểu 7 ngày dù retention property thấp hơn.",
+   "Billing theo serverless jobs SKU."
+  ],
+  "related": [],
+  "src": {
+   "label": "Predictive optimization for Unity Catalog managed tables",
+   "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+  }
+ },
+ {
+  "id": "liquid-clustering",
+  "term": "Liquid Clustering",
+  "full": "",
+  "aliases": [
+   "liquid clustering",
+   "CLUSTER BY",
+   "clustering key",
+   "clustering keys"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Kỹ thuật data layout thay partitioning và ZORDER, gom data theo tối đa 4 clustering key để data skipping.",
+  "means": [
+   "Đổi key không rewrite data cũ; `OPTIMIZE FULL` để recluster.",
+   "Hợp với cột high cardinality, skew, query pattern thay đổi.",
+   "Không kết hợp với partition hay ZORDER."
+  ],
+  "related": [
+   "automatic-liquid-clustering",
+   "hierarchical-clustering",
+   "zorder"
+  ],
+  "src": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "automatic-liquid-clustering",
+  "term": "CLUSTER BY AUTO",
+  "full": "Automatic liquid clustering",
+  "aliases": [
+   "automatic liquid clustering",
+   "Automatic liquid clustering",
+   "clusterByAuto"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Chế độ liquid clustering mà Predictive Optimization tự chọn và đổi clustering key theo query history.",
+  "means": [
+   "Chỉ UC managed table, cần Predictive Optimization.",
+   "Đổi key chỉ khi lợi ích data skipping lớn hơn cost.",
+   "Đáp án cho query pattern không biết trước, least tuning."
+  ],
+  "related": [
+   "liquid-clustering",
+   "predictive-optimization"
+  ],
+  "src": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "hierarchical-clustering",
+  "term": "hierarchical clustering",
+  "full": "",
+  "aliases": [
+   "delta.liquid.hierarchicalClusteringColumns"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Cách ưu tiên một số clustering key, cluster theo cột ưu tiên trước rồi tới cột sau (DBR 17.1+).",
+  "means": [
+   "Dùng cho cột low cardinality hay filter như ngày.",
+   "Partition column thành hierarchical key khi convert sang liquid."
+  ],
+  "related": [
+   "liquid-clustering"
+  ],
+  "src": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "deletion-vectors",
+  "term": "deletion vectors",
+  "full": "",
+  "aliases": [
+   "deletion vector",
+   "Deletion vectors",
+   "REORG TABLE"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Table feature đánh dấu row bị xoá hoặc sửa trong metadata thay vì rewrite cả Parquet file.",
+  "means": [
+   "Tăng tốc DELETE, UPDATE, MERGE và bật row-level concurrency.",
+   "Xoá vật lý cần `REORG TABLE ... APPLY (PURGE)` rồi VACUUM.",
+   "Bật bằng `delta.enableDeletionVectors`."
+  ],
+  "related": [
+   "liquid-clustering"
+  ],
+  "src": {
+   "label": "Deletion vectors in Databricks",
+   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+  }
+ },
+ {
+  "id": "disk-cache",
+  "term": "disk cache",
+  "full": "",
+  "aliases": [
+   "Delta cache",
+   "DBIO cache",
+   "Disk cache"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Cache của Databricks lưu copy của Parquet file trên SSD local của worker ở lần read đầu.",
+  "means": [
+   "Tự động, tự loại entry khi file đổi.",
+   "Khác Spark cache: không cần sửa code.",
+   "Bật tắt bằng `spark.databricks.io.cache.enabled`."
+  ],
+  "related": [
+   "query-profile"
+  ],
+  "src": {
+   "label": "Optimize performance with caching on Databricks",
+   "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+  }
+ },
+ {
+  "id": "change-data-feed",
+  "term": "Change Data Feed",
+  "full": "",
+  "aliases": [
+   "change data feed",
+   "CDF",
+   "table_changes",
+   "readChangeFeed"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Feature ghi lại thay đổi mức row giữa các version của Delta hoặc Iceberg v3 table kèm loại change.",
+  "means": [
+   "Đọc bằng `table_changes()` hoặc option `readChangeFeed`.",
+   "Automatic CDF (DBR 19+) dùng row tracking, Databricks khuyên migrate từ legacy.",
+   "Không phải lịch sử vĩnh viễn, phụ thuộc retention."
+  ],
+  "related": [],
+  "src": {
+   "label": "Use change data feed on Databricks",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ },
+ {
+  "id": "query-profile",
+  "term": "query profile",
+  "full": "",
+  "aliases": [
+   "Query profile",
+   "performance insights",
+   "Top operators"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Màn hình DAG từng operator của query với time spent, rows, memory peak và performance insight.",
+  "means": [
+   "Cần là owner query hoặc CAN MONITOR trên warehouse.",
+   "Insight như DATA_SPILL, EXPLODING_JOIN chỉ ra cách sửa."
+  ],
+  "related": [
+   "aqe"
+  ],
+  "src": {
+   "label": "Query profile",
+   "url": "https://docs.databricks.com/aws/en/sql/user/queries/query-profile"
+  }
+ },
+ {
+  "id": "aqe",
+  "term": "Adaptive query execution",
+  "full": "",
+  "aliases": [
+   "AQE"
+  ],
+  "cat": "Spark & SQL",
+  "what": "Cơ chế tối ưu lại plan lúc query chạy dựa trên kích thước data thực tế sau mỗi shuffle.",
+  "means": [
+   "Đổi sort merge join sang broadcast, gộp partition nhỏ, tách partition skew.",
+   "Bật mặc định; không reorder join.",
+   "Không áp cho streaming query."
+  ],
+  "related": [],
+  "src": {
+   "label": "Adaptive query execution",
+   "url": "https://docs.databricks.com/aws/en/optimizations/aqe"
+  }
+ },
+ {
+  "id": "zorder",
+  "term": "ZORDER",
+  "full": "",
+  "aliases": [
+   "ZORDER BY",
+   "Z-order",
+   "Z-ordering"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Kỹ thuật cũ gom data liên quan vào cùng file qua `OPTIMIZE ... ZORDER BY` để data skipping.",
+  "means": [
+   "Không idempotent, chỉ trong từng partition.",
+   "Không dùng được với liquid clustering hay Iceberg table.",
+   "Docs khuyên liquid clustering cho table mới."
+  ],
+  "related": [
+   "liquid-clustering"
+  ],
+  "src": {
+   "label": "Data skipping",
+   "url": "https://docs.databricks.com/aws/en/delta/data-skipping"
+  }
+ },
+ {
+  "id": "auto-compaction",
+  "term": "auto compaction",
+  "full": "",
+  "aliases": [
+   "optimized writes",
+   "autoOptimize.autoCompact",
+   "targetFileSize"
+  ],
+  "cat": "Delta & Iceberg",
+  "what": "Cơ chế gộp file nhỏ ngay sau write thành công, chạy trên cluster đang ghi.",
+  "means": [
+   "Giá trị `true` dùng target 128 MB; `auto` tự chỉnh.",
+   "Không thay hoàn toàn OPTIMIZE cho table trên 1 TB."
+  ],
+  "related": [],
+  "src": {
+   "label": "Control data file size",
+   "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+  }
+ },
+ {
+  "id": "metric-view",
+  "term": "metric view",
+  "full": "Unity Catalog metric view",
+  "aliases": [
+   "metric views",
+   "Metric view",
+   "WITH METRICS",
+   "MEASURE()"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Object Unity Catalog định nghĩa measure và field bằng YAML một lần, group by tuỳ ý lúc query.",
+  "means": [
+   "Tạo bằng `CREATE VIEW ... WITH METRICS LANGUAGE YAML`.",
+   "Query bằng `MEASURE()`; không `SELECT *`, không join trực tiếp.",
+   "Materialization cần serverless, DBR 17.3+, source không có row filter hay mask."
+  ],
+  "related": [],
+  "src": {
+   "label": "Unity Catalog metric views",
+   "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/"
+  }
+ }
+]

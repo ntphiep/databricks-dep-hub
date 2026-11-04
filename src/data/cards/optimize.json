@@ -1,0 +1,236 @@
+[
+ {
+  "id": "opt-c01",
+  "front": "Operations run by predictive optimization",
+  "back": "OPTIMIZE, VACUUM, ANALYZE and REFRESH INDEX on Unity Catalog managed tables, on serverless jobs compute. Không chạy ZORDER và không chạy trên external table.",
+  "ref": {
+   "label": "Predictive optimization",
+   "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+  }
+ },
+ {
+  "id": "opt-c02",
+  "front": "Scope syntax for predictive optimization",
+  "back": "`ALTER CATALOG | SCHEMA | TABLE ... ENABLE | DISABLE | INHERIT PREDICTIVE OPTIMIZATION`. Object con kế thừa từ account, catalog, schema.",
+  "ref": {
+   "label": "Predictive optimization",
+   "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+  }
+ },
+ {
+  "id": "opt-c03",
+  "front": "Requirements for CLUSTER BY AUTO",
+  "back": "Unity Catalog managed table, predictive optimization enabled, DBR 15.4 LTS+. External table chỉ dùng được clustering key thủ công.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c04",
+  "front": "Maximum number of liquid clustering keys",
+  "back": "4. Với table dưới 10 TB, nhiều key hơn làm filter một cột chậm hơn.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c05",
+  "front": "Effect of ALTER TABLE ... CLUSTER BY (new keys) on existing data",
+  "back": "Existing data is not rewritten; run `OPTIMIZE ... FULL` to recluster. Write và OPTIMIZE sau đó dùng key mới.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c06",
+  "front": "Convert a partitioned Delta table to liquid clustering in place",
+  "back": "`ALTER TABLE t REPLACE PARTITIONED BY WITH CLUSTER BY (...)` on DBR 18.1+, then OPTIMIZE. Partition column trở thành hierarchical clustering key.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c07",
+  "front": "What deletion vectors speed up",
+  "back": "DELETE, UPDATE and MERGE, by marking changed rows instead of rewriting whole Parquet files. Row cũ chỉ bị xoá vật lý khi file được rewrite.",
+  "ref": {
+   "label": "Deletion vectors in Databricks",
+   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+  }
+ },
+ {
+  "id": "opt-c08",
+  "front": "Physically remove soft-deleted rows",
+  "back": "`REORG TABLE t APPLY (PURGE)`, then VACUUM after the retention period. Dùng cho yêu cầu xoá vĩnh viễn data.",
+  "ref": {
+   "label": "Remove unused data files with vacuum",
+   "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+  }
+ },
+ {
+  "id": "opt-c09",
+  "front": "Disk cache vs Spark cache: which is automatic?",
+  "back": "Disk cache (formerly Delta cache): automatic, local SSD, Parquet only, self-invalidating. Spark cache cần `cache()` trong code và áp cho mọi DataFrame.",
+  "ref": {
+   "label": "Optimize performance with caching",
+   "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+  }
+ },
+ {
+  "id": "opt-c10",
+  "front": "CACHE SELECT on SQL warehouses and DBR 14.2+",
+  "back": "Ignored; an enhanced disk caching algorithm is used instead. Đề nhắc CACHE SELECT thường là distractor.",
+  "ref": {
+   "label": "Optimize performance with caching",
+   "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+  }
+ },
+ {
+  "id": "opt-c11",
+  "front": "Legacy vs automatic change data feed on DBR 19+",
+  "back": "Automatic CDF computes changes at read time from row tracking (Delta) or row lineage (Iceberg v3), with no per-table setting; Databricks recommends migrating from legacy. Một table không dùng cả hai loại.",
+  "ref": {
+   "label": "Change data feed",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ },
+ {
+  "id": "opt-c12",
+  "front": "`_change_type` values in change data feed",
+  "back": "insert, update_preimage, update_postimage, delete. Một UPDATE sinh 2 row preimage và postimage.",
+  "ref": {
+   "label": "table_changes",
+   "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/table_changes"
+  }
+ },
+ {
+  "id": "opt-c13",
+  "front": "First run of a streaming read with readChangeFeed and no starting version",
+  "back": "Returns the current table snapshot as insert records, then subsequent changes. Đặt `startingVersion` nếu target đã có data tới version đó.",
+  "ref": {
+   "label": "Use change data feed",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ },
+ {
+  "id": "opt-c14",
+  "front": "Automatic change data feed requirements",
+  "back": "DBR 19+, Unity Catalog table: Delta with row tracking or managed Iceberg v3. Không cần bật từng table, không dùng chung với legacy CDF.",
+  "ref": {
+   "label": "Use change data feed",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ },
+ {
+  "id": "opt-c15",
+  "front": "Query profile insight DATA_SPILL",
+  "back": "Data did not fit in memory and spilled to disk; increase warehouse size or reduce rows and columns. Đọc ở tab Performance insights.",
+  "ref": {
+   "label": "Query performance insights",
+   "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+  }
+ },
+ {
+  "id": "opt-c16",
+  "front": "Who can view a query profile?",
+  "back": "The query owner, or a user with at least CAN MONITOR on the SQL warehouse. Query trả từ query cache không có profile.",
+  "ref": {
+   "label": "Query profile",
+   "url": "https://docs.databricks.com/aws/en/sql/user/queries/query-profile"
+  }
+ },
+ {
+  "id": "opt-c17",
+  "front": "AQE runtime broadcast threshold on Databricks",
+  "back": "`spark.databricks.adaptive.autoBroadcastJoinThreshold`, default 30MB. AQE đổi sort merge join sang broadcast hash join lúc chạy.",
+  "ref": {
+   "label": "Adaptive query execution",
+   "url": "https://docs.databricks.com/aws/en/optimizations/aqe"
+  }
+ },
+ {
+  "id": "opt-c18",
+  "front": "Partitioning guidance by table size",
+  "back": "Under 1 TB: don't partition. 1 to 100 TB: liquid clustering. 100 TB+: liquid first, partition only if verified; each partition at least 1 GB.",
+  "ref": {
+   "label": "When to partition tables",
+   "url": "https://docs.databricks.com/aws/en/tables/partitions"
+  }
+ },
+ {
+  "id": "opt-c19",
+  "front": "Autotuned target file size for UC managed tables",
+  "back": "256 MB under 2.56 TB, growing linearly to 1 GB at 10 TB, 1 GB above. Đặt `delta.targetFileSize` để cố định.",
+  "ref": {
+   "label": "Control data file size",
+   "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+  }
+ },
+ {
+  "id": "opt-c20",
+  "front": "Query a measure in a metric view",
+  "back": "Wrap it in `MEASURE()` and group by fields, e.g. `SELECT Segment, MEASURE(Revenue) FROM mv GROUP BY ALL`. Không dùng `SELECT *`.",
+  "ref": {
+   "label": "Query metric views",
+   "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/query"
+  }
+ },
+ {
+  "id": "opt-c21",
+  "front": "Predictive optimization VACUUM when `delta.deletedFileRetentionDuration` is below 7 days",
+  "back": "It still retains data files for at least 7 days. Muốn xoá sớm hơn thì không dựa vào Predictive Optimization.",
+  "ref": {
+   "label": "Predictive optimization",
+   "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+  }
+ },
+ {
+  "id": "opt-c22",
+  "front": "Recluster only part of a liquid table after a key change",
+  "back": "`OPTIMIZE t FULL WHERE <predicate>` on DBR 18.1+; files whose range overlaps the predicate are reclustered. Tránh rewrite cả table lớn.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c23",
+  "front": "CREATE OR REPLACE on a table with CLUSTER BY AUTO",
+  "back": "Without `CLUSTER BY AUTO` in the statement, automatic clustering is turned off and selected keys are lost. Luôn lặp lại `CLUSTER BY AUTO` khi replace.",
+  "ref": {
+   "label": "Use liquid clustering for tables",
+   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+  }
+ },
+ {
+  "id": "opt-c24",
+  "front": "Caching APIs on serverless compute",
+  "back": "`df.cache()` and `persist()` work; `CACHE TABLE`, `spark.catalog.cacheTable()`, `clearCache()` and `df.checkpoint()` throw exceptions. Notebook chuyển từ classic sang serverless hay lỗi ở đây.",
+  "ref": {
+   "label": "Serverless compute limitations",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+  }
+ },
+ {
+  "id": "opt-c25",
+  "front": "Performance insight EXCESSIVE_QUEUE_TIME",
+  "back": "Queries wait in the warehouse queue; increase the maximum number of clusters (scale out). Tăng size chỉ giúp `DATA_SPILL`.",
+  "ref": {
+   "label": "Query performance insights",
+   "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+  }
+ },
+ {
+  "id": "opt-c26",
+  "front": "Metric view materialization: when does a query use it?",
+  "back": "Exact match, rollup match for additive measures, or unaggregated match; otherwise it reads the source. Measure non-additive như `COUNT(DISTINCT)` cần exact match.",
+  "ref": {
+   "label": "Metric view materialization",
+   "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization"
+  }
+ }
+]

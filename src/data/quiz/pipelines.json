@@ -1,0 +1,1267 @@
+[
+ {
+  "id": "pip-01",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A team is migrating a Delta Live Tables notebook to Lakeflow Pipelines. New code must follow the current Python API. The first dataset ingests JSON files that land continuously in a Unity Catalog volume and must process each file exactly once without the team managing checkpoints or schema locations.\nWhich definition should the team use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Import `from pyspark import pipelines as dp` and decorate a function with `@dp.materialized_view` that returns `spark.readStream.format(\"cloudFiles\")...load(path)`."
+   },
+   {
+    "k": "B",
+    "t": "Import `from pyspark import pipelines as dp` and decorate a function with `@dp.table` that returns `spark.readStream.format(\"cloudFiles\")...load(path)`."
+   },
+   {
+    "k": "C",
+    "t": "Import `dlt` and decorate a function with `@dlt.view` that returns `spark.read.format(\"json\").load(path)`."
+   },
+   {
+    "k": "D",
+    "t": "Import `from pyspark import pipelines as dp` and decorate a function with `@dp.table` that calls `spark.readStream...writeStream.toTable(\"bronze\")`."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: \"current Python API\", file tới liên tục, xử lý mỗi file một lần, không tự quản lý checkpoint.\n- `@dp.table` trả streaming DataFrame tạo streaming table; `cloudFiles` là Auto Loader.\n- Trong pipeline, checkpoint và schema location do Lakeflow quản lý.",
+  "wrong": {
+   "A": "Materialized view là batch target; ingest từ Auto Loader phải là streaming table.",
+   "C": "`dlt` là API cũ, view không persist, và batch read đọc lại toàn bộ file mỗi lần.",
+   "D": "Hàm dataset chỉ return DataFrame; gọi `writeStream`, `toTable()` trong pipeline code là sai."
+  },
+  "refs": [
+   {
+    "label": "Lakeflow pipelines Python reference",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+   },
+   {
+    "label": "Load data in pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/load"
+   },
+   {
+    "label": "What is Auto Loader?",
+    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/"
+   }
+  ]
+ },
+ {
+  "id": "pip-02",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 1,
+  "stem": "An Auto Loader stream ingests JSON order events from partners. Partners add new fields without notice several times a month. The business requires that the stream never stops because of a schema change and that values in unexpected fields are kept so analysts can review them later.\nWhich configuration meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Set `cloudFiles.schemaEvolutionMode` to `addNewColumns` and rely on automatic restarts."
+   },
+   {
+    "k": "B",
+    "t": "Set `cloudFiles.schemaEvolutionMode` to `failOnNewColumns` and update the schema manually."
+   },
+   {
+    "k": "C",
+    "t": "Set `cloudFiles.schemaEvolutionMode` to `rescue`."
+   },
+   {
+    "k": "D",
+    "t": "Set `cloudFiles.schemaEvolutionMode` to `none` without a rescued data column."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: \"never stops\" và \"values in unexpected fields are kept\".\n- Mode `rescue` không evolve schema, không làm stream fail, ghi cột mới vào `_rescued_data`.",
+  "wrong": {
+   "A": "`addNewColumns` làm stream fail với `UnknownFieldException` rồi mới restart với schema mới.",
+   "B": "`failOnNewColumns` dừng stream tới khi có người sửa schema.",
+   "D": "`none` bỏ qua cột mới và không rescue data nếu không set `rescuedDataColumn`."
+  },
+  "refs": [
+   {
+    "label": "Auto Loader schema inference and evolution",
+    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema"
+   }
+  ]
+ },
+ {
+  "id": "pip-03",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 1,
+  "stem": "An Auto Loader stream reads a landing bucket that receives several million small files per hour. Directory listing now dominates cloud storage API costs and slows file discovery. The bucket is registered as a Unity Catalog external location, and the platform team wants the approach Databricks recommends for most workloads.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable file events on the external location and set `cloudFiles.useManagedFileEvents` on the stream."
+   },
+   {
+    "k": "B",
+    "t": "Replace Auto Loader with `spark.readStream.format(\"json\").load(path)`."
+   },
+   {
+    "k": "C",
+    "t": "Keep directory listing and change the trigger to `processingTime='1 second'`."
+   },
+   {
+    "k": "D",
+    "t": "Create a separate classic file notification queue and subscription for each stream, authenticated with a service credential."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: hàng triệu file mỗi giờ, cost do listing, external location UC, \"recommended for most workloads\".\n- File notification mode với file events dùng một queue cho mọi stream của external location; Databricks tự set up.",
+  "wrong": {
+   "B": "File source của Spark vẫn phải list thư mục và thiếu schema evolution của Auto Loader.",
+   "C": "Trigger dày hơn làm tăng số lần list, cost càng cao.",
+   "D": "Classic file notification vẫn chạy được nhưng phải quản lý queue riêng cho từng stream; docs khuyên file events."
+  },
+  "refs": [
+   {
+    "label": "Auto Loader file notification mode",
+    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode"
+   },
+   {
+    "label": "Auto Loader for production",
+    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/production"
+   }
+  ]
+ },
+ {
+  "id": "pip-04",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 2,
+  "stem": "A Lakeflow pipeline has a streaming table `events` fed by Kafka topic `events_eu`. The team must add topic `events_us` without reprocessing data already in `events`, and must load archived 2025 Parquet files into the same table one time only.\nWhich two actions meet these requirements? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Rewrite the `events` query as a `UNION ALL` of both topics and run a full refresh."
+   },
+   {
+    "k": "B",
+    "t": "Add `CREATE FLOW kafka_us AS INSERT INTO events BY NAME SELECT * FROM STREAM read_kafka(...)` for `events_us`."
+   },
+   {
+    "k": "C",
+    "t": "Add `CREATE FLOW backfill_2025 AS INSERT ONCE INTO events BY NAME SELECT * FROM read_files(...)`."
+   },
+   {
+    "k": "D",
+    "t": "Create a materialized view that unions `events` with the archive files."
+   },
+   {
+    "k": "E",
+    "t": "Add an `AUTO CDC INTO events` flow that reads the archive files with `SEQUENCE BY` file date."
+   }
+  ],
+  "answer": [
+   "B",
+   "C"
+  ],
+  "explain": "- Tín hiệu: thêm nguồn \"without reprocessing\" và backfill \"one time only\".\n- Mỗi nguồn một append flow vào cùng streaming table, không cần full refresh.\n- `INSERT ONCE` chạy một lần, chỉ chạy lại khi full refresh.",
+  "wrong": {
+   "A": "Full refresh xử lý lại toàn bộ data, vi phạm yêu cầu.",
+   "D": "Không đưa dữ liệu vào `events`; tạo thêm dataset khác.",
+   "E": "Target đã có append flow nên không nhận AUTO CDC flow; archive cũng không phải CDC feed."
+  },
+  "refs": [
+   {
+    "label": "Pipeline flows",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+   },
+   {
+    "label": "CREATE FLOW (pipelines)",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow"
+   }
+  ]
+ },
+ {
+  "id": "pip-05",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A data engineer adds this code to a Python file in a Lakeflow pipeline to log row counts and keep an audit copy:\n`@dp.table`\n`def silver():`\n`    df = spark.readStream.table(\"bronze\").where(\"id IS NOT NULL\")`\n`    print(df.count())`\n`    df.write.saveAsTable(\"audit.silver_copy\")`\n`    return df`\nThe pipeline behaves unpredictably during planning.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Wrap the `count()` and `saveAsTable()` calls in a `try/except` block so that errors raised during pipeline planning are ignored."
+   },
+   {
+    "k": "B",
+    "t": "Change the decorator to `@dp.temporary_view` so that side effects run only once."
+   },
+   {
+    "k": "C",
+    "t": "Keep only the transformation and `return df` in the function, and define the audit copy as a separate dataset."
+   },
+   {
+    "k": "D",
+    "t": "Switch the pipeline to continuous mode so the function is evaluated a single time."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: side effect trong hàm định nghĩa dataset, lỗi lúc planning.\n- Pipeline đánh giá source code nhiều lần; hàm dataset chỉ được return DataFrame.\n- Docs liệt kê `count()`, `saveAsTable()` trong các thao tác không bao giờ dùng trong pipeline code.",
+  "wrong": {
+   "A": "Che lỗi không bỏ được side effect; audit copy vẫn bị ghi nhiều lần.",
+   "B": "Temporary view vẫn được đánh giá nhiều lần, cùng ràng buộc.",
+   "D": "Pipeline mode không đổi cách source code được đánh giá."
+  },
+  "refs": [
+   {
+    "label": "Lakeflow pipelines Python reference",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+   }
+  ]
+ },
+ {
+  "id": "pip-06",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A silver streaming table `customers` is maintained by AUTO CDC with SCD Type 1, so rows are updated and deleted. A gold dataset must show lifetime revenue per customer segment, must stay correct after customer updates and deletes, and is refreshed hourly for dashboards. The pipeline runs on serverless compute and cost must stay low.\nWhich gold dataset should the engineer define?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A streaming table that reads `STREAM(customers)` and aggregates by segment."
+   },
+   {
+    "k": "B",
+    "t": "A streaming table that reads `customers` with `skipChangeCommits` enabled."
+   },
+   {
+    "k": "C",
+    "t": "A temporary view that aggregates `customers` by segment for the dashboards."
+   },
+   {
+    "k": "D",
+    "t": "A materialized view that aggregates `customers` by segment."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: nguồn có update và delete, kết quả phải luôn đúng, refresh theo lịch, serverless.\n- Materialized view luôn đúng với nguồn tại lúc refresh và được incremental refresh trên serverless.",
+  "wrong": {
+   "A": "Streaming table chỉ xử lý append; update và delete ở nguồn làm stream lỗi hoặc không được phản ánh.",
+   "B": "`skipChangeCommits` bỏ qua update và delete nên aggregate sai.",
+   "C": "Temporary view không publish ra catalog nên dashboard ngoài pipeline không đọc được."
+  },
+  "refs": [
+   {
+    "label": "Pipeline concepts",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+   },
+   {
+    "label": "Incremental refresh for materialized views",
+    "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+   }
+  ]
+ },
+ {
+  "id": "pip-07",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A pipeline ingests clickstream events from a Kafka topic with a 3-day retention period. The events are append-only, volume is high, and downstream silver tables need the data within minutes. A team member proposes a materialized view over the Kafka source because it is always correct.\nWhich dataset type should the engineer choose for the ingestion step, and why?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A materialized view, because it reprocesses all available Kafka data on every refresh and therefore never misses late or out-of-order events."
+   },
+   {
+    "k": "B",
+    "t": "A materialized view with `REFRESH POLICY INCREMENTAL`, because it then behaves exactly like a streaming table for append-only data."
+   },
+   {
+    "k": "C",
+    "t": "A temporary view, because it avoids storage costs for high-volume data."
+   },
+   {
+    "k": "D",
+    "t": "A streaming table, because each record is processed once and a full recompute would lose data older than the Kafka retention."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: Kafka giữ 3 ngày, append-only, latency vài phút.\n- Docs: không dùng materialized view cho nguồn không giữ history như Kafka; dùng streaming table.",
+  "wrong": {
+   "A": "Full recompute đọc lại Kafka chỉ còn 3 ngày, mất data cũ.",
+   "B": "Materialized view vẫn có thể full recompute, không đảm bảo xử lý mỗi record đúng một lần.",
+   "C": "View không persist; mỗi lần đọc lại phụ thuộc retention của Kafka."
+  },
+  "refs": [
+   {
+    "label": "Incremental refresh for materialized views",
+    "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+   },
+   {
+    "label": "Pipeline concepts",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+   }
+  ]
+ },
+ {
+  "id": "pip-08",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.6",
+  "source": "original",
+  "select": 2,
+  "stem": "A data engineer reviews a streaming table `silver_orders` that joins a stream of orders with a static `dim_products` table. Product names changed last week, and the engineer also changed the query to apply `UPPER()` to a column.\nWhich two statements describe the behavior of `silver_orders`? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Rows written before the query change keep the old values until a full refresh."
+   },
+   {
+    "k": "B",
+    "t": "Existing rows are automatically recomputed with `UPPER()` on the next update."
+   },
+   {
+    "k": "C",
+    "t": "Rows already joined keep the old product names because streaming table joins do not recompute when the dimension changes."
+   },
+   {
+    "k": "D",
+    "t": "The table can be updated by a second pipeline that owns the product logic."
+   },
+   {
+    "k": "E",
+    "t": "The table can be the source of a shallow clone for testing."
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Streaming table xử lý mỗi row một lần; đổi query chỉ áp cho row mới, row cũ cần full refresh.\n- Join trong streaming table không recompute khi dimension đổi; cần kết quả luôn đúng thì dùng materialized view.",
+  "wrong": {
+   "B": "Không có recompute tự động; cần full refresh.",
+   "D": "Streaming table chỉ do một pipeline sở hữu và cập nhật.",
+   "E": "Streaming table không hỗ trợ CLONE."
+  },
+  "refs": [
+   {
+    "label": "Streaming tables",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+   }
+  ]
+ },
+ {
+  "id": "pip-09",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow pipeline on classic compute defines a materialized view `gold_sales` over large Delta tables. Every update recomputes the full result and the job is expensive. The query uses only `GROUP BY` and inner joins, which support incremental refresh.\nWhat change will allow incremental refresh?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Configure the pipeline to use serverless compute."
+   },
+   {
+    "k": "B",
+    "t": "Switch the pipeline to continuous mode."
+   },
+   {
+    "k": "C",
+    "t": "Enable `delta.enableChangeDataFeed` on all source tables."
+   },
+   {
+    "k": "D",
+    "t": "Run `REFRESH MATERIALIZED VIEW gold_sales FULL` once to initialize incremental state."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: classic compute, luôn full recompute dù query hỗ trợ incremental.\n- Chỉ materialized view cập nhật bằng serverless pipeline mới được incremental refresh.",
+  "wrong": {
+   "B": "Pipeline mode không đổi cách refresh materialized view.",
+   "C": "Docs nói không cần bật change data feed cũ trên bảng nguồn.",
+   "D": "Full refresh luôn tính lại toàn bộ và reset checkpoint; không bật incremental."
+  },
+  "refs": [
+   {
+    "label": "Incremental refresh for materialized views",
+    "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+   }
+  ]
+ },
+ {
+  "id": "pip-10",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A SQL analyst works only in a Databricks SQL warehouse and wants a pre-computed summary table that refreshes every hour. The analyst does not want to create or manage a pipeline, a notebook, or a job.\nWhat is the simplest solution?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Create a standard view with `CREATE VIEW` and query it from the dashboard."
+   },
+   {
+    "k": "B",
+    "t": "Create a Lakeflow pipeline in continuous mode that defines the summary as a streaming table."
+   },
+   {
+    "k": "C",
+    "t": "Create a standalone materialized view with `SCHEDULE EVERY 1 HOUR`."
+   },
+   {
+    "k": "D",
+    "t": "Write a Structured Streaming notebook with `trigger(processingTime='1 hour')` and schedule it in Lakeflow Jobs."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: chỉ dùng SQL warehouse, refresh hàng giờ, không quản lý pipeline.\n- Standalone materialized view: Databricks tạo pipeline ẩn; lịch đặt bằng `SCHEDULE` hoặc `TRIGGER ON UPDATE`.",
+  "wrong": {
+   "A": "View thường tính lại mỗi lần query, không pre-computed.",
+   "B": "Phải tạo và quản lý pipeline; continuous mode tốn compute cho nhu cầu hàng giờ.",
+   "D": "Phải viết và quản lý notebook, job; trái yêu cầu."
+  },
+  "refs": [
+   {
+    "label": "Standalone pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/standalone-pipelines"
+   },
+   {
+    "label": "CREATE MATERIALIZED VIEW",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-materialized-view"
+   }
+  ]
+ },
+ {
+  "id": "pip-11",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 1,
+  "stem": "A pipeline applies a customer CDC feed with this code:\n`dp.create_auto_cdc_flow(target=\"customers\", source=\"cdc\", keys=[\"customer_id\"], sequence_by=col(\"commit_ts\"), apply_as_deletes=expr(\"op = 'DELETE'\"), except_column_list=[\"op\", \"commit_ts\"])`\nAuditors now require the full history of every address change, with the period each version was valid.\nWhat change meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `stored_as_scd_type=2` so the target keeps versions with `__START_AT` and `__END_AT`."
+   },
+   {
+    "k": "B",
+    "t": "Add `apply_as_truncates=expr(\"op = 'TRUNCATE'\")` so old versions are preserved."
+   },
+   {
+    "k": "C",
+    "t": "Remove `except_column_list` so `commit_ts` is stored in the target."
+   },
+   {
+    "k": "D",
+    "t": "Replace the flow with `foreachBatch` and a hand-written `MERGE` that inserts a row per change."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: cần history mọi thay đổi và khoảng thời gian hiệu lực.\n- `stored_as_scd_type` mặc định là 1; Type 2 tạo version mới với `__START_AT`, `__END_AT`.",
+  "wrong": {
+   "B": "Truncate xoá toàn bảng và chỉ hỗ trợ SCD Type 1.",
+   "C": "Lưu `commit_ts` không tạo history; Type 1 vẫn ghi đè.",
+   "D": "Làm được nhưng tốn code và phải tự xử lý event sai thứ tự; trái mục tiêu ít code."
+  },
+  "refs": [
+   {
+    "label": "create_auto_cdc_flow",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+   },
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   }
+  ]
+ },
+ {
+  "id": "pip-12",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 1,
+  "stem": "An AUTO CDC flow writes to an SCD Type 1 table keyed on `user_id` and sequenced by `seq`. For user 7 the pipeline receives these events in this arrival order: INSERT city Hanoi (seq 1), UPDATE city Hue (seq 4), UPDATE city Danang (seq 3).\nWhat does the target contain for user 7 after the update completes?",
+  "options": [
+   {
+    "k": "A",
+    "t": "One row with city Danang, because it arrived last."
+   },
+   {
+    "k": "B",
+    "t": "The update fails because events arrived out of order."
+   },
+   {
+    "k": "C",
+    "t": "Two rows, Hue and Danang, because the late event creates a new version."
+   },
+   {
+    "k": "D",
+    "t": "One row with city Hue, because it has the highest sequence value."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- AUTO CDC áp event theo `SEQUENCE BY`, không theo thứ tự tới.\n- Event có sequence cũ hơn state đã áp (seq 3 < 4) bị bỏ; SCD Type 1 chỉ giữ một row.",
+  "wrong": {
+   "A": "Thứ tự tới không quyết định; sequence quyết định.",
+   "B": "AUTO CDC được thiết kế cho event sai thứ tự; không fail.",
+   "C": "SCD Type 1 không giữ version; chỉ Type 2 mới chèn version."
+  },
+  "refs": [
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   }
+  ]
+ },
+ {
+  "id": "pip-13",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 2,
+  "stem": "A `customers_history` table uses AUTO CDC with SCD Type 2. New versions must be created only when `address` or `tier` changes; changes to `last_login` must update the current version in place. Source rows with `op = 'DELETE'` must end the customer's current version.\nWhich two clauses should the engineer add? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "`TRACK HISTORY ON (address, tier)`"
+   },
+   {
+    "k": "B",
+    "t": "`APPLY AS TRUNCATE WHEN op = 'DELETE'`"
+   },
+   {
+    "k": "C",
+    "t": "`COLUMNS * EXCEPT (last_login)`"
+   },
+   {
+    "k": "D",
+    "t": "`IGNORE NULL UPDATES`"
+   },
+   {
+    "k": "E",
+    "t": "`APPLY AS DELETE WHEN op = 'DELETE'`"
+   }
+  ],
+  "answer": [
+   "A",
+   "E"
+  ],
+  "explain": "- `TRACK HISTORY ON` chỉ cho các cột liệt kê sinh version mới; cột khác cập nhật version hiện tại.\n- `APPLY AS DELETE WHEN` xác định event delete.",
+  "wrong": {
+   "B": "Truncate xoá toàn bảng và không hỗ trợ SCD Type 2.",
+   "C": "Bỏ hẳn cột `last_login` khỏi target thay vì cập nhật nó.",
+   "D": "Dùng cho partial update, không điều khiển history."
+  },
+  "refs": [
+   {
+    "label": "AUTO CDC INTO (pipelines)",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+   },
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   }
+  ]
+ },
+ {
+  "id": "pip-14",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 1,
+  "stem": "A legacy ERP system cannot emit change data. Every night it exports a full snapshot of the `products` table to cloud storage. The business needs an SCD Type 2 dimension that records inserts, updates, and deletes between nights, with minimal custom code.\nWhich approach should the data engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`AUTO CDC INTO` with `SEQUENCE BY` the export date, reading each snapshot as a stream."
+   },
+   {
+    "k": "B",
+    "t": "`AUTO CDC ... FROM SNAPSHOT` (`create_auto_cdc_from_snapshot_flow`) with `STORED AS SCD TYPE 2`."
+   },
+   {
+    "k": "C",
+    "t": "A materialized view over the latest snapshot with a nightly full refresh."
+   },
+   {
+    "k": "D",
+    "t": "Enable change data feed on a Delta table that is reloaded with `INSERT OVERWRITE` each night, and stream the change feed into the dimension."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: không có CDC, chỉ có full snapshot định kỳ.\n- AUTO CDC FROM SNAPSHOT so sánh các snapshot theo thứ tự để suy ra insert, update, delete, rồi áp SCD Type 1 hoặc 2.",
+  "wrong": {
+   "A": "Snapshot không có cột operation; row bị xoá chỉ vắng mặt nên AUTO CDC thường không thấy delete.",
+   "C": "Materialized view chỉ có trạng thái mới nhất, không có history.",
+   "D": "Cần tự viết logic so sánh; không phải cách ít code nhất."
+  },
+  "refs": [
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   },
+   {
+    "label": "CREATE FLOW (pipelines)",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow"
+   }
+  ]
+ },
+ {
+  "id": "pip-15",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow pipeline maintains `orders_current` with AUTO CDC SCD Type 1. A second team wants to publish every insert, update, and delete applied to `orders_current` to a Kafka topic in near real time. A plain `spark.readStream.table(\"orders_current\")` fails because the table receives updates and deletes.\nWhat should the second team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Read the table with `skipChangeCommits` set to `true`."
+   },
+   {
+    "k": "B",
+    "t": "Read the change data feed of the AUTO CDC target table."
+   },
+   {
+    "k": "C",
+    "t": "Create a materialized view over `orders_current` and stream from it."
+   },
+   {
+    "k": "D",
+    "t": "Add a second AUTO CDC flow from `orders_current` into a Kafka sink."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: cần mọi insert, update, delete từ target AUTO CDC dưới dạng stream.\n- Docs: muốn stream từ target AUTO CDC thì đọc change feed của nó.",
+  "wrong": {
+   "A": "`skipChangeCommits` bỏ qua update và delete, chỉ còn append.",
+   "C": "Materialized view là batch target, không phải nguồn stream thay đổi.",
+   "D": "AUTO CDC flow chỉ target streaming table, không target sink."
+  },
+  "refs": [
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   },
+   {
+    "label": "Delta table streaming reads and writes",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake"
+   }
+  ]
+ },
+ {
+  "id": "pip-16",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 1,
+  "stem": "A CDC source sometimes emits several changes for the same key with the same `commit_ts` value. The tie is broken by a monotonically increasing `lsn` column. The engineer needs deterministic results in an AUTO CDC flow.\nWhich `SEQUENCE BY` setting should the engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`SEQUENCE BY commit_ts` and add `ORDER BY lsn` in the source view."
+   },
+   {
+    "k": "B",
+    "t": "`SEQUENCE BY lsn` with `KEYS (customer_id, commit_ts)`"
+   },
+   {
+    "k": "C",
+    "t": "`SEQUENCE BY current_timestamp()`"
+   },
+   {
+    "k": "D",
+    "t": "`SEQUENCE BY STRUCT(commit_ts, lsn)`"
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: hoà `commit_ts`, có cột phá hoà.\n- `STRUCT` sắp theo field đầu, hoà thì xét field sau.",
+  "wrong": {
+   "A": "Thứ tự trong source view không quyết định; AUTO CDC chỉ dùng `SEQUENCE BY`.",
+   "B": "Đưa `commit_ts` vào key làm mỗi thay đổi thành row khác nhau, sai identity.",
+   "C": "Thời điểm xử lý không phản ánh thứ tự thay đổi thật ở nguồn."
+  },
+  "refs": [
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   }
+  ]
+ },
+ {
+  "id": "pip-17",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.8",
+  "source": "original",
+  "select": 2,
+  "stem": "A company wants pipeline code that runs both on Databricks and on an open-source Apache Spark cluster with `spark-pipelines run`. The design review lists features the team plans to use.\nAccording to the Databricks documentation, which two features are available in Lakeflow Pipelines but NOT in Apache Spark Declarative Pipelines? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Materialized views"
+   },
+   {
+    "k": "B",
+    "t": "AUTO CDC flows for SCD Type 1 and Type 2"
+   },
+   {
+    "k": "C",
+    "t": "Append flows into a streaming table"
+   },
+   {
+    "k": "D",
+    "t": "Data quality expectations"
+   },
+   {
+    "k": "E",
+    "t": "Temporary views"
+   }
+  ],
+  "answer": [
+   "B",
+   "D"
+  ],
+  "explain": "- Docs Databricks: AUTO CDC, expectations, event log, update flow, foreachBatch sink, continuous mode chỉ có trong Lakeflow Pipelines.\n- Streaming table, materialized view, temporary view, append flow có ở cả hai.",
+  "wrong": {
+   "A": "Có trong SDP (`@dp.materialized_view`).",
+   "C": "Có trong SDP (`@dp.append_flow`, `CREATE FLOW`).",
+   "E": "Có trong SDP (`@dp.temporary_view`)."
+  },
+  "refs": [
+   {
+    "label": "Apache Spark Declarative Pipelines (Databricks docs)",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines"
+   },
+   {
+    "label": "Lakeflow pipelines Python reference",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+   }
+  ]
+ },
+ {
+  "id": "pip-18",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.8",
+  "source": "original",
+  "select": 1,
+  "stem": "A team runs 15 Structured Streaming notebooks as tasks in one Lakeflow Job. Each notebook writes a table that later notebooks read. Engineers spend time wiring task dependencies, managing checkpoint paths, and writing retry logic. Management asks for the option with the LEAST operational overhead while keeping incremental processing.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Combine the 15 queries into a single notebook task that shares one checkpoint location to simplify recovery."
+   },
+   {
+    "k": "B",
+    "t": "Rewrite the logic as streaming tables and materialized views in a Lakeflow pipeline."
+   },
+   {
+    "k": "C",
+    "t": "Keep the job and switch every query to the Spark continuous processing trigger for lower latency."
+   },
+   {
+    "k": "D",
+    "t": "Keep the job and add `foreachBatch` to each query to control commits manually."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: nhiều bảng phụ thuộc nhau, tự nối dependency, checkpoint, retry; \"LEAST operational overhead\".\n- Pipeline tự suy ra DAG, quản lý checkpoint, retry từ task tới flow tới pipeline.",
+  "wrong": {
+   "A": "Mỗi query phải có checkpoint riêng; dùng chung là sai.",
+   "C": "Databricks không hỗ trợ continuous processing của Spark; dùng real-time mode cho low latency.",
+   "D": "Thêm code và tự lo idempotency; tăng overhead."
+  },
+  "refs": [
+   {
+    "label": "Pipeline concepts",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+   },
+   {
+    "label": "Procedural vs. declarative data processing",
+    "url": "https://docs.databricks.com/aws/en/data-engineering/procedural-vs-declarative"
+   },
+   {
+    "label": "Structured Streaming checkpoints",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+   }
+  ]
+ },
+ {
+  "id": "pip-19",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.8",
+  "source": "original",
+  "select": 1,
+  "stem": "A data engineer moves a Structured Streaming job to serverless compute in Lakeflow Jobs. The query uses `.trigger(processingTime='1 minute')` and fails to start. The business needs data refreshed roughly every minute with low operational effort on serverless.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Keep the serverless job and change the trigger to `continuous='1 minute'`."
+   },
+   {
+    "k": "B",
+    "t": "Move the job to a SQL warehouse."
+   },
+   {
+    "k": "C",
+    "t": "Switch to `Trigger.Once` and call the query repeatedly in a `while` loop inside a single task."
+   },
+   {
+    "k": "D",
+    "t": "Run the logic in a serverless Lakeflow pipeline in continuous mode."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: serverless job chỉ hỗ trợ `AvailableNow` và `Once`.\n- Docs: muốn streaming liên tục trên serverless thì dùng serverless pipeline ở continuous mode.",
+  "wrong": {
+   "A": "Continuous processing của Spark không được Databricks hỗ trợ và không chạy trên serverless job.",
+   "B": "SQL warehouse chạy SQL, không chạy notebook Python dùng Structured Streaming.",
+   "C": "`Trigger.Once` deprecated; vòng lặp tự viết tăng effort."
+  },
+  "refs": [
+   {
+    "label": "Trigger intervals",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+   },
+   {
+    "label": "Triggered vs. continuous pipeline mode",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/pipeline-mode"
+   }
+  ]
+ },
+ {
+  "id": "pip-20",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 1,
+  "stem": "A streaming query computes per-store totals and writes them to a Unity Catalog managed table. The engineer sets `.outputMode(\"update\")` so that only changed aggregates are written, but the query fails against the Delta sink.\nHow should the engineer get update-like behavior on the Delta table?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Use `foreachBatch` and run a `MERGE INTO` of each micro-batch into the target table."
+   },
+   {
+    "k": "B",
+    "t": "Use `.outputMode(\"complete\")` so only changed rows are written."
+   },
+   {
+    "k": "C",
+    "t": "Remove the watermark from the aggregation so that the Delta sink accepts update output mode."
+   },
+   {
+    "k": "D",
+    "t": "Write the stream to a memory sink and copy the results into the managed table with a scheduled job."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: Delta sink, muốn ghi row đã đổi.\n- Delta Lake sink chỉ hỗ trợ append và complete; hành vi giống update dùng `foreachBatch` với `MERGE`.",
+  "wrong": {
+   "B": "Complete ghi lại toàn bộ kết quả mỗi trigger, không chỉ row đổi.",
+   "C": "Watermark không liên quan tới việc sink hỗ trợ output mode.",
+   "D": "Memory sink không fault tolerant và thêm một job thừa."
+  },
+  "refs": [
+   {
+    "label": "Output modes",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+   },
+   {
+    "label": "foreachBatch",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+   }
+  ]
+ },
+ {
+  "id": "pip-21",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 1,
+  "stem": "A query uses `.withWatermark(\"event_ts\", \"20 minutes\")` and a 1-hour tumbling window in append output mode. The first micro-batch contains events at 9:40 and 10:05. The next micro-batch contains one event at 10:25.\nWhat does the query write to the sink after the second micro-batch?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Both the 9:00 to 10:00 window and the 10:00 to 11:00 window."
+   },
+   {
+    "k": "B",
+    "t": "Nothing, because append mode writes only when the query stops."
+   },
+   {
+    "k": "C",
+    "t": "Only the 9:00 to 10:00 window."
+   },
+   {
+    "k": "D",
+    "t": "Only the 10:00 to 11:00 window."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Watermark = event time lớn nhất trừ 20 phút: 10:25 trừ 20 phút là 10:05.\n- Append chỉ ghi window không còn đổi: window kết thúc 10:00 đã nhỏ hơn 10:05, window 10:00 tới 11:00 vẫn có thể đổi.",
+  "wrong": {
+   "A": "Window 10:00 tới 11:00 chưa đóng nên append chưa ghi.",
+   "B": "Append ghi khi watermark vượt cuối window, không chờ query dừng.",
+   "D": "Đó là hành vi kiểu update mode; append ghi window đã đóng."
+  },
+  "refs": [
+   {
+    "label": "Output modes",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+   },
+   {
+    "label": "Watermarks",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+   }
+  ]
+ },
+ {
+  "id": "pip-22",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 2,
+  "stem": "A `foreachBatch` function writes each micro-batch to two Delta tables. After a driver failure, the restarted query re-ran the last batch and duplicated rows in both tables. The engineer must make the writes exactly-once on retry.\nWhich two actions should the engineer take? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Set `txnAppId` to a constant unique string and `txnVersion` to the batch ID on each write."
+   },
+   {
+    "k": "B",
+    "t": "Catch every exception inside the function and retry the writes in a loop."
+   },
+   {
+    "k": "C",
+    "t": "Delete the checkpoint after each failure and keep the same `txnAppId`."
+   },
+   {
+    "k": "D",
+    "t": "Let exceptions propagate so the orchestrator retries the whole batch."
+   },
+   {
+    "k": "E",
+    "t": "Use one checkpoint location shared by two separate queries, one per table."
+   }
+  ],
+  "answer": [
+   "A",
+   "D"
+  ],
+  "explain": "- `foreachBatch` chỉ đảm bảo at-least-once; Delta dùng cặp `txnAppId`, `txnVersion` để bỏ write trùng.\n- Databricks khuyên để lỗi propagate, orchestrator retry cả batch, không tự retry cục bộ.",
+  "wrong": {
+   "B": "Tự retry trong hàm có thể ghi trùng hoặc ghi dở và làm sai metrics.",
+   "C": "Checkpoint mới bắt đầu batch ID từ 0; giữ `txnAppId` cũ làm batch mới bị bỏ qua.",
+   "E": "Mỗi query phải có checkpoint riêng."
+  },
+  "refs": [
+   {
+    "label": "foreachBatch",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/foreach"
+   },
+   {
+    "label": "Delta table streaming reads and writes",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake"
+   },
+   {
+    "label": "Structured Streaming checkpoints",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+   }
+  ]
+ },
+ {
+  "id": "pip-23",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 1,
+  "stem": "A production streaming aggregation counts orders per store and runs with a checkpoint in a Unity Catalog volume. The engineer plans four separate changes before the next restart and wants to keep the existing state where possible.\nWhich change requires starting from a new checkpoint location?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Adding a filter that removes test records."
+   },
+   {
+    "k": "B",
+    "t": "Changing `maxFilesPerTrigger` from 1000 to 500."
+   },
+   {
+    "k": "C",
+    "t": "Changing the trigger from `processingTime='5 minutes'` to `availableNow=True`."
+   },
+   {
+    "k": "D",
+    "t": "Adding `region` as a second grouping key in the aggregation."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Thay đổi grouping key hay aggregate làm đổi schema state, không được phép với cùng checkpoint.\n- Filter, rate limit, trigger interval đổi được giữa hai lần chạy.",
+  "wrong": {
+   "A": "Thêm hoặc bỏ filter được phép.",
+   "B": "Đổi rate limit được phép.",
+   "C": "Đổi trigger interval giữa các lần chạy được phép với cùng checkpoint."
+  },
+  "refs": [
+   {
+    "label": "Structured Streaming checkpoints",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+   },
+   {
+    "label": "Trigger intervals",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+   }
+  ]
+ },
+ {
+  "id": "pip-24",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 1,
+  "stem": "A query left-outer-joins a stream of ad impressions with a stream of clicks on `ad_id` within a time range. Without changes, state grows until the cluster runs out of memory, and unmatched impressions are never written to the sink.\nWhich configuration should the engineer apply?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Define watermarks on both streams and keep append output mode."
+   },
+   {
+    "k": "B",
+    "t": "Switch to update output mode so unmatched rows are emitted immediately."
+   },
+   {
+    "k": "C",
+    "t": "Switch to complete output mode without watermarks."
+   },
+   {
+    "k": "D",
+    "t": "Set `spark.sql.streaming.multipleWatermarkPolicy` to `max` without defining watermarks."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Outer join stream-stream bắt buộc watermark; join chỉ hỗ trợ append mode.\n- Row không khớp được ghi với null sau khi qua ngưỡng trễ, và state cũ được dọn.",
+  "wrong": {
+   "B": "Join giữa hai stream chỉ hỗ trợ append mode.",
+   "C": "Complete không dùng cho join và không bỏ state.",
+   "D": "Policy chỉ chọn cách gộp các watermark đã khai báo; không có watermark thì không có tác dụng."
+  },
+  "refs": [
+   {
+    "label": "Watermarks",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/watermarks"
+   },
+   {
+    "label": "Output modes",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+   }
+  ]
+ },
+ {
+  "id": "pip-25",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.4",
+  "source": "original",
+  "select": 2,
+  "stem": "A Lakeflow pipeline has a streaming table `bronze_events` that reads a Kafka topic with 7-day retention and now holds two years of data. A downstream streaming table `silver_events` reads `bronze_events`. The engineer fixed a parsing bug in `silver_events` and must reprocess its full history. A teammate proposes a full refresh of the whole pipeline. The bronze history must not be lost, now or by a future mistake.\nWhich two actions should the engineer take? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Set the table property `pipelines.reset.allowed` to `false` on `bronze_events`."
+   },
+   {
+    "k": "B",
+    "t": "Start an update with `full_refresh_selection` that lists only `silver_events`."
+   },
+   {
+    "k": "C",
+    "t": "Run a full refresh of the whole pipeline, because the Kafka offsets stored in the checkpoint let `bronze_events` replay two years of events."
+   },
+   {
+    "k": "D",
+    "t": "Reset the checkpoint of the `bronze_events` flow with `reset_checkpoint_selection` so that all bronze history is read again."
+   },
+   {
+    "k": "E",
+    "t": "Convert `silver_events` to a materialized view on classic compute so that it is incrementally refreshed from bronze."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: Kafka chỉ giữ 7 ngày, bronze giữ 2 năm; full refresh streaming table xoá data rồi đọc lại nguồn.\n- `full_refresh_selection` chỉ full refresh `silver_events`; silver đọc lại toàn bộ 2 năm từ `bronze_events` là Delta table.\n- `pipelines.reset.allowed = false` chặn full refresh `bronze_events` về sau.",
+  "wrong": {
+   "C": "Full refresh xoá data bronze và chỉ đọc lại được 7 ngày còn trong Kafka; record cũ bị mất.",
+   "D": "Reset checkpoint bronze chỉ đọc lại data còn trong Kafka và không sửa lỗi ở silver.",
+   "E": "Incremental refresh của materialized view cần serverless; trên classic compute luôn full recompute."
+  },
+  "refs": [
+   {
+    "label": "Run a pipeline update",
+    "url": "https://docs.databricks.com/aws/en/ldp/updates"
+   },
+   {
+    "label": "Incremental refresh for materialized views",
+    "url": "https://docs.databricks.com/aws/en/ldp/incremental-refresh"
+   }
+  ]
+ },
+ {
+  "id": "pip-26",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.7",
+  "source": "original",
+  "select": 2,
+  "stem": "A team reviews the design of an AUTO CDC target `customers` in a Lakeflow pipeline. The change feed sometimes contains rows where the sequencing column `commit_ts` is NULL. Another engineer wants to load a one-time historical backfill from a batch query into the same target, and a third wants to add a plain append flow from a second source.\nWhich two statements about this design are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Rows with a NULL `SEQUENCE BY` value are not supported and must be fixed or filtered before the flow."
+   },
+   {
+    "k": "B",
+    "t": "The source of an AUTO CDC flow must be a streaming source, even for a `ONCE` flow."
+   },
+   {
+    "k": "C",
+    "t": "An append flow can write into `customers` as long as it uses `INSERT INTO ... BY NAME`."
+   },
+   {
+    "k": "D",
+    "t": "A NULL `commit_ts` is treated as the lowest sequence value, so those rows always lose to later events."
+   },
+   {
+    "k": "E",
+    "t": "`APPLY AS TRUNCATE WHEN` can be used to reset the SCD Type 2 history before the backfill."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Docs ghi rõ: NULL sequencing values không được hỗ trợ.\n- Nguồn AUTO CDC phải là streaming source, kể cả flow `ONCE`.\n- Target AUTO CDC chỉ nhận AUTO CDC flow khác.",
+  "wrong": {
+   "C": "Streaming table là target AUTO CDC chỉ nhận AUTO CDC flow khác, không nhận append flow.",
+   "D": "Docs không xếp NULL như giá trị nhỏ nhất; NULL không được hỗ trợ.",
+   "E": "`APPLY AS TRUNCATE WHEN` chỉ hỗ trợ SCD Type 1."
+  },
+  "refs": [
+   {
+    "label": "Change data capture and snapshots",
+    "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+   },
+   {
+    "label": "Flows in Lakeflow pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+   },
+   {
+    "label": "AUTO CDC INTO (pipelines)",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+   }
+  ]
+ },
+ {
+  "id": "pip-27",
+  "topic": "pipelines",
+  "domain": "S1",
+  "task": "1.12",
+  "source": "original",
+  "select": 1,
+  "stem": "A Structured Streaming query on Databricks Runtime 18.2 unions a Kafka stream, an Auto Loader stream and a Delta table stream, then runs a stateful aggregation. More sources will be added every quarter, and sources may be reordered during refactoring. The team must keep the aggregation state and the existing checkpoint each time.\nWhat should the engineer configure when building the query?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable `spark.sql.streaming.queryEvolution.enableSourceEvolution` and give every source a stable name with `.name()` before `.load()` or `.table()`."
+   },
+   {
+    "k": "B",
+    "t": "Always append new sources at the end of the union, because Structured Streaming matches sources to the checkpoint by their DataFrame variable names."
+   },
+   {
+    "k": "C",
+    "t": "Start a new checkpoint location for each change and rebuild the aggregation state by reading the sink table as an extra source."
+   },
+   {
+    "k": "D",
+    "t": "Set `spark.sql.streaming.multipleWatermarkPolicy` to `max` so that new sources align to the watermark already stored in the checkpoint."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Mặc định Structured Streaming nhận diện source theo vị trí trong query plan; đổi số hoặc thứ tự source cần checkpoint mới.\n- Source evolution (Databricks Runtime 18.2+) cho đặt tên source bằng `.name()`, rồi reorder và thêm source mà giữ checkpoint.",
+  "wrong": {
+   "B": "Source được nhận diện theo vị trí, không theo tên biến; thêm source vẫn làm checkpoint không tương thích nếu không bật source evolution.",
+   "C": "Checkpoint mới làm mất state; đọc lại sink không dựng lại state của aggregation.",
+   "D": "`multipleWatermarkPolicy` chọn global watermark, không liên quan tới tương thích checkpoint."
+  },
+  "refs": [
+   {
+    "label": "Structured Streaming checkpoints",
+    "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+   }
+  ]
+ }
+]

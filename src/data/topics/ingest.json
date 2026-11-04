@@ -1,0 +1,1773 @@
+{
+ "id": "ingest",
+ "title": "Ingestion, sharing & data manipulation",
+ "domain": [
+  "S2",
+  "S3"
+ ],
+ "icon": "dbx-lakeflow-connect",
+ "summary": "Câu hỏi về chọn công cụ ingest cho file, message bus, database CDC, target Delta hay Iceberg, OpenSharing, Clean Rooms, Lakehouse Federation, window function, VARIANT, AI Functions và expectations.",
+ "sections": [
+  {
+   "id": "sources",
+   "title": "Định dạng file, message bus và chọn công cụ ingest",
+   "icon": "dbx-auto-loader",
+   "task": "2.1",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "API đọc theo nguồn",
+     "columns": [
+      "Nguồn",
+      "API",
+      "Điểm cần nhớ"
+     ],
+     "rows": [
+      [
+       "Cloud storage: JSON, CSV, Parquet, Avro, ORC, XML, text",
+       "Auto Loader `cloudFiles.format`, `read_files`, `COPY INTO`",
+       "Incremental thì dùng Auto Loader; trong SQL dùng `STREAM read_files(...)` cho streaming table"
+      ],
+      [
+       "Binary: ảnh, PDF, audio",
+       "`format(\"binaryFile\")`, `read_files(..., format => 'binaryFile')`",
+       "Mỗi file một row: `path`, `modificationTime`, `length`, `content`"
+      ],
+      [
+       "Iceberg table",
+       "Managed Iceberg trong Unity Catalog, foreign Iceberg qua Lakehouse Federation",
+       "Foreign Iceberg chỉ đọc; Iceberg trên Databricks chỉ dùng file Parquet"
+      ],
+      [
+       "Kafka",
+       "`format(\"kafka\")`, `read_kafka`",
+       "`key`, `value` là binary; cast sang STRING rồi parse"
+      ],
+      [
+       "Kinesis",
+       "`format(\"kinesis\")`",
+       "`data` là binary; dùng `streamName` hoặc `streamARN`, không đổi qua lại trên query đang chạy"
+      ],
+      [
+       "Pub/Sub",
+       "`format(\"pubsub\")`, `read_pubsub`",
+       "Pub/Sub có thể giao row trùng hoặc sai thứ tự; code phải tự dedup"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Auto Loader options",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+      },
+      {
+       "label": "read_files table-valued function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files"
+      },
+      {
+       "label": "Read binary files",
+       "url": "https://docs.databricks.com/aws/en/query/formats/binary"
+      },
+      {
+       "label": "Connect to Apache Kafka",
+       "url": "https://docs.databricks.com/aws/en/connect/streaming/kafka"
+      },
+      {
+       "label": "Connect to Amazon Kinesis",
+       "url": "https://docs.databricks.com/aws/en/connect/streaming/kinesis"
+      },
+      {
+       "label": "Subscribe to Google Pub/Sub",
+       "url": "https://docs.databricks.com/aws/en/connect/streaming/pub-sub"
+      },
+      {
+       "label": "What is Apache Iceberg in Databricks?",
+       "url": "https://docs.databricks.com/aws/en/iceberg/"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn công cụ ingest theo nguồn",
+     "rows": [
+      {
+       "says": "CDC from SQL Server, MySQL or PostgreSQL with the LEAST operational overhead",
+       "pick": "Lakeflow Connect database connector",
+       "why": "Managed: gateway, CDC, retry, schema evolution. Docs khuyên bắt đầu ở tầng managed nhất.",
+       "src": {
+        "label": "What is Lakeflow Connect?",
+        "url": "https://docs.databricks.com/aws/en/ingestion/overview"
+       }
+      },
+      {
+       "says": "Salesforce, Workday or ServiceNow data, no custom code",
+       "pick": "Lakeflow Connect SaaS connector",
+       "why": "Connector lo authentication, API change và incremental cursor theo từng nguồn.",
+       "src": {
+        "label": "Lakeflow Connect connector concepts",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/"
+       }
+      },
+      {
+       "says": "Files arrive continuously in S3 or a Unity Catalog volume",
+       "pick": "Auto Loader vào streaming table",
+       "why": "Mỗi file xử lý đúng một lần, schema inference và evolution có sẵn.",
+       "src": {
+        "label": "Auto Loader options",
+        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+       }
+      },
+      {
+       "says": "Kafka topic, custom parsing or full control of offsets",
+       "pick": "Structured Streaming hoặc `read_kafka` trong Lakeflow pipeline",
+       "why": "Managed Kafka connector của Lakeflow Connect đang Beta; tự code khi cần kiểm soát chi tiết.",
+       "src": {
+        "label": "Lakeflow Connect Kafka connector",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka"
+       }
+      },
+      {
+       "says": "Kinesis or Google Pub/Sub stream",
+       "pick": "Structured Streaming hoặc Lakeflow pipeline",
+       "why": "Lakeflow Connect chưa có managed connector cho Kinesis và Pub/Sub.",
+       "src": {
+        "label": "Lakeflow Connect streaming connectors",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview"
+       }
+      },
+      {
+       "says": "Database without CDC enabled, table has an updated_at column",
+       "pick": "Lakeflow Connect query-based connector",
+       "why": "Đọc theo cursor column, không cần gateway hay staging volume; không bắt từng trạng thái trung gian.",
+       "src": {
+        "label": "Query-based connectors",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/query-based-overview"
+       }
+      },
+      {
+       "says": "Query external data in place without copying it",
+       "pick": "Lakehouse Federation",
+       "why": "Foreign catalog chỉ đọc, query pushdown xuống nguồn; không có pipeline ingest.",
+       "src": {
+        "label": "What is query federation?",
+        "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Delta và Iceberg không phải file format",
+     "md": "- `cloudFiles.format` chỉ nhận avro, binaryFile, csv, json, orc, parquet, text, xml\n- Option chọn `cloudFiles.format = delta` là distractor\n- Delta table nguồn đọc bằng `readStream.table()`; Iceberg đọc qua Unity Catalog",
+     "src": [
+      {
+       "label": "Auto Loader options",
+       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+      },
+      {
+       "label": "What is Apache Iceberg in Databricks?",
+       "url": "https://docs.databricks.com/aws/en/iceberg/"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Streaming connector mới của Lakeflow Connect",
+     "md": "- Managed Kafka connector (Beta) và RabbitMQ ghi thẳng vào streaming table trên serverless\n- Credential nằm trong Unity Catalog connection, cần `USE CONNECTION` để tạo pipeline",
+     "src": [
+      {
+       "label": "Lakeflow Connect streaming connectors",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview"
+      },
+      {
+       "label": "Lakeflow Connect Kafka connector",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cdc-targets",
+   "title": "CDC pipeline với target Delta hoặc Iceberg",
+   "icon": "dbx-spark-declarative-pipelines",
+   "task": "2.2",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Nguồn thay đổi và API phù hợp",
+     "columns": [
+      "Nguồn thay đổi",
+      "API trong Lakeflow Pipelines",
+      "Ghi chú"
+     ],
+     "rows": [
+      [
+       "Feed change record có key, cột thứ tự, cột operation",
+       "AUTO CDC",
+       "Xử lý event sai thứ tự theo `SEQUENCE BY`; SCD Type 1 hoặc 2"
+      ],
+      [
+       "Chỉ có snapshot định kỳ",
+       "AUTO CDC FROM SNAPSHOT",
+       "So sánh snapshot liên tiếp; đọc snapshot từ Delta table, file hoặc JDBC"
+      ],
+      [
+       "Delta hoặc Iceberg v3 table trong Unity Catalog",
+       "`readChangeFeed` rồi AUTO CDC",
+       "Change data feed có `_change_type`, `_commit_version`"
+      ],
+      [
+       "SQL Server, MySQL, PostgreSQL",
+       "Lakeflow Connect database connector",
+       "Connector tự áp change; chọn `scd_type` trong ingestion spec"
+      ]
+     ],
+     "src": [
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      },
+      {
+       "label": "Use change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+      },
+      {
+       "label": "Managed database connectors",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Chọn format cho target",
+     "columns": [
+      "Target",
+      "Cách cấu hình",
+      "Reader bên ngoài"
+     ],
+     "rows": [
+      [
+       "Streaming table Delta (mặc định)",
+       "`CREATE OR REFRESH STREAMING TABLE` rồi flow AUTO CDC",
+       "Delta client 4.0+ qua Unity Catalog API, khi bật external metadata"
+      ],
+      [
+       "Streaming table đọc được như Iceberg",
+       "Thêm `pipelines.externalMetadata.enabled` và UniForm Iceberg V3 properties",
+       "Iceberg v3 client qua Iceberg REST Catalog"
+      ],
+      [
+       "Materialized view cho Iceberg reader",
+       "`CREATE OR REFRESH MATERIALIZED VIEW ... USING ICEBERG`",
+       "Chỉ đọc, không ghi"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Enable external data access to streaming tables and materialized views",
+       "url": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines"
+      },
+      {
+       "label": "What is Apache Iceberg in Databricks?",
+       "url": "https://docs.databricks.com/aws/en/iceberg/"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "AUTO CDC vào streaming table mà Iceberg client đọc được",
+     "lang": "text",
+     "code": "CREATE OR REFRESH STREAMING TABLE customers\nTBLPROPERTIES (\n  'pipelines.externalMetadata.enabled' = 'true',\n  'delta.columnMapping.mode' = 'name',\n  'delta.enableRowTracking' = 'true',\n  'delta.enableIcebergCompatV3' = 'true',\n  'delta.universalFormat.enabledFormats' = 'iceberg');\n\nCREATE FLOW customers_cdc AS AUTO CDC INTO customers\nFROM STREAM(bronze_customers_cdc)\nKEYS (customer_id)\nAPPLY AS DELETE WHEN operation = 'DELETE'\nSEQUENCE BY event_ts\nCOLUMNS * EXCEPT (operation, event_ts)\nSTORED AS SCD TYPE 1;",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Bật external metadata; cần Databricks Runtime 17.3 trở lên và default publishing mode."
+      },
+      {
+       "line": 4,
+       "md": "Column mapping bắt buộc cho Iceberg; row tracking cho Iceberg read."
+      },
+      {
+       "line": 10,
+       "md": "Cơ chế AUTO CDC xem chương Lakeflow Pipelines, streaming & CDC."
+      }
+     ],
+     "src": [
+      {
+       "label": "Enable external data access to streaming tables and materialized views",
+       "url": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines"
+      },
+      {
+       "label": "The AUTO CDC APIs",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Iceberg reader cần quyền riêng",
+     "md": "- Principal đọc từ bên ngoài cần `EXTERNAL USE SCHEMA` trên schema và `SELECT` trên table\n- Docs chỉ ghi `USING ICEBERG` cho materialized view; streaming table dùng TBLPROPERTIES\n- Metadata cũ thì chạy `REPAIR TABLE ... SYNC METADATA`",
+     "src": [
+      {
+       "label": "Enable external data access to streaming tables and materialized views",
+       "url": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Automatic change data feed không cần bật từng table",
+     "md": "- Tính change lúc đọc từ row tracking (Delta) hoặc row lineage (Iceberg v3)\n- Không cần bật CDF cho từng table; cần Databricks Runtime 19 trở lên và table trong Unity Catalog",
+     "src": [
+      {
+       "label": "Use change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lfc-db",
+   "title": "Lakeflow Connect: ingest CDC từ SQL Server, MySQL, PostgreSQL",
+   "icon": "dbx-lakeflow-connect",
+   "task": "2.3",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Database connector gồm gateway, staging và ingestion pipeline",
+     "caption": "Gateway chạy liên tục để không mất change log; ingestion pipeline chạy theo lịch.",
+     "dir": "DOWN",
+     "nodes": [
+      {
+       "id": "db",
+       "icon": "database",
+       "label": "SQL Server",
+       "sub": "CT, CDC, binlog, WAL",
+       "info": "- SQL Server: change tracking (cần primary key) hoặc CDC\n- MySQL: binlog format ROW, row image FULL\n- PostgreSQL: logical replication, publication, replication slot"
+      },
+      {
+       "id": "conn",
+       "icon": "key",
+       "label": "UC connection",
+       "sub": "credential nguồn",
+       "info": "- Securable object trong Unity Catalog giữ credential của replication user\n- Pipeline không chứa password"
+      },
+      {
+       "id": "gw",
+       "icon": "dbx-lakeflow-connect",
+       "label": "Ingestion gateway",
+       "sub": "classic, continuous",
+       "info": "- Lấy snapshot, change log, metadata\n- Chạy liên tục trên classic compute để đọc change trước khi nguồn truncate log\n- Ghi vào staging volume (UC volume, tự xoá sau 30 ngày)\n- Tính tiền cả khi ingestion pipeline idle"
+      },
+      {
+       "id": "pipe",
+       "icon": "dbx-spark-declarative-pipelines",
+       "label": "Ingestion pipeline",
+       "sub": "ghi streaming table",
+       "info": "- Áp change từ staging vào streaming table (Delta) theo `scd_type`\n- Mỗi schedule sinh một Lakeflow job"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "conn",
+       "to": "gw",
+       "label": "authenticate",
+       "style": "dashed",
+       "tone": "backup"
+      },
+      {
+       "id": "e2",
+       "from": "db",
+       "to": "gw",
+       "label": "snapshot + change",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e3",
+       "from": "gw",
+       "to": "pipe",
+       "label": "staging volume",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Gateway đọc liên tục"
+      },
+      {
+       "style": "solid",
+       "tone": "primary",
+       "label": "Pipeline đọc staging theo lịch"
+      },
+      {
+       "style": "dashed",
+       "tone": "backup",
+       "label": "Credential từ connection"
+      }
+     ],
+     "steps": [
+      {
+       "title": "1. Connection",
+       "md": "- Admin tạo Unity Catalog connection với credential của replication user",
+       "hl": [
+        "conn",
+        "e1"
+       ]
+      },
+      {
+       "title": "2. Gateway",
+       "md": "- Snapshot lần đầu, sau đó đọc change log liên tục\n- Dừng gateway có thể mất change và buộc full refresh",
+       "hl": [
+        "db",
+        "gw",
+        "e2"
+       ]
+      },
+      {
+       "title": "3. Ingestion pipeline",
+       "md": "- Serverless, chạy theo schedule\n- Áp change vào streaming table theo SCD type",
+       "hl": [
+        "e3",
+        "pipe"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Managed database connectors",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+      },
+      {
+       "label": "Lakeflow Connect connector concepts",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/"
+      },
+      {
+       "label": "YouTube Databricks, Demo: SQL Server connector from Lakeflow Connect",
+       "url": "https://www.youtube.com/watch?v=r8v31p682vw"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Gateway và ingestion pipeline chạy ở hai job",
+     "img": "https://docs.databricks.com/aws/en/assets/images/database-connector-orchestration-d6d9fba6b1a6b61da413e0d800334d40.png",
+     "alt": "Orchestration diagram for database connectors: Job 1 holds the ingestion gateway, Job 2 holds the ingestion pipeline followed by downstream tasks",
+     "caption": "Với database connector, ingestion gateway chạy trong job riêng dưới dạng continuous task. Mỗi schedule của ingestion pipeline tạo một job, có thể nối thêm task downstream.",
+     "credit": {
+      "label": "Databricks docs: Lakeflow Connect connector concepts",
+      "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Chuẩn bị nguồn theo database",
+     "columns": [
+      "Nguồn",
+      "Cơ chế bắt change",
+      "Việc phải làm ở nguồn"
+     ],
+     "rows": [
+      [
+       "SQL Server",
+       "Change tracking hoặc CDC; bật cả hai thì connector dùng change tracking",
+       "Change tracking cần primary key và nhẹ hơn; CDC không cần primary key; chỉ đọc từ primary instance"
+      ],
+      [
+       "MySQL (Public Preview)",
+       "Binary log replication",
+       "Bật binlog, `binlog_format = ROW`, `binlog_row_image = FULL`, user có quyền replication"
+      ],
+      [
+       "PostgreSQL 13+ (Public Preview)",
+       "Logical replication",
+       "`wal_level = logical` (RDS: `rds.logical_replication = 1`), publication rồi replication slot, đặt `REPLICA IDENTITY`"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Configure SQL Server for ingestion",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup"
+      },
+      {
+       "label": "Ingest data from SQL Server",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+      },
+      {
+       "label": "Configure MySQL for ingestion",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/mysql-source-setup"
+      },
+      {
+       "label": "Configure PostgreSQL for ingestion",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Tín hiệu trong đề",
+     "md": "- \"Change logs truncated\", \"gateway stopped\": change bị mất, phải full refresh table\n- \"Pipeline idle but still billed\": gateway classic compute chạy liên tục\n- \"Read replica\": SQL Server không hỗ trợ CT và CDC trên replica\n- \"Availability Group failover\" với change tracking: full refresh mọi table; CDC qua AG listener chạy tiếp được",
+     "src": [
+      {
+       "label": "Ingest data from SQL Server",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+      },
+      {
+       "label": "Managed database connectors",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+      },
+      {
+       "label": "SQL Server connector limitations",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-limits"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lfc-config",
+   "title": "Cấu hình ingestion pipeline và bẫy SCD",
+   "icon": "dbx-lakeflow-connect",
+   "task": "2.3",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Bundle: gateway và ingestion pipeline cho SQL Server",
+     "lang": "text",
+     "code": "resources:\n  pipelines:\n    gw_pipeline:\n      name: lfc-sqlserver-gateway\n      catalog: ops\n      schema: lfc_staging\n      gateway_definition:\n        connection_name: sqlserver_prod\n        gateway_storage_catalog: ops\n        gateway_storage_schema: lfc_staging\n    mi_pipeline:\n      name: lfc-sqlserver-ingestion\n      serverless: true\n      continuous: false\n      catalog: bronze\n      schema: erp\n      ingestion_definition:\n        ingestion_gateway_id: ${resources.pipelines.gw_pipeline.id}\n        table_configuration:\n          scd_type: SCD_TYPE_2\n        objects:\n          - schema:\n              source_catalog: erp_db\n              source_schema: dbo\n              destination_catalog: bronze\n              destination_schema: erp",
+     "notes": [
+      {
+       "line": 8,
+       "md": "Connection kiểu SQLSERVER trong Unity Catalog; gateway thừa hưởng credential."
+      },
+      {
+       "line": 14,
+       "md": "Ingestion pipeline không hỗ trợ continuous; trigger bằng Lakeflow job theo lịch."
+      },
+      {
+       "line": 18,
+       "md": "Ingestion pipeline trỏ tới gateway, không khai báo lại `connection_name`."
+      },
+      {
+       "line": 20,
+       "md": "SCD Type 2 cần CDC ở nguồn; change tracking chỉ cho SCD Type 1."
+      },
+      {
+       "line": 22,
+       "md": "Ingest cả schema thì table mới ở nguồn được tự thêm."
+      }
+     ],
+     "src": [
+      {
+       "label": "Ingest data from SQL Server",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Quyết định khi cấu hình",
+     "rows": [
+      {
+       "says": "Keep full history of every change in the destination",
+       "pick": "`scd_type: SCD_TYPE_2` và bật CDC ở SQL Server",
+       "why": "Destination có `__START_AT`, `__END_AT`; change tracking không hỗ trợ SCD Type 2.",
+       "src": {
+        "label": "Ingest data from SQL Server",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+       }
+      },
+      {
+       "says": "Minimize load on the source SQL Server, tables have primary keys",
+       "pick": "Change tracking",
+       "why": "Docs khuyên change tracking cho table có primary key vì nhẹ hơn CDC.",
+       "src": {
+        "label": "Configure SQL Server for ingestion",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup"
+       }
+      },
+      {
+       "says": "A source column was renamed",
+       "pick": "Full refresh table bị ảnh hưởng",
+       "why": "SQL Server connector tự xử lý column mới và column bị xoá, không xử lý rename hay đổi data type.",
+       "src": {
+        "label": "Microsoft SQL Server ingestion connector",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview"
+       }
+      },
+      {
+       "says": "Deploy the same ingestion to dev, staging and prod with CI/CD",
+       "pick": "Declarative Automation Bundles",
+       "why": "Gateway và ingestion pipeline là resource `pipelines` trong `databricks.yml`; connection tạo trước bằng CLI hoặc API.",
+       "src": {
+        "label": "Lakeflow Connect connector concepts",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/"
+       }
+      },
+      {
+       "says": "One pipeline instead of a gateway plus a pipeline for SQL Server",
+       "pick": "Integrated CDC pipeline",
+       "why": "Một pipeline gồm cả extraction và apply, tham chiếu `connection_name`, `connector_type: CDC`; mặc định triggered.",
+       "src": {
+        "label": "Create an integrated CDC pipeline for SQL Server",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-integrated-pipeline"
+       }
+      },
+      {
+       "says": "Pipeline must recover automatically from log cleanup events",
+       "pick": "Bật Auto full refresh",
+       "why": "Pipeline tự full refresh table bị ảnh hưởng; với SCD Type 2, full refresh xoá history đã có.",
+       "src": {
+        "label": "Ingest data from SQL Server",
+        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn hay bị hỏi",
+     "md": "- Tối đa 250 table mỗi SQL Server ingestion pipeline\n- Column bị xoá ở nguồn không bị drop, chỉ đánh dấu inactive\n- Row filtering qua API không hỗ trợ; column selection thì có",
+     "src": [
+      {
+       "label": "Microsoft SQL Server ingestion connector",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview"
+      },
+      {
+       "label": "Lakeflow Connect FAQ",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/faq"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "opensharing",
+   "title": "OpenSharing: D2D và Databricks-to-Open",
+   "icon": "dbx-opensharing",
+   "task": "2.4",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Provider share tới hai loại recipient",
+     "caption": "Share là securable chỉ đọc; loại recipient quyết định protocol.",
+     "dir": "RIGHT",
+     "nodes": [
+      {
+       "id": "share",
+       "icon": "dbx-opensharing",
+       "label": "Provider share",
+       "sub": "table, view, volume",
+       "info": "- Share được table, streaming table, managed Iceberg, view, materialized view, volume, model, notebook; volume, model, notebook chỉ qua D2D\n- `CREATE SHARE`, `ALTER SHARE ... ADD TABLE`\n- WITH HISTORY cho time travel, streaming read; CDF cần bật trước khi share\n- `GRANT SELECT ON SHARE ... TO RECIPIENT`; SELECT là privilege duy nhất cho recipient"
+      },
+      {
+       "id": "cat",
+       "icon": "dbx-unity-catalog",
+       "label": "Recipient có UC",
+       "sub": "catalog USING SHARE",
+       "info": "- Recipient tạo catalog từ share, rồi tự GRANT trong metastore của mình\n- Không cần token"
+      },
+      {
+       "id": "client",
+       "icon": "device-desktop-analytics",
+       "label": "Recipient khác",
+       "sub": "Spark, pandas, BI",
+       "info": "- Bearer token trong credential file, tải được một lần từ activation link\n- Hoặc OIDC federation đổi JWT lấy OAuth token ngắn hạn"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e3",
+       "from": "share",
+       "to": "cat",
+       "label": "D2D, sharing ID",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e4",
+       "from": "share",
+       "to": "client",
+       "label": "Open, token hoặc OIDC",
+       "style": "dashed",
+       "tone": "data"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Databricks-to-Databricks"
+      },
+      {
+       "style": "dashed",
+       "tone": "data",
+       "label": "Databricks-to-Open"
+      }
+     ],
+     "src": [
+      {
+       "label": "What is OpenSharing?",
+       "url": "https://docs.databricks.com/aws/en/opensharing/"
+      },
+      {
+       "label": "Create shares for OpenSharing",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
+      },
+      {
+       "label": "Manage access to OpenSharing shares",
+       "url": "https://docs.databricks.com/aws/en/opensharing/grant-access"
+      }
+     ]
+    },
+    {
+     "type": "compare",
+     "title": "Hai protocol từ workspace có Unity Catalog",
+     "items": [
+      {
+       "name": "Databricks-to-Databricks (D2D)",
+       "icon": "dbx-databricks",
+       "tag": "recipient có UC",
+       "points": [
+        "Recipient xác định bằng sharing identifier `<cloud>:<region>:<uuid>`",
+        "Không có token để quản lý",
+        "Share thêm volume, model, notebook",
+        "Recipient GRANT lại trong metastore của mình; audit ở cả hai phía",
+        "Chạy cross-cloud; trong cùng account luôn bật sẵn"
+       ]
+      },
+      {
+       "name": "Databricks-to-Open",
+       "icon": "logo-delta-sharing",
+       "tag": "mọi platform",
+       "points": [
+        "Chỉ share data dạng bảng",
+        "Bearer token trong credential file hoặc OIDC federation",
+        "Credential file tải được một lần; token tối đa một năm",
+        "Client: Spark, pandas, Power BI, Databricks"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "What is OpenSharing?",
+       "url": "https://docs.databricks.com/aws/en/opensharing/"
+      },
+      {
+       "label": "Create data recipients (Databricks-to-Databricks)",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient"
+      },
+      {
+       "label": "Create recipients with bearer tokens (Databricks-to-Open)",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient-token"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Provider và recipient trong SQL (D2D)",
+     "lang": "text",
+     "code": "-- Provider\nCREATE SHARE orders_share;\nALTER SHARE orders_share ADD TABLE sales.core.orders WITH HISTORY;\nCREATE RECIPIENT partner_x USING ID 'aws:us-west-2:19a84bee-54bc-43a2-87de-023d0ec16016';\nGRANT SELECT ON SHARE orders_share TO RECIPIENT partner_x;\n\n-- Recipient\nCREATE CATALOG partner_orders USING SHARE acme_provider.orders_share;",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Mặc định WITH HISTORY từ Databricks Runtime 16.2; cần cho time travel và streaming read."
+      },
+      {
+       "line": 4,
+       "md": "Không có `USING ID` thì recipient kiểu token cho Databricks-to-Open."
+      },
+      {
+       "line": 8,
+       "md": "Cần `CREATE CATALOG` và `USE PROVIDER`, hoặc là owner của provider object."
+      }
+     ],
+     "src": [
+      {
+       "label": "Create shares for OpenSharing",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
+      },
+      {
+       "label": "Create data recipients (Databricks-to-Databricks)",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient"
+      },
+      {
+       "label": "Read data shared using Databricks-to-Databricks OpenSharing",
+       "url": "https://docs.databricks.com/aws/en/opensharing/read-data-databricks"
+      },
+      {
+       "label": "Manage access to OpenSharing shares",
+       "url": "https://docs.databricks.com/aws/en/opensharing/grant-access"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Delta Sharing đổi tên thành OpenSharing",
+     "md": "- Databricks công bố OpenSharing ngày 10/06/2026, protocol do Linux Foundation host\n- Docs hiện chỉ dùng tên OpenSharing; tài liệu cũ và đề cũ gọi là Delta Sharing\n- Share tới Iceberg client như Snowflake, Trino đã GA",
+     "src": [
+      {
+       "label": "Databricks press release, Databricks announces OpenSharing (10/06/2026)",
+       "url": "https://www.databricks.com/company/newsroom/press-releases/databricks-announces-opensharing"
+      },
+      {
+       "label": "Databricks blog, Introducing OpenSharing (06/2026)",
+       "url": "https://www.databricks.com/blog/announcing-new-opensharing-and-marketplace-capabilities-ai-era"
+      },
+      {
+       "label": "What is OpenSharing?",
+       "url": "https://docs.databricks.com/aws/en/opensharing/"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Token cũ hết hạn 08/12/2026",
+     "md": "- Recipient token cấp trước 08/12/2025, hạn sau 08/12/2026 hoặc không hạn, tự hết hạn ngày 08/12/2026\n- Rotate token: tối đa một token active và một token đang rotate",
+     "src": [
+      {
+       "label": "Create recipients with bearer tokens (Databricks-to-Open)",
+       "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient-token"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "clean-rooms",
+   "title": "Clean Rooms cho cộng tác bảo toàn privacy",
+   "icon": "dbx-clean-rooms",
+   "task": "2.4",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Hai collaborator và central clean room",
+     "caption": "Data chỉ share tới central clean room; collaborator chỉ thấy metadata và output.",
+     "dir": "RIGHT",
+     "nodes": [
+      {
+       "id": "ta",
+       "icon": "table",
+       "label": "A: customers",
+       "sub": "metastore của A",
+       "info": "- Share bằng OpenSharing tới central clean room, kèm alias\n- B chỉ thấy tên và type của column"
+      },
+      {
+       "id": "nb",
+       "icon": "dbx-clean-rooms",
+       "label": "Central clean room",
+       "sub": "approved notebook",
+       "info": "- Notebook do một bên upload phải được bên kia approve\n- Chỉ chạy được version mới nhất\n- Chạy trên serverless compute do Databricks quản lý"
+      },
+      {
+       "id": "tb",
+       "icon": "table",
+       "label": "B: transactions",
+       "sub": "metastore của B",
+       "info": "- Không bên nào có admin privilege trong central clean room"
+      },
+      {
+       "id": "out",
+       "icon": "table-export",
+       "label": "Output table",
+       "sub": "read-only, tạm thời",
+       "info": "- Notebook sinh output table tạm thời, chỉ đọc, trong Unity Catalog metastore của collaborator"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "ta",
+       "to": "nb",
+       "label": "OpenSharing",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e2",
+       "from": "tb",
+       "to": "nb",
+       "label": "OpenSharing",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e3",
+       "from": "nb",
+       "to": "out",
+       "label": "kết quả",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Share chỉ đọc tới clean room"
+      },
+      {
+       "style": "solid",
+       "tone": "primary",
+       "label": "Output về collaborator"
+      }
+     ],
+     "src": [
+      {
+       "label": "What is Databricks Clean Rooms?",
+       "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+      },
+      {
+       "label": "YouTube Databricks, Databricks Clean Rooms Product Demo",
+       "url": "https://www.youtube.com/watch?v=WdraYJoEgqg"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Luồng hoạt động của Clean Rooms",
+     "img": "https://docs.databricks.com/aws/en/assets/images/clean-rooms-flow-output-e68cf079658e82c4fee80501d998a4ce.png",
+     "alt": "Clean Rooms flow: collaborator A creates the clean room, both collaborators share tables and volumes as live data, A adds a notebook snapshot, B runs the notebook and receives output tables",
+     "caption": "Collaborator share table, volume vào central clean room dưới dạng live data, không copy; notebook là snapshot; bên chạy notebook nhận output table. Nhãn Delta Sharing trong hình là tên cũ của OpenSharing.",
+     "credit": {
+      "label": "Databricks docs: What is Databricks Clean Rooms?",
+      "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Điều kiện và giới hạn",
+     "columns": [
+      "Mục",
+      "Giá trị"
+     ],
+     "rows": [
+      [
+       "Yêu cầu",
+       "Workspace có Unity Catalog, serverless compute, OpenSharing bật trên metastore"
+      ],
+      [
+       "Mô hình tin cậy",
+       "No-trust: mọi collaborator ngang quyền, kể cả người tạo; notebook phải được bên kia approve"
+      ],
+      [
+       "Số collaborator",
+       "Tối đa 10; sau khi tạo thì không thêm collaborator mới"
+      ],
+      [
+       "Bên kia thấy gì",
+       "Alias của asset, tên và type column, notebook (read-only), run history, output table"
+      ],
+      [
+       "Audit",
+       "System table clean room events và audit log service `clean-room`"
+      ],
+      [
+       "Ngoại lệ",
+       "Packaged clean rooms dùng mô hình provider-consumer, quyền không ngang nhau"
+      ]
+     ],
+     "src": [
+      {
+       "label": "What is Databricks Clean Rooms?",
+       "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn Clean Rooms hay OpenSharing",
+     "rows": [
+      {
+       "says": "Partners must join datasets but neither may see the other's rows",
+       "pick": "Clean Rooms",
+       "why": "Code chạy trong central clean room; collaborator chỉ thấy metadata và output đã approve.",
+       "src": {
+        "label": "What is Databricks Clean Rooms?",
+        "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+       }
+      },
+      {
+       "says": "Give a partner read-only access to a curated table",
+       "pick": "OpenSharing (D2D hoặc Open)",
+       "why": "Recipient đọc được toàn bộ row của share; không cần môi trường trung gian.",
+       "src": {
+        "label": "What is OpenSharing?",
+        "url": "https://docs.databricks.com/aws/en/opensharing/"
+       }
+      },
+      {
+       "says": "Restrict shared rows per recipient",
+       "pick": "Share dynamic view (D2D)",
+       "why": "Dynamic view lọc row và column theo recipient property.",
+       "src": {
+        "label": "What is OpenSharing?",
+        "url": "https://docs.databricks.com/aws/en/opensharing/"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "federation",
+   "title": "Lakehouse Federation với Unity Catalog",
+   "icon": "dbx-lakehouse-federation",
+   "task": "2.5",
+   "blocks": [
+    {
+     "type": "compare",
+     "title": "Hai kiểu Lakehouse Federation",
+     "items": [
+      {
+       "name": "Query federation",
+       "icon": "dbx-lakehouse-federation",
+       "tag": "JDBC pushdown",
+       "points": [
+        "Nguồn: MySQL, PostgreSQL, SQL Server, Oracle, Redshift, Snowflake, BigQuery, Teradata, Synapse",
+        "Query đẩy xuống database qua JDBC, chạy ở cả hai phía",
+        "Hợp cho ad hoc reporting, BI, proof-of-concept"
+       ]
+      },
+      {
+       "name": "Catalog federation",
+       "icon": "dbx-unity-catalog",
+       "tag": "đọc thẳng object storage",
+       "points": [
+        "Nguồn: Hive metastore, AWS Glue, Snowflake, Salesforce Data 360",
+        "Chỉ chạy trên Databricks compute, rẻ và nhanh hơn query federation",
+        "Cần thêm storage credential và external location",
+        "Hợp cho migration dần sang Unity Catalog"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Connect to external databases and catalogs",
+       "url": "https://docs.databricks.com/aws/en/query-federation/"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Catalog federation đọc thẳng storage",
+     "img": "https://docs.databricks.com/aws/en/assets/images/catalog-federation-diagram-c0bf5290cdce3262a74c6fe9d9b08985.png",
+     "alt": "Catalog federation diagram: a Databricks query is verified against file metadata from a third-party catalog, then executed in Databricks reading directly from storage",
+     "caption": "Catalog federation chỉ lấy metadata từ catalog ngoài, rồi Databricks đọc file thẳng từ storage. Query federation thì đẩy filter, aggregation xuống database nguồn.",
+     "credit": {
+      "label": "Databricks docs: What is catalog federation?",
+      "url": "https://docs.databricks.com/aws/en/query-federation/catalog-federation"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Connection, foreign catalog và quyền",
+     "lang": "text",
+     "code": "CREATE CONNECTION pg_orders TYPE postgresql\nOPTIONS (\n  host 'orders.db.internal',\n  port '5432',\n  user secret('fed', 'pg_user'),\n  password secret('fed', 'pg_password')\n);\n\nCREATE FOREIGN CATALOG orders_pg USING CONNECTION pg_orders\nOPTIONS (database 'orders');\n\nGRANT USE CATALOG ON CATALOG orders_pg TO `analysts`;\nGRANT USE SCHEMA, SELECT ON SCHEMA orders_pg.public TO `analysts`;",
+     "notes": [
+      {
+       "line": 1,
+       "md": "Cần metastore admin hoặc `CREATE CONNECTION` trên metastore."
+      },
+      {
+       "line": 5,
+       "md": "Credential lấy từ secret, không ghi plaintext."
+      },
+      {
+       "line": 9,
+       "md": "Cần `CREATE CATALOG` và là owner connection hoặc có `CREATE FOREIGN CATALOG` trên connection."
+      },
+      {
+       "line": 12,
+       "md": "User query bằng credential của connection; Unity Catalog kiểm soát ai đọc table nào."
+      }
+     ],
+     "src": [
+      {
+       "label": "What is query federation?",
+       "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+      },
+      {
+       "label": "Unity Catalog privileges and securable objects",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Privilege liên quan",
+     "columns": [
+      "Privilege",
+      "Trên",
+      "Cho phép"
+     ],
+     "rows": [
+      [
+       "`CREATE CONNECTION`",
+       "Metastore",
+       "Tạo connection lưu host và credential"
+      ],
+      [
+       "`CREATE FOREIGN CATALOG`",
+       "Connection",
+       "Tạo foreign catalog từ connection"
+      ],
+      [
+       "`USE CONNECTION`",
+       "Connection",
+       "Xem connection; cần cho `remote_query`; tạo managed ingestion pipeline từ connection"
+      ],
+      [
+       "`USE CATALOG`, `USE SCHEMA`, `SELECT`",
+       "Foreign catalog, schema, table",
+       "Đọc foreign table như table thường"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Unity Catalog privileges and securable objects",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+      },
+      {
+       "label": "What is query federation?",
+       "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+      },
+      {
+       "label": "Lakeflow Connect Kafka connector",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn của query federation",
+     "md": "- Chỉ đọc; ngoại lệ là federate Hive metastore cũ của workspace\n- Không dùng result cache và disk cache\n- Tên table và schema bị chuyển về lowercase\n- Dedicated access mode chỉ dùng được cho owner của connection",
+     "src": [
+      {
+       "label": "What is query federation?",
+       "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Chọn Federation hay Lakeflow Connect",
+     "md": "- Volume lớn, cần latency thấp, query lặp lại: Lakeflow Connect\n- Ad hoc, proof-of-concept, không muốn copy data: query federation\n- Cần materialize: `CREATE MATERIALIZED VIEW` trên foreign table",
+     "src": [
+      {
+       "label": "Connect to external databases and catalogs",
+       "url": "https://docs.databricks.com/aws/en/query-federation/"
+      },
+      {
+       "label": "What is query federation?",
+       "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "transform",
+   "title": "Window function, join và aggregation",
+   "icon": "dbx-apache-spark",
+   "task": "3.1",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Lấy bản ghi mới nhất mỗi key: SQL và PySpark",
+     "lang": "text",
+     "code": "-- SQL: QUALIFY filters on the window result\nSELECT *\nFROM bronze.orders_cdc\nQUALIFY row_number() OVER (\n  PARTITION BY order_id ORDER BY updated_at DESC) = 1;\n\n# PySpark\nfrom pyspark.sql import Window, functions as F\nw = Window.partitionBy(\"order_id\").orderBy(F.col(\"updated_at\").desc())\nlatest = (df.withColumn(\"rn\", F.row_number().over(w))\n            .filter(\"rn = 1\").drop(\"rn\"))\n\n# Running total: explicit ROWS frame\nw2 = (Window.partitionBy(\"customer_id\").orderBy(\"order_ts\")\n        .rowsBetween(Window.unboundedPreceding, Window.currentRow))\ndf.withColumn(\"running_amt\", F.sum(\"amount\").over(w2))",
+     "notes": [
+      {
+       "line": 4,
+       "md": "QUALIFY cần ít nhất một window function; không chứa aggregate function."
+      },
+      {
+       "line": 9,
+       "md": "Ranking function bắt buộc ORDER BY và không nhận window frame."
+      },
+      {
+       "line": 15,
+       "md": "Có ORDER BY mà không ghi frame thì mặc định là RANGE từ unbounded preceding tới current row."
+      }
+     ],
+     "src": [
+      {
+       "label": "QUALIFY clause",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify"
+      },
+      {
+       "label": "Window functions",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions"
+      },
+      {
+       "label": "PySpark Window (Apache Spark docs)",
+       "url": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Join và aggregation hay gặp",
+     "columns": [
+      "Cú pháp",
+      "Kết quả",
+      "Dùng khi"
+     ],
+     "rows": [
+      [
+       "`LEFT SEMI JOIN`",
+       "Row bên trái có match bên phải, chỉ cột bên trái",
+       "Lọc theo danh sách key, thay `IN (subquery)`"
+      ],
+      [
+       "`LEFT ANTI JOIN`",
+       "Row bên trái không có match",
+       "Tìm record mới chưa có ở target, orphan key"
+      ],
+      [
+       "`/*+ BROADCAST(dim) */`",
+       "Broadcast bảng có hint, bỏ qua `autoBroadcastJoinThreshold`; hint xung đột thì BROADCAST thắng MERGE, SHUFFLE_HASH",
+       "Join fact lớn với dimension nhỏ"
+      ],
+      [
+       "`GROUP BY ROLLUP (a, b)`",
+       "Subtotal theo cấp a, b và grand total",
+       "Báo cáo phân cấp"
+      ],
+      [
+       "`GROUP BY CUBE (a, b)`",
+       "Mọi tổ hợp của a, b",
+       "Pivot đa chiều"
+      ],
+      [
+       "`GROUP BY GROUPING SETS ((a), (b))`",
+       "Chỉ các tổ hợp liệt kê",
+       "Nhiều aggregate trên một lần đọc"
+      ],
+      [
+       "`GROUP BY ALL`",
+       "Group theo mọi cột không aggregate trong SELECT",
+       "Viết nhanh, ít lỗi thiếu cột"
+      ]
+     ],
+     "src": [
+      {
+       "label": "JOIN",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-join"
+      },
+      {
+       "label": "Hints",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints"
+      },
+      {
+       "label": "GROUP BY clause",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Frame mặc định làm sai running total",
+     "md": "- `ORDER BY` không kèm frame dùng RANGE: row trùng giá trị order được cộng cùng lúc\n- Cần đếm từng row thì ghi rõ `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`\n- Không có `ORDER BY` thì frame là toàn partition",
+     "src": [
+      {
+       "label": "PySpark Window (Apache Spark docs)",
+       "url": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html"
+      },
+      {
+       "label": "Window functions",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Mẫu đề dedup",
+     "md": "- \"Keep only the latest record per key\": `row_number()` + `QUALIFY` hoặc filter `rn = 1`\n- `rank()` giữ cả row hoà, không đảm bảo một row mỗi key\n- `dropDuplicates` không chọn được row mới nhất",
+     "src": [
+      {
+       "label": "QUALIFY clause",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify"
+      },
+      {
+       "label": "Window functions",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "variant",
+   "title": "VARIANT cho dữ liệu bán cấu trúc",
+   "icon": "braces",
+   "task": "3.2",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Ingest và query VARIANT",
+     "lang": "text",
+     "code": "-- Ingest: whole JSON record into one VARIANT column\nCREATE TABLE events AS\nSELECT raw:event_id::STRING AS event_id,\n       parse_json(raw) AS payload\nFROM bronze.events_json;\n\n-- Query: colon path, dot for nested, [n] for arrays\nSELECT payload:device.os::STRING          AS os,\n       payload:items[0].sku::STRING       AS first_sku,\n       payload:['zip code']::STRING       AS zip,\n       variant_get(payload, '$.amount', 'decimal(10,2)') AS amount,\n       try_variant_get(payload, '$.qty', 'int')          AS qty\nFROM events;\n\n# Auto Loader: one VARIANT column per record\nspark.readStream.format(\"cloudFiles\") \\\n  .option(\"cloudFiles.format\", \"json\") \\\n  .option(\"singleVariantColumn\", \"payload\") \\\n  .load(\"/Volumes/main/raw/events/\")",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Docs khuyên tách field hay query thành cột thường để query nhanh hơn và cluster được."
+      },
+      {
+       "line": 4,
+       "md": "`parse_json` lỗi với JSON hỏng; `try_parse_json` trả NULL."
+      },
+      {
+       "line": 8,
+       "md": "Path phân biệt hoa thường; kết quả `:` vẫn là VARIANT nên cast `::STRING`."
+      },
+      {
+       "line": 10,
+       "md": "Tên có dấu cách, dấu chấm, dấu hai chấm dùng `['...']`."
+      },
+      {
+       "line": 12,
+       "md": "`try_variant_get` trả NULL khi cast lỗi thay vì fail query."
+      },
+      {
+       "line": 18,
+       "md": "Không có schema evolution và không có `rescuedDataColumn` khi dùng `singleVariantColumn`."
+      }
+     ],
+     "src": [
+      {
+       "label": "Query variant data",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+      },
+      {
+       "label": "How is variant different than JSON strings?",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff"
+      },
+      {
+       "label": "Ingest data as semi-structured variant type",
+       "url": "https://docs.databricks.com/aws/en/ingestion/variant"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Hàm VARIANT và hàm JSON string tương ứng",
+     "columns": [
+      "VARIANT",
+      "JSON string",
+      "Ghi chú"
+     ],
+     "rows": [
+      [
+       "`parse_json`, `try_parse_json`",
+       "`from_json`",
+       "String sang VARIANT; `to_json` đổi ngược lại"
+      ],
+      [
+       "`variant_get`, `try_variant_get`",
+       "`get_json_object` + cast",
+       "Nhận path và type"
+      ],
+      [
+       "`schema_of_variant`, `schema_of_variant_agg`",
+       "`schema_of_json`, `schema_of_json_agg`",
+       "Type xung đột thì trả VARIANT"
+      ],
+      [
+       "`variant_explode`, `variant_explode_outer`",
+       "`explode`",
+       "Table-valued, đặt trong FROM với LATERAL; trả `pos`, `key`, `value`"
+      ],
+      [
+       "`is_variant_null`",
+       "`IS NULL`",
+       "Phân biệt JSON null với SQL NULL"
+      ]
+     ],
+     "src": [
+      {
+       "label": "How is variant different than JSON strings?",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff"
+      },
+      {
+       "label": "Query variant data",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Chọn cách lưu dữ liệu bán cấu trúc",
+     "columns": [
+      "Cách lưu",
+      "Hợp với",
+      "Đọc"
+     ],
+     "rows": [
+      [
+       "VARIANT",
+       "Schema đổi thường xuyên hoặc chưa biết",
+       "Encoding tối ưu, nhanh hơn JSON string"
+      ],
+      [
+       "JSON string",
+       "Giữ nguyên bản raw",
+       "Chậm nhất, parse lại cả string mỗi query"
+      ],
+      [
+       "STRUCT",
+       "Schema biết trước, cần validate khi ghi",
+       "Nhanh nhất, kém dần khi vượt vài trăm cột"
+      ],
+      [
+       "MAP, ARRAY",
+       "Khoảng 500 field, key và value có type",
+       "Cân bằng, không có statistics"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Model semi-structured data",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn của cột VARIANT",
+     "md": "- Không làm partition column, clustering key hay Z-order key\n- Không dùng trong GROUP BY, ORDER BY, DISTINCT, UNION, INTERSECT, EXCEPT\n- Không có min/max statistics cho cột VARIANT\n- Bật trên Delta table cũ bằng `delta.feature.variantType`, nâng writer protocol",
+     "src": [
+      {
+       "label": "Variant type support for Iceberg and Delta Lake",
+       "url": "https://docs.databricks.com/aws/en/tables/features/variant"
+      },
+      {
+       "label": "Query variant data",
+       "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+      },
+      {
+       "label": "YouTube Databricks, Say goodbye to messy JSON headaches with VARIANT",
+       "url": "https://www.youtube.com/watch?v=fWdxF7nL3YI"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai-functions",
+   "title": "AI Functions và ai_query trong pipeline",
+   "icon": "dbx-ai-functions",
+   "task": "3.3",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Task-specific hay ai_query",
+     "columns": [
+      "Loại",
+      "Ví dụ",
+      "Dùng khi"
+     ],
+     "rows": [
+      [
+       "Task-specific",
+       "`ai_classify`, `ai_extract`, `ai_parse_document`, `ai_analyze_sentiment`, `ai_summarize`, `ai_translate`, `ai_mask`",
+       "Việc chuẩn, không cần chọn model hay viết prompt; docs khuyên bắt đầu ở đây"
+      ],
+      [
+       "General-purpose",
+       "`ai_query(endpoint, request, ...)`",
+       "Cần prompt riêng, model cụ thể, custom model endpoint hoặc output schema riêng"
+      ],
+      [
+       "Chạy trên compute của query",
+       "`ai_forecast`, `ai_predict_class`, `ai_detect_anomalies`",
+       "Không có phí inference riêng"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Transform unstructured data using AI Functions",
+       "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "docs",
+     "title": "Chọn task-specific AI function hay ai_query",
+     "img": "https://docs.databricks.com/aws/en/assets/images/ai-function-decision-tree-bf7fdb678c63687921a43d6d73d59725.svg",
+     "alt": "Decision tree: use a task-specific AI function such as ai_parse_document, ai_extract or ai_classify when one matches the objective and quality is acceptable, otherwise use ai_query",
+     "caption": "Docs khuyên thử task-specific function như `ai_extract`, `ai_classify` trước; chỉ chuyển sang `ai_query` khi không có function khớp hoặc chất lượng chưa đạt sau vài lần thử.",
+     "credit": {
+      "label": "Databricks docs: Transform unstructured data using AI Functions",
+      "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Phân loại trong Lakeflow pipeline với output có schema",
+     "lang": "text",
+     "code": "CREATE OR REFRESH MATERIALIZED VIEW tickets_classified AS\nSELECT\n  ticket_id,\n  ai_query(\n    'system.ai.meta-llama-3-3-70b-instruct',\n    'Classify this support ticket: ' || body,\n    responseFormat => '{\"type\": \"json_schema\", \"json_schema\": {\"name\": \"t\",\n      \"schema\": {\"type\": \"object\", \"properties\": {\"category\": {\"type\": \"string\",\n      \"enum\": [\"billing\", \"bug\", \"account\"]}}}, \"strict\": true}}',\n    failOnError => false\n  ) AS result\nFROM tickets_raw;\n\n-- quick label only, no prompt engineering\nSELECT ticket_id, ai_classify(body, '[\"billing\", \"bug\", \"account\"]') AS category\nFROM tickets_raw;",
+     "notes": [
+      {
+       "line": 5,
+       "md": "Batch inference nên dùng foundation model do Databricks host, không dùng provisioned throughput."
+      },
+      {
+       "line": 7,
+       "md": "`responseFormat` ép output theo JSON schema; cần Databricks Runtime 15.4 LTS trở lên."
+      },
+      {
+       "line": 10,
+       "md": "`failOnError => false` trả STRUCT có `errorMessage`; row lỗi không làm fail cả query."
+      }
+     ],
+     "src": [
+      {
+       "label": "ai_query function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+      },
+      {
+       "label": "Deploy batch inference pipelines",
+       "url": "https://docs.databricks.com/aws/en/large-language-models/batch-inference-pipelines"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Tín hiệu trong đề",
+     "rows": [
+      {
+       "says": "Classify sentiment of reviews with minimal code, no model management",
+       "pick": "`ai_analyze_sentiment` hoặc `ai_classify`",
+       "why": "Task-specific function chạy model do Databricks quản lý, không cần endpoint hay prompt.",
+       "src": {
+        "label": "Transform unstructured data using AI Functions",
+        "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+       }
+      },
+      {
+       "says": "Call our own fine-tuned model served on Model Serving",
+       "pick": "`ai_query` với tên custom endpoint",
+       "why": "`ai_query` gọi foundation, external và custom model endpoint; definer cần `CAN QUERY` trên endpoint.",
+       "src": {
+        "label": "ai_query function",
+        "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+       }
+      },
+      {
+       "says": "A few bad rows must not fail the nightly enrichment job",
+       "pick": "`failOnError => false`",
+       "why": "Mỗi row nhận response hoặc errorMessage; lọc row lỗi ở bước sau.",
+       "src": {
+        "label": "ai_query function",
+        "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+       }
+      },
+      {
+       "says": "Enrich millions of rows as fast as possible",
+       "pick": "Gửi cả dataset trong một query",
+       "why": "AI Functions tự song song, retry và scale; không tự chia batch nhỏ.",
+       "src": {
+        "label": "Transform unstructured data using AI Functions",
+        "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Yêu cầu compute và cost",
+     "md": "- Không chạy trên Classic SQL warehouse; cần Databricks Runtime 15.4 LTS trở lên\n- Query compute luôn tính tiền; inference tính thêm qua Model Serving hoặc product `AI_FUNCTIONS`\n- Theo dõi cost trong `system.billing.usage`",
+     "src": [
+      {
+       "label": "Transform unstructured data using AI Functions",
+       "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+      },
+      {
+       "label": "ai_query function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "expectations",
+   "title": "Expectations: warn, drop, fail và quarantine",
+   "icon": "dbx-spark-declarative-pipelines",
+   "task": "3.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Ba action khi record vi phạm",
+     "columns": [
+      "Action",
+      "SQL",
+      "Python",
+      "Kết quả"
+     ],
+     "rows": [
+      [
+       "warn (mặc định)",
+       "`EXPECT (...)`",
+       "`@dp.expect`",
+       "Record lỗi vẫn ghi vào target; metric được ghi"
+      ],
+      [
+       "drop",
+       "`EXPECT (...) ON VIOLATION DROP ROW`",
+       "`@dp.expect_or_drop`",
+       "Record lỗi bị bỏ trước khi ghi; số row bị drop có trong metric"
+      ],
+      [
+       "fail",
+       "`EXPECT (...) ON VIOLATION FAIL UPDATE`",
+       "`@dp.expect_or_fail`",
+       "Update fail, transaction rollback; không có metric; sửa rồi chạy lại"
+      ],
+      [
+       "Nhóm nhiều rule",
+       "Không có",
+       "`@dp.expect_all`, `expect_all_or_drop`, `expect_all_or_fail`",
+       "Dict tên rule và constraint, dùng lại cho nhiều dataset"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Manage data quality with pipeline expectations",
+       "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "docs",
+     "title": "Warn, drop, fail với một nhóm expectation",
+     "img": "https://docs.databricks.com/aws/en/assets/images/multiple-expectations-e760f5dee94c9619be11e355f3b3dc17.png",
+     "alt": "Flow graph of an expectations group with three rules; if at least one fails the action is warn (keep record), drop (continue processing without the record) or fail flow",
+     "caption": "Một record chỉ cần fail một rule trong nhóm là bị áp action: warn vẫn giữ record, drop bỏ record nhưng flow chạy tiếp, fail dừng flow.",
+     "credit": {
+      "label": "Databricks docs: Manage data quality with pipeline expectations",
+      "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Quarantine: giữ record lỗi ở table riêng",
+     "lang": "text",
+     "code": "from pyspark import pipelines as dp\nfrom pyspark.sql.functions import expr\n\nrules = {\n  \"valid_pickup_zip\": \"pickup_zip IS NOT NULL\",\n  \"valid_dropoff_zip\": \"dropoff_zip IS NOT NULL\",\n}\nquarantine_rules = \"NOT({0})\".format(\" AND \".join(rules.values()))\n\n@dp.table(temporary=True, partition_cols=[\"is_quarantined\"])\n@dp.expect_all(rules)\ndef trips_quarantine():\n    return (spark.readStream.table(\"raw_trips\")\n            .withColumn(\"is_quarantined\", expr(quarantine_rules)))\n\n@dp.temporary_view\ndef valid_trips():\n    return spark.read.table(\"trips_quarantine\").filter(\"is_quarantined = false\")\n\n@dp.temporary_view\ndef invalid_trips():\n    return spark.read.table(\"trips_quarantine\").filter(\"is_quarantined = true\")",
+     "notes": [
+      {
+       "line": 8,
+       "md": "Một cột boolean đánh dấu record vi phạm bất kỳ rule nào."
+      },
+      {
+       "line": 11,
+       "md": "`expect_all` ở mức warn: giữ mọi row và vẫn ghi metric cho từng rule."
+      },
+      {
+       "line": 16,
+       "md": "Downstream đọc nhánh hợp lệ; nhánh lỗi đi vào table review hoặc reprocess."
+      }
+     ],
+     "src": [
+      {
+       "label": "Expectation recommendations and advanced patterns",
+       "url": "https://docs.databricks.com/aws/en/ldp/expectation-patterns"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn action theo yêu cầu",
+     "rows": [
+      {
+       "says": "Bad records must never reach the target and the pipeline must keep running",
+       "pick": "`expect_or_drop`",
+       "why": "Row lỗi bị bỏ, update vẫn chạy, số row drop có trong event log.",
+       "src": {
+        "label": "Manage data quality with pipeline expectations",
+        "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+       }
+      },
+      {
+       "says": "Any invalid record must stop the update for manual review",
+       "pick": "`expect_or_fail`",
+       "why": "Update fail và rollback atomically; error message có input record vi phạm.",
+       "src": {
+        "label": "Manage data quality with pipeline expectations",
+        "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+       }
+      },
+      {
+       "says": "Keep invalid records for later analysis without failing",
+       "pick": "Quarantine pattern",
+       "why": "Expectations ở mức warn cộng cột cờ, tách hai nhánh valid và invalid.",
+       "src": {
+        "label": "Expectation recommendations and advanced patterns",
+        "url": "https://docs.databricks.com/aws/en/ldp/expectation-patterns"
+       }
+      },
+      {
+       "says": "Track how many rows violate a rule but keep all rows",
+       "pick": "`expect` (warn)",
+       "why": "Mặc định giữ row lỗi trong target và ghi số pass, fail.",
+       "src": {
+        "label": "Manage data quality with pipeline expectations",
+        "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Constraint không được làm gì",
+     "md": "- Không gọi Python UDF, không gọi external service, không subquery tới table khác\n- Tên expectation phải duy nhất trong một dataset\n- Triggered pipeline: một flow fail không làm fail flow song song; continuous pipeline thì dừng flow và mọi flow phụ thuộc",
+     "src": [
+      {
+       "label": "Manage data quality with pipeline expectations",
+       "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Expectations trong 2026",
+     "md": "- 01/2026: lưu expectations trong Unity Catalog table để dùng chung giữa pipeline\n- 06/2026: thêm expectations cho standalone materialized view bằng `CONSTRAINT ... EXPECT`\n- 09/2026: pipeline unit test (Beta) kiểm tra expectations với mock data",
+     "src": [
+      {
+       "label": "Lakeflow pipelines release notes 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/dlt/2026"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

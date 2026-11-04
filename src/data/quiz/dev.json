@@ -1,0 +1,1145 @@
+[
+ {
+  "id": "dev-01",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A data engineering team maintains shared transformation logic used by six Lakeflow Jobs. They want the logic unit-tested in CI with pytest, versioned with the jobs, and deployed to dev and prod with Declarative Automation Bundles. Today the logic lives in notebooks that other notebooks load with `%run`.\nWhich project structure best supports modular development and CI?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Keep the notebooks under `src/`, and have each pytest file call `%run` on the shared notebooks so the tests load the same functions the jobs use."
+   },
+   {
+    "k": "B",
+    "t": "Move the logic into a package under `src/<package>/` built as a wheel by `artifacts`; define jobs in `resources/*.yml` via `include`; put pytest files in `tests/`."
+   },
+   {
+    "k": "C",
+    "t": "Create one `databricks.yml` inside each job folder so each job becomes its own bundle, and let every bundle import the shared notebooks from a common Git folder path."
+   },
+   {
+    "k": "D",
+    "t": "Build the wheel manually on a laptop, copy it to the DBFS root, and reference the `dbfs:/` path from the `libraries` list of every job task."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: logic dùng chung, test bằng pytest trong CI, deploy theo target.\n- Template `default-python` tách `src/<package>` (wheel), `resources/` (job), `tests/` (pytest).\n- `artifacts` build wheel lúc `bundle deploy`, `include` nạp file resource.",
+  "wrong": {
+   "A": "`%run` là magic của notebook, pytest không chạy được; Databricks khuyên đặt function và test ngoài notebook.",
+   "C": "Tách nhiều bundle làm mất một nguồn cấu hình chung và vẫn giữ logic trong notebook.",
+   "D": "Library trong DBFS root bị tắt mặc định từ Databricks Runtime 15.1; build thủ công không vào CI."
+  },
+  "refs": [
+   {
+    "label": "databricks/cli, default-python serverless template output (GitHub)",
+    "url": "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python"
+   },
+   {
+    "label": "Build a Python wheel file using bundles",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/python-wheel"
+   },
+   {
+    "label": "Unit testing for Databricks notebooks",
+    "url": "https://docs.databricks.com/aws/en/notebooks/testing"
+   }
+  ]
+ },
+ {
+  "id": "dev-02",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A bundle's `databricks.yml` has grown to 2,000 lines because it defines 40 jobs and 5 pipelines. Several engineers edit it at the same time and merge conflicts are frequent. The team wants one file per job or pipeline while still deploying everything as a single bundle with one `databricks bundle deploy`.\nWhat should they do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add a second `databricks.yml` inside the `resources/` folder that lists the jobs, and let the CLI merge both files during deploy."
+   },
+   {
+    "k": "B",
+    "t": "Move each job to `resources/<name>.job.yml` and add `include: - resources/*.yml` to the root `databricks.yml`."
+   },
+   {
+    "k": "C",
+    "t": "List each job file under `sync.include` in the root `databricks.yml` so the CLI uploads and registers them together with the source code."
+   },
+   {
+    "k": "D",
+    "t": "Create one target per job under `targets` and deploy each target separately."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: tách file nhưng vẫn là một bundle.\n- Bundle có đúng một `databricks.yml` ở root; mapping `include` nạp các file cấu hình khác.\n- Template mặc định dùng đúng `include: - resources/*.yml`.",
+  "wrong": {
+   "A": "Mỗi bundle chỉ có một file `databricks.yml`, đặt ở root.",
+   "C": "`sync` chọn file được upload, không nạp file đó làm cấu hình bundle.",
+   "D": "Target là môi trường như dev và prod, không phải cách chia file theo job."
+  },
+  "refs": [
+   {
+    "label": "Bundle configuration",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/settings"
+   },
+   {
+    "label": "databricks/cli, default-python serverless template output (GitHub)",
+    "url": "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python"
+   }
+  ]
+ },
+ {
+  "id": "dev-03",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A bundle contains a Python package in `src/orders_etl` with a `pyproject.toml`. The team wants `databricks bundle deploy -t dev` to build the package and a job task of type `python_wheel_task` to run it on serverless compute for jobs.\nWhich two configuration items are required? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "An `artifacts` entry with `type: whl` and a build command such as `uv build --wheel`."
+   },
+   {
+    "k": "B",
+    "t": "A job `environments` entry listing `../dist/*.whl` in `spec.dependencies`, referenced by the task's `environment_key`."
+   },
+   {
+    "k": "C",
+    "t": "A task-level `libraries` entry `- whl: ./dist/*.whl` combined with a `new_cluster` block that sets `spark_version` and `node_type_id`."
+   },
+   {
+    "k": "D",
+    "t": "The top-level mapping `experimental: python_wheel_wrapper: true`."
+   },
+   {
+    "k": "E",
+    "t": "A cluster-scoped init script that runs `pip install` on the built wheel."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: build lúc deploy và chạy wheel trên serverless.\n- `artifacts` với `type: whl` build wheel.\n- Python wheel task trên serverless bắt buộc có environment; wheel nằm trong `dependencies`.",
+  "wrong": {
+   "C": "`libraries` với `new_cluster` là cấu hình classic compute, không phải serverless.",
+   "D": "Wrapper này chỉ cần cho Databricks Runtime 12.2 LTS trở xuống.",
+   "E": "Serverless không hỗ trợ init script."
+  },
+  "refs": [
+   {
+    "label": "Build a Python wheel file using bundles",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/python-wheel"
+   },
+   {
+    "label": "databricks/cli, default-python serverless template output (GitHub)",
+    "url": "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python"
+   },
+   {
+    "label": "Configure the serverless environment",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+   }
+  ]
+ },
+ {
+  "id": "dev-04",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A serverless job runs a Python wheel task. An engineer fixes a bug in the package, rebuilds the wheel without changing `version = \"0.1.0\"` in `pyproject.toml`, and redeploys the bundle. The next scheduled run still shows the old behavior even though the new file is in the workspace.\nWhat is the most likely fix?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Restart the job cluster from the Compute page."
+   },
+   {
+    "k": "B",
+    "t": "Call `dbutils.library.restartPython()` at the start of the wheel entry point so the new module is reloaded."
+   },
+   {
+    "k": "C",
+    "t": "Increase the package version and redeploy the bundle."
+   },
+   {
+    "k": "D",
+    "t": "Enable Performance optimized mode on the job."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: serverless, wheel đổi code nhưng giữ version.\n- Serverless cache virtual environment theo bộ dependency.\n- Docs yêu cầu tăng version khi đổi implementation của package dùng trong serverless job.",
+  "wrong": {
+   "A": "Serverless không có cluster để restart.",
+   "B": "Restart Python không xoá cache environment; wheel cũ vẫn được dùng.",
+   "D": "Performance mode đổi tốc độ khởi động, không đổi dependency cache."
+  },
+  "refs": [
+   {
+    "label": "Configure the serverless environment",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+   }
+  ]
+ },
+ {
+  "id": "dev-05",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A serverless job depends on an internal wheel that contains a C extension. The wheel was built on an engineer's x86_64 laptop and stored in a Unity Catalog volume. Some runs succeed, while others fail during environment setup with an installation error. The code itself has not changed.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Pin `environment_version` to 1 in the job environment so every run resolves the same Python version and the same preinstalled packages."
+   },
+   {
+    "k": "B",
+    "t": "Add an init script to the job that installs a C compiler and build tools on the serverless nodes before the task starts."
+   },
+   {
+    "k": "C",
+    "t": "Configure three task retries with a 5-minute interval so a failed installation is retried on fresh compute."
+   },
+   {
+    "k": "D",
+    "t": "Ship a pure-Python `py3-none-any` wheel, or wheels for both aarch64 and x86_64 with `platform_machine` markers."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: lỗi lúc cài, lúc có lúc không, wheel có C extension.\n- Serverless có thể chạy trên aarch64 hoặc x86_64 và đổi giữa các run.\n- Cần wheel cho mọi kiến trúc hoặc wheel pure Python.",
+  "wrong": {
+   "A": "Environment version không cố định kiến trúc CPU.",
+   "B": "Serverless không hỗ trợ init script.",
+   "C": "Retry có thể lại rơi vào kiến trúc không khớp; không sửa nguyên nhân."
+  },
+  "refs": [
+   {
+    "label": "Configure the serverless environment",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+   },
+   {
+    "label": "Python Packaging User Guide, Package formats (source)",
+    "url": "https://github.com/pypa/packaging.python.org/blob/main/source/discussions/package-formats.rst"
+   }
+  ]
+ },
+ {
+  "id": "dev-06",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.2",
+  "source": "original",
+  "select": 2,
+  "stem": "A serverless Lakeflow pipeline needs the PyPI package `simplejson` and helper modules stored as `.py` files in the same Git folder as the pipeline source. A previous developer added `%pip install simplejson` followed by `dbutils.library.restartPython()` in the first source file, and also tried to attach a Maven JAR. The pipeline now fails.\nWhich two changes follow the recommended approach? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `simplejson==3.19.*` to the pipeline Environment settings."
+   },
+   {
+    "k": "B",
+    "t": "Keep `dbutils.library.restartPython()` but move it to the last source file."
+   },
+   {
+    "k": "C",
+    "t": "Add a cluster-scoped init script that installs `simplejson` and the JAR."
+   },
+   {
+    "k": "D",
+    "t": "Import the helper modules from workspace files instead of installing them."
+   },
+   {
+    "k": "E",
+    "t": "Replace the Maven JAR with the same JAR uploaded to a Unity Catalog volume and reference that volume path in the pipeline settings."
+   }
+  ],
+  "answer": [
+   "A",
+   "D"
+  ],
+  "explain": "- Tín hiệu: serverless pipeline, PyPI package và module Python nội bộ.\n- Docs khuyên hai pattern: Environment settings cho package, import module từ workspace files.\n- Pin version khi thêm dependency.",
+  "wrong": {
+   "B": "Pipeline không hỗ trợ restart Python process thủ công.",
+   "C": "Serverless pipeline không hỗ trợ init script.",
+   "E": "Pipeline không hỗ trợ JVM library dù để ở đâu."
+  },
+  "refs": [
+   {
+    "label": "Manage Python dependencies for pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/developer/external-dependencies"
+   }
+  ]
+ },
+ {
+  "id": "dev-07",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.2",
+  "source": "original",
+  "select": 1,
+  "stem": "An engineer runs unit tests locally with pytest against a Databricks workspace using Databricks Connect. After a teammate adds `pyspark` to the project's dev dependencies to get IDE autocompletion, every test fails during session creation, although the Databricks Connect version matches the cluster.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Uninstall `pyspark`; it cannot be installed alongside Databricks Connect."
+   },
+   {
+    "k": "B",
+    "t": "Set `SPARK_HOME` to the local `pyspark` installation."
+   },
+   {
+    "k": "C",
+    "t": "Pin `pyspark` to exactly the same version as the cluster's Databricks Runtime so both packages expose identical APIs."
+   },
+   {
+    "k": "D",
+    "t": "Downgrade Databricks Connect to an older release line that tolerates a local PySpark installation in the same environment."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: thêm `pyspark` cạnh Databricks Connect thì hỏng.\n- Docs: Databricks Connect và PySpark loại trừ nhau.",
+  "wrong": {
+   "B": "`SPARK_HOME` không giải quyết xung đột package trong cùng environment.",
+   "C": "Cùng version vẫn là hai package xung đột.",
+   "D": "Không có version Databricks Connect nào hỗ trợ cài chung PySpark."
+  },
+  "refs": [
+   {
+    "label": "Testing for Databricks Connect for Python",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/testing"
+   }
+  ]
+ },
+ {
+  "id": "dev-08",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A compliance team wrote Python logic that masks partner identifiers. Analysts must call it from SQL on a serverless SQL warehouse, and engineers must call it from notebooks and jobs. The function must be discoverable in Catalog Explorer and access must be granted per group.\nWhich implementation meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Register it with `spark.udf.register` in a shared notebook that every analyst and engineer runs with `%run` before querying."
+   },
+   {
+    "k": "B",
+    "t": "Create it with `CREATE FUNCTION main.compliance.mask_id(...) LANGUAGE PYTHON` and grant `EXECUTE` to the groups."
+   },
+   {
+    "k": "C",
+    "t": "Package it as a `pandas_udf` inside a wheel and install that wheel as a compute-scoped library on every all-purpose cluster."
+   },
+   {
+    "k": "D",
+    "t": "Create it with `CREATE TEMPORARY FUNCTION` at the start of each SQL session."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: SQL warehouse, notebook và job dùng chung, discoverable, cấp quyền theo group.\n- Unity Catalog Python UDF lưu trong catalog, quyền `EXECUTE`, chạy trên pro và serverless SQL warehouse.",
+  "wrong": {
+   "A": "Session-scoped UDF chỉ sống trong SparkSession, không có governance, SQL warehouse không gọi được.",
+   "C": "Wheel trên cluster không phục vụ SQL warehouse và không có quyền `EXECUTE`.",
+   "D": "Temporary function nằm trong `system.session`, không lưu vào catalog."
+  },
+  "refs": [
+   {
+    "label": "UDFs in Unity Catalog",
+    "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+   },
+   {
+    "label": "What are user-defined functions (UDFs)?",
+    "url": "https://docs.databricks.com/aws/en/udf/"
+   }
+  ]
+ },
+ {
+  "id": "dev-09",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.3",
+  "source": "original",
+  "select": 1,
+  "stem": "An engineer must score 2 billion rows with a scikit-learn model inside a Spark job. Loading the model from a Unity Catalog volume takes 20 seconds. The current scalar Python UDF loads the model inside the function and the job is extremely slow.\nWhich UDF design minimizes repeated model loading while keeping vectorized execution?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A scalar `@udf` that caches the model in a module-level global variable the first time the function is called on each executor."
+   },
+   {
+    "k": "B",
+    "t": "A Series to Series `@pandas_udf` that loads the model at the top of the function body and then predicts on the input Series."
+   },
+   {
+    "k": "C",
+    "t": "An Iterator of Series to Iterator of Series `@pandas_udf` that loads the model before looping over batches."
+   },
+   {
+    "k": "D",
+    "t": "A Series to scalar `@pandas_udf` used with `groupBy().agg()`."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: khởi tạo nặng, cần vector hoá.\n- Iterator pandas UDF chạy phần khởi tạo một lần rồi xử lý nhiều batch Arrow.\n- Docs nêu đúng use case load model cho mỗi batch input.",
+  "wrong": {
+   "A": "Scalar UDF vẫn gọi Python cho từng row, không vector hoá.",
+   "B": "Series to Series gọi hàm cho từng batch nên load model lại mỗi batch.",
+   "D": "Series to scalar là aggregate, trả một giá trị cho mỗi group, không phải điểm cho mỗi row."
+  },
+  "refs": [
+   {
+    "label": "pandas user-defined functions",
+    "url": "https://docs.databricks.com/aws/en/udf/pandas"
+   }
+  ]
+ },
+ {
+  "id": "dev-10",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A daily ETL job processes 5 TB of orders. A developer proposes a Python UDF that trims strings, upper-cases country codes and converts a timestamp column. All three steps can be expressed with standard Spark SQL functions. The job must run with the best performance.\nWhat should the engineer recommend?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Use built-in functions such as `trim`, `upper` and `to_timestamp`."
+   },
+   {
+    "k": "B",
+    "t": "Use a `pandas_udf` so the work is vectorized through Apache Arrow."
+   },
+   {
+    "k": "C",
+    "t": "Register the Python UDF in Unity Catalog with `STRICT ISOLATION`."
+   },
+   {
+    "k": "D",
+    "t": "Keep the Python UDF and raise `spark.sql.execution.arrow.maxRecordsPerBatch` so each Python call handles more rows."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: logic diễn đạt được bằng built-in function, dữ liệu lớn, chạy định kỳ.\n- Databricks khuyên Apache Spark functions cho ETL lớn và workload định kỳ; UDF cho logic khó diễn đạt.",
+  "wrong": {
+   "B": "pandas UDF nhanh hơn Python UDF nhưng vẫn chậm hơn built-in function được optimizer xử lý.",
+   "C": "Strict isolation tăng cách ly, không tăng tốc; Databricks khuyên chỉ dùng khi UDF đổi system state.",
+   "D": "Vẫn giữ UDF nên vẫn chậm hơn built-in function, dù chỉnh batch size."
+  },
+  "refs": [
+   {
+    "label": "What are user-defined functions (UDFs)?",
+    "url": "https://docs.databricks.com/aws/en/udf/"
+   }
+  ]
+ },
+ {
+  "id": "dev-11",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.3",
+  "source": "original",
+  "select": 2,
+  "stem": "A Unity Catalog Python UDF must use the PyPI package `simplejson` and an internal wheel stored in `/Volumes/main/libs/pkgs/`. Hundreds of analysts will call it. The security team wants callers to need only `EXECUTE` on the function, without `READ VOLUME` on the library volume. The UDF runs on serverless compute and serverless SQL warehouses.\nWhich two elements must the function definition include? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "An `ENVIRONMENT` clause whose `dependencies` lists `simplejson==3.19.3` and the volume wheel path."
+   },
+   {
+    "k": "B",
+    "t": "`environment_version = '6'` set explicitly in the `ENVIRONMENT` clause."
+   },
+   {
+    "k": "C",
+    "t": "The `STRICT ISOLATION` characteristic."
+   },
+   {
+    "k": "D",
+    "t": "A `%pip install` of both packages at the top of every caller's notebook and in the SQL warehouse startup settings."
+   },
+   {
+    "k": "E",
+    "t": "A grant of `READ VOLUME` on the library volume to every caller group."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: dependency PyPI và volume, người gọi chỉ có `EXECUTE`.\n- `ENVIRONMENT (dependencies ...)` khai báo package theo format pip.\n- Environment version từ 6: người gọi không cần READ VOLUME.",
+  "wrong": {
+   "C": "Strict isolation không liên quan tới dependency hay quyền trên volume.",
+   "D": "UDF chạy trong environment riêng; library cài trong notebook không vào UDF.",
+   "E": "Trái yêu cầu chỉ cấp `EXECUTE`."
+  },
+  "refs": [
+   {
+    "label": "UDFs in Unity Catalog",
+    "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+   }
+  ]
+ },
+ {
+  "id": "dev-12",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.5",
+  "source": "original",
+  "select": 1,
+  "stem": "An external scheduler must start an existing Lakeflow Job every night, pass the business date as a parameter, and block until the run finishes. The run must appear in the job's run history and keep the job's retry settings. The team uses the Databricks CLI.\nWhich command should the scheduler run?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`databricks jobs submit --json @nightly_run.json` with the full task definition each night."
+   },
+   {
+    "k": "B",
+    "t": "`databricks jobs run-now <job-id> --json '{\"job_parameters\": {\"run_date\": \"2026-11-04\"}}'`"
+   },
+   {
+    "k": "C",
+    "t": "`databricks jobs create --json @job.json` followed by deleting the job after the run."
+   },
+   {
+    "k": "D",
+    "t": "`databricks jobs reset <job-id> --json @job.json` with the date written into the task settings."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: job có sẵn, truyền parameter, chờ xong, giữ run history và retry.\n- `run-now` trigger job đã lưu, `job_parameters` ghi đè cho run đó.\n- CLI mặc định chờ tới TERMINATED hoặc SKIPPED, timeout 20 phút.",
+  "wrong": {
+   "A": "`submit` tạo one-time run không lưu thành job, không retry, không auto-optimize serverless.",
+   "C": "Tạo rồi xoá job làm mất run history và cấu hình.",
+   "D": "`reset` ghi đè toàn bộ settings của job, không trigger run."
+  },
+  "refs": [
+   {
+    "label": "jobs command group (Databricks CLI)",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+   },
+   {
+    "label": "Configure job parameters",
+    "url": "https://docs.databricks.com/aws/en/jobs/job-parameters"
+   }
+  ]
+ },
+ {
+  "id": "dev-13",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A team creates a job with the Jobs API 2.2 and sets `max_concurrent_runs` to 1. A file arrival trigger fires while a previous run is still active. The team did not set the `queue` field in the request body.\nWhat happens to the new run?",
+  "options": [
+   {
+    "k": "A",
+    "t": "It is skipped because the job already has an active run."
+   },
+   {
+    "k": "B",
+    "t": "It fails immediately with a concurrency error."
+   },
+   {
+    "k": "C",
+    "t": "It starts in parallel, because runs started by a file arrival trigger are not counted against `max_concurrent_runs`."
+   },
+   {
+    "k": "D",
+    "t": "It is queued; jobs created with Jobs API 2.2 queue runs by default."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: Jobs API 2.2, không set `queue`.\n- Job tạo bằng API 2.2 bật queue mặc định; API 2.0 và 2.1 thì không.\n- Run bị queue tới khi có chỗ.",
+  "wrong": {
+   "A": "Skip là hành vi khi queue tắt, ví dụ job tạo bằng API 2.1 không set `queue`.",
+   "B": "Vượt concurrency không làm run fail.",
+   "C": "Trigger vẫn tuân theo max concurrency của job."
+  },
+  "refs": [
+   {
+    "label": "Updating from Jobs API 2.1 to 2.2",
+    "url": "https://docs.databricks.com/aws/en/reference/jobs-api-2-2-updates"
+   },
+   {
+    "label": "Automate jobs with schedules and triggers",
+    "url": "https://docs.databricks.com/aws/en/jobs/triggers"
+   }
+  ]
+ },
+ {
+  "id": "dev-14",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.5",
+  "source": "original",
+  "select": 1,
+  "stem": "Partners drop CSV files into a Unity Catalog external location at unpredictable times, a few times per day. An ingestion job must start soon after each drop. The team wants the LEAST operational overhead and no compute running while no files arrive.\nWhich trigger should they configure on the job?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A scheduled trigger that runs every minute."
+   },
+   {
+    "k": "B",
+    "t": "A file arrival trigger on the external location."
+   },
+   {
+    "k": "C",
+    "t": "A continuous trigger with a notebook that polls the location."
+   },
+   {
+    "k": "D",
+    "t": "A table update trigger on the bronze table."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: file tới không đều, chỉ chạy khi có file, overhead thấp nhất.\n- File arrival trigger chạy job khi file mới vào Unity Catalog storage location.",
+  "wrong": {
+   "A": "Chạy mỗi phút tốn compute cả khi không có file.",
+   "C": "Continuous luôn giữ một run active, tốn compute.",
+   "D": "Bronze table chỉ đổi sau khi job đã ingest, nên trigger không bao giờ bắt đầu."
+  },
+  "refs": [
+   {
+    "label": "Automate jobs with schedules and triggers",
+    "url": "https://docs.databricks.com/aws/en/jobs/triggers"
+   }
+  ]
+ },
+ {
+  "id": "dev-15",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.9",
+  "source": "original",
+  "select": 1,
+  "stem": "A notebook task `validate` sets a task value with `dbutils.jobs.taskValues.set(key=\"version\", value=12.0)`. The next task is an If/else condition task with left operand `{{tasks.validate.values.version}}`, operator `==`, and right operand `12`. The tasks on the true branch never run.\nWhat explains this behavior?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Task values set from a notebook cannot be referenced in If/else condition tasks, only in For each tasks."
+   },
+   {
+    "k": "B",
+    "t": "`==` compares strings, so `12.0` does not equal `12`."
+   },
+   {
+    "k": "C",
+    "t": "Numeric task values are rounded down before comparison."
+   },
+   {
+    "k": "D",
+    "t": "The If/else task must read the value through `{{job.parameters.version}}`, because task values are only visible to notebooks."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: toán tử `==` và giá trị `12.0` so với `12`.\n- `==` và `!=` so sánh chuỗi; `>`, `>=`, `<`, `<=` so sánh số.\n- Docs nêu đúng ví dụ `12.0 == 12` là false.",
+  "wrong": {
+   "A": "If/else nhận task value qua `{{tasks.<task>.values.<key>}}`.",
+   "C": "Không có bước làm tròn; giá trị được serialize thành chuỗi.",
+   "D": "Task value là operand hợp lệ, không cần job parameter."
+  },
+  "refs": [
+   {
+    "label": "Add branching logic with the If/else task",
+    "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+   }
+  ]
+ },
+ {
+  "id": "dev-16",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.9",
+  "source": "original",
+  "select": 1,
+  "stem": "An upstream task `list_tables` produces a JSON array of 40 table names that changes daily. The same notebook must process each table with the table name as a parameter. At most 5 tables may be processed at the same time, and the team wants minimal custom code.\nWhich job design meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A For each task over `{{tasks.list_tables.values.tables}}` with concurrency 5 and a nested notebook task using `{{input}}`."
+   },
+   {
+    "k": "B",
+    "t": "Forty notebook tasks defined in the job, regenerated every day from the table list."
+   },
+   {
+    "k": "C",
+    "t": "A driver notebook task that starts 5 Python threads, each calling `dbutils.notebook.run` on the next table name until the list is empty."
+   },
+   {
+    "k": "D",
+    "t": "A For each task whose nested task is another For each task, so the outer loop splits the list into 8 groups of 5 tables."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: danh sách động từ task trước, cùng một notebook, giới hạn song song.\n- For each nhận task value làm inputs, `{{input}}` là phần tử của từng iteration.\n- Concurrency giới hạn số iteration chạy cùng lúc.",
+  "wrong": {
+   "B": "Danh sách thay đổi hằng ngày; sửa job mỗi ngày không phải minimal code.",
+   "C": "Thread tự viết là code thủ công, mất run history theo từng iteration.",
+   "D": "Nested task không được là For each task khác."
+  },
+  "refs": [
+   {
+    "label": "Use a For each task to run another task in a loop",
+    "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+   },
+   {
+    "label": "Add tasks to jobs in bundles",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types"
+   }
+  ]
+ },
+ {
+  "id": "dev-17",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.9",
+  "source": "original",
+  "select": 2,
+  "stem": "A job has a task `ingest` that sets the task value `new_rows`. The task `load_silver` must run only when `new_rows` is greater than 0. Otherwise the task `send_noop_report` must run. Neither case should mark the job run as failed.\nWhich two configuration steps achieve this? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add an If/else condition task: left `{{tasks.ingest.values.new_rows}}`, operator `GREATER_THAN`, right `0`."
+   },
+   {
+    "k": "B",
+    "t": "Make `load_silver` depend on the condition with outcome `true` and `send_noop_report` with outcome `false`."
+   },
+   {
+    "k": "C",
+    "t": "Set the Run if condition of `send_noop_report` to At least one failed."
+   },
+   {
+    "k": "D",
+    "t": "Make `ingest` raise an exception when no new rows arrive, set `load_silver` to All succeeded and `send_noop_report` to All done."
+   },
+   {
+    "k": "E",
+    "t": "Add a For each task over an empty array when `new_rows` is 0."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: rẽ nhánh theo giá trị, không đánh dấu run fail.\n- If/else condition task so sánh task value bằng toán tử số.\n- Task phụ thuộc chọn nhánh bằng `outcome` true hoặc false.",
+  "wrong": {
+   "C": "At least one failed chỉ chạy khi upstream lỗi, trái yêu cầu không fail.",
+   "D": "Raise exception làm run fail.",
+   "E": "For each không phải toán tử rẽ nhánh."
+  },
+  "refs": [
+   {
+    "label": "Add branching logic with the If/else task",
+    "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+   },
+   {
+    "label": "Add tasks to jobs in bundles",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types"
+   },
+   {
+    "label": "Configure task dependencies",
+    "url": "https://docs.databricks.com/aws/en/jobs/run-if"
+   }
+  ]
+ },
+ {
+  "id": "dev-18",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.10",
+  "source": "original",
+  "select": 1,
+  "stem": "A nightly batch job on serverless compute for jobs has a 6-hour SLA and typically finishes in 40 minutes. Startup delays of several minutes are acceptable. Finance asks for the MOST cost-effective configuration without moving off serverless.\nWhat should the engineer change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable Performance optimized on the job so tasks start faster and release compute sooner."
+   },
+   {
+    "k": "B",
+    "t": "Disable Performance optimized (standard performance mode)."
+   },
+   {
+    "k": "C",
+    "t": "Move the tasks to an all-purpose cluster with a 10-minute auto-termination."
+   },
+   {
+    "k": "D",
+    "t": "Set the job to run on a serverless SQL warehouse."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: chấp nhận khởi động chậm, MOST cost-effective, giữ serverless.\n- Standard mode khởi động 4 tới 6 phút, cùng SKU, tiêu ít DBU hơn.\n- Docs: tới 70% cost thấp hơn performance-optimized.",
+  "wrong": {
+   "A": "Performance optimized khởi động nhanh hơn nhưng tốn nhiều DBU hơn.",
+   "C": "Rời serverless, trái yêu cầu của finance.",
+   "D": "SQL warehouse chạy SQL task, không chạy notebook hay Python task."
+  },
+  "refs": [
+   {
+    "label": "Run Lakeflow Jobs with serverless compute",
+    "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+   },
+   {
+    "label": "Best practices for serverless compute",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/best-practices"
+   }
+  ]
+ },
+ {
+  "id": "dev-19",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.10",
+  "source": "original",
+  "select": 1,
+  "stem": "A notebook task on serverless compute collects a 15 GB aggregate with `toPandas()` and fails with an out-of-memory error in the Python process. The Spark stages complete successfully. The team wants the smallest configuration change.\nWhat should they configure?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Set `spark.executor.memory` to 32g in the first cell of the notebook session."
+   },
+   {
+    "k": "B",
+    "t": "Enable Performance optimized on the job."
+   },
+   {
+    "k": "C",
+    "t": "Select High memory in the notebook's Environment side pane."
+   },
+   {
+    "k": "D",
+    "t": "Increase `spark.sql.execution.arrow.maxRecordsPerBatch` so `toPandas()` transfers smaller batches."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: notebook task, OOM ở Python process, Spark vẫn chạy tốt.\n- High memory tăng REPL memory từ 16 GB lên 32 GB, không đổi Spark session.\n- Setting áp dụng cho notebook job task ở run kế tiếp.",
+  "wrong": {
+   "A": "Serverless chỉ cho set một số Spark config; executor memory không giúp Python process.",
+   "B": "Performance mode đổi tốc độ, không đổi memory.",
+   "D": "Config này không có tác dụng trên serverless."
+  },
+  "refs": [
+   {
+    "label": "Configure the serverless environment",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+   },
+   {
+    "label": "Run Lakeflow Jobs with serverless compute",
+    "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+   }
+  ]
+ },
+ {
+  "id": "dev-20",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.10",
+  "source": "original",
+  "select": 1,
+  "stem": "A scheduled serverless job contains a task that calls an external payment API. The call is not idempotent, so the task must run at most once per job run. The engineer already set the task's retry count to 0, but the platform team warns the task can still be retried automatically.\nWhat else must the engineer configure?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable queueing on the job so a second attempt waits instead of running in parallel."
+   },
+   {
+    "k": "B",
+    "t": "Switch the job to standard performance mode."
+   },
+   {
+    "k": "C",
+    "t": "Set `max_concurrent_runs` to 1 so only one run of the job can call the API at a time."
+   },
+   {
+    "k": "D",
+    "t": "Clear Enable serverless auto-optimization in the Retry Policy."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: non-idempotent, at most once, serverless.\n- Auto-optimization bật mặc định và có thể retry task lỗi.\n- Tắt trong Retry Policy của task.",
+  "wrong": {
+   "A": "Queue giữ run chờ, không ngăn retry.",
+   "B": "Performance mode không liên quan tới retry.",
+   "C": "Giới hạn số run đồng thời, không ngăn retry trong một run."
+  },
+  "refs": [
+   {
+    "label": "Run Lakeflow Jobs with serverless compute",
+    "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+   }
+  ]
+ },
+ {
+  "id": "dev-22",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.11",
+  "source": "original",
+  "select": 1,
+  "stem": "A test checks a currency conversion that uses floating-point arithmetic. The business accepts results within 1% of the expected value, but `assertDataFrameEqual(actual, expected)` fails because values such as 100.4 and 100.0 differ.\nHow should the engineer write the assertion?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`assertDataFrameEqual(actual, expected, rtol=1e-2)`"
+   },
+   {
+    "k": "B",
+    "t": "`assertDataFrameEqual(actual, expected, ignoreColumnType=True)`"
+   },
+   {
+    "k": "C",
+    "t": "`assertDataFrameEqual(actual, expected, checkRowOrder=False)`"
+   },
+   {
+    "k": "D",
+    "t": "Round all values to integers inside the production transformation."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: chấp nhận sai số tương đối 1%.\n- `rtol` là relative tolerance, mặc định `1e-5`; so gần đúng theo `abs(a - b) <= atol + rtol * abs(b)`.",
+  "wrong": {
+   "B": "Bỏ qua kiểu cột, không nới sai số giá trị.",
+   "C": "Đã là mặc định và không liên quan tới giá trị float.",
+   "D": "Sửa code production để test pass làm sai kết quả nghiệp vụ."
+  },
+  "refs": [
+   {
+    "label": "PySpark API, assertDataFrameEqual",
+    "url": "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html"
+   }
+  ]
+ },
+ {
+  "id": "dev-23",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.11",
+  "source": "original",
+  "select": 2,
+  "stem": "A team refactors a 400-line notebook into testable code. They want small transformations that can be chained in production and tested individually with pytest in CI against a Databricks workspace through Databricks Connect.\nWhich two practices should they adopt? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Write each step as a DataFrame-in, DataFrame-out function and chain them with `df.transform()`."
+   },
+   {
+    "k": "B",
+    "t": "Provide a `spark` fixture in `tests/conftest.py` that returns `DatabricksSession.builder.getOrCreate()`."
+   },
+   {
+    "k": "C",
+    "t": "Keep the tests inside the production notebook and run them against the production tables after each deploy so they see real data."
+   },
+   {
+    "k": "D",
+    "t": "Load the function notebooks in pytest with `%run ./transforms`."
+   },
+   {
+    "k": "E",
+    "t": "Compare the output of `display()` with a saved screenshot."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: hàm nhỏ ghép chuỗi, test riêng bằng pytest qua Databricks Connect.\n- `DataFrame.transform` nhận hàm DataFrame và tham số thêm.\n- Template `default-python` tạo fixture `spark` trong `conftest.py`.",
+  "wrong": {
+   "C": "Không chạy unit test trên data production.",
+   "D": "`%run` là magic của notebook, không chạy trong pytest.",
+   "E": "Không so được tự động và không ổn định."
+  },
+  "refs": [
+   {
+    "label": "PySpark API, DataFrame.transform",
+    "url": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.transform.html"
+   },
+   {
+    "label": "databricks/cli, default-python serverless template output (GitHub)",
+    "url": "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python"
+   },
+   {
+    "label": "Unit testing for Databricks notebooks",
+    "url": "https://docs.databricks.com/aws/en/notebooks/testing"
+   }
+  ]
+ },
+ {
+  "id": "dev-24",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.10",
+  "source": "original",
+  "select": 1,
+  "stem": "A notebook that ran for years on classic all-purpose compute is moved to a serverless job without code changes. It casts a string column with `CAST(qty AS INT)`. Some rows contain `'n/a'`. On classic compute those rows became NULL, but the serverless run now fails with a cast error. The Spark plan and data are unchanged.\nWhat explains the new behavior, and what is the smallest code fix?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Serverless enables ANSI mode by default, so invalid casts raise errors; use `try_cast(qty AS INT)`."
+   },
+   {
+    "k": "B",
+    "t": "Serverless uses the UTC session time zone, which changes how strings are parsed; set `spark.sql.session.timeZone`."
+   },
+   {
+    "k": "C",
+    "t": "Serverless runs on aarch64, where integer parsing differs; pin a wheel built for x86_64."
+   },
+   {
+    "k": "D",
+    "t": "Spark Connect forbids SQL casts inside DataFrame code; rewrite the cast as a Python UDF."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Serverless bật ANSI mode mặc định: cast sai, overflow, input hỏng báo lỗi runtime thay vì trả NULL.\n- `try_cast` trả NULL khi cast không thành công, giữ đúng hành vi cũ ở từng biểu thức.",
+  "wrong": {
+   "B": "Time zone ảnh hưởng timestamp, không làm cast chuỗi sang INT báo lỗi.",
+   "C": "Kiến trúc CPU ảnh hưởng wheel có native code, không ảnh hưởng semantics của SQL cast.",
+   "D": "Spark Connect hỗ trợ cast; Python UDF chậm hơn và không cần thiết."
+  },
+  "refs": [
+   {
+    "label": "Serverless compute limitations",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+   },
+   {
+    "label": "try_cast function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/try_cast"
+   }
+  ]
+ },
+ {
+  "id": "dev-25",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A notebook in a Databricks Git folder runs `%pip install mylib==2.4.0` and restarts Python. The repository root also contains a folder `mylib/` with an old vendored copy (version 1.9) that a previous developer committed. After the restart, `import mylib; mylib.__version__` still returns `1.9`. The cluster has no compute-scoped `mylib`.\nWhat explains this, and what should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Libraries in the Git folder root take precedence over notebook-scoped libraries; remove or rename the vendored `mylib/` folder."
+   },
+   {
+    "k": "B",
+    "t": "`%pip install` installs into the driver only; install `mylib` as a compute-scoped library so executors see 2.4.0."
+   },
+   {
+    "k": "C",
+    "t": "Notebook-scoped libraries are cached between sessions; call `dbutils.library.restartPython()` a second time."
+   },
+   {
+    "k": "D",
+    "t": "Databricks Runtime ships `mylib` 1.9, which always overrides `%pip`; pin a Databricks Runtime that does not include it."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Thứ tự import: current working directory trong Git folder, rồi root của Git folder, rồi notebook-scoped library.\n- Folder `mylib/` ở root che bản cài bằng `%pip`; bỏ folder đó thì import đúng 2.4.0.",
+  "wrong": {
+   "B": "Compute-scoped library còn đứng sau notebook-scoped library, nên vẫn bị folder ở root che.",
+   "C": "Python đã restart; lý do là thứ tự `sys.path`, không phải cache.",
+   "D": "Library có sẵn trong Databricks Runtime đứng sau `%pip`; ở đây runtime cũng không chứa `mylib`."
+  },
+  "refs": [
+   {
+    "label": "Install libraries",
+    "url": "https://docs.databricks.com/aws/en/libraries/"
+   }
+  ]
+ },
+ {
+  "id": "dev-26",
+  "topic": "dev",
+  "domain": "S1",
+  "task": "1.11",
+  "source": "original",
+  "select": 1,
+  "stem": "After a refactor, a transformation returns the same rows and data types as before, but the columns now come out in a different order and one column changed from nullable to non-nullable. The unit test `assertDataFrameEqual(actual, expected)` fails. The team considers both differences acceptable but still wants the test to catch wrong values and wrong data types. The project uses PySpark 4.0.\nHow should the engineer change the assertion?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`assertDataFrameEqual(actual, expected, ignoreColumnOrder=True)`"
+   },
+   {
+    "k": "B",
+    "t": "`assertDataFrameEqual(actual, expected, ignoreColumnOrder=True, ignoreNullable=False)`"
+   },
+   {
+    "k": "C",
+    "t": "`assertDataFrameEqual(actual, expected, ignoreColumnType=True)`"
+   },
+   {
+    "k": "D",
+    "t": "`assertDataFrameEqual(actual.collect(), expected.collect(), checkRowOrder=True)`"
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- `ignoreColumnOrder=True` ghép cột theo tên thay vì theo vị trí.\n- `ignoreNullable` mặc định đã là `True`, nên khác biệt nullable không làm test fail.\n- Kiểu dữ liệu vẫn được so vì `ignoreColumnType` giữ mặc định `False`.",
+  "wrong": {
+   "B": "`ignoreNullable=False` bắt khác biệt nullable, test vẫn fail.",
+   "C": "Bỏ qua kiểu dữ liệu làm mất yêu cầu bắt sai type; thứ tự cột vẫn làm test fail.",
+   "D": "So list `Row` theo thứ tự làm test phụ thuộc thứ tự row và không giải quyết thứ tự cột."
+  },
+  "refs": [
+   {
+    "label": "pyspark.testing.assertDataFrameEqual (Spark 4.0.0)",
+    "url": "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html"
+   }
+  ]
+ }
+]

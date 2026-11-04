@@ -1,0 +1,331 @@
+[
+ {
+  "id": "usage-privileges",
+  "term": "USE CATALOG",
+  "full": "",
+  "aliases": [
+   "USE SCHEMA",
+   "usage privilege",
+   "usage privileges"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Usage privilege trên catalog và schema, điều kiện để làm việc với mọi object bên trong.",
+  "means": [
+   "Đọc table cần `USE CATALOG` + `USE SCHEMA` + `SELECT`.",
+   "Chỉ owner catalog, schema hoặc người có `MANAGE` cấp được, chặn table owner chia sẻ vượt ranh giới."
+  ],
+  "related": [
+   "manage-privilege"
+  ],
+  "src": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "privilege-inheritance",
+  "term": "privilege inheritance",
+  "full": "",
+  "aliases": [
+   "inheritance model",
+   "Privilege inheritance"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Privilege cấp trên catalog hoặc schema tự áp cho mọi object con hiện có và tạo sau.",
+  "means": [
+   "Grant trên metastore không kế thừa, trừ `READ METADATA`.",
+   "Ownership không kế thừa; deny qua DENY policy cũng kế thừa xuống."
+  ],
+  "related": [],
+  "src": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "manage-privilege",
+  "term": "MANAGE",
+  "full": "",
+  "aliases": [
+   "MANAGE privilege",
+   "MANAGE ACCESS CONTROL"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Privilege cho grant, revoke, transfer ownership và drop object mà không cần là owner.",
+  "means": [
+   "Không gồm `SELECT`, `MODIFY`; user tự grant cho mình được.",
+   "`ALL PRIVILEGES` không chứa `MANAGE`.",
+   "Child privilege: `READ METADATA`, `MANAGE ACCESS CONTROL`."
+  ],
+  "related": [
+   "usage-privileges"
+  ],
+  "src": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "browse-privilege",
+  "term": "BROWSE",
+  "full": "",
+  "aliases": [],
+  "cat": "Unity Catalog & Security",
+  "what": "Privilege cấp ở catalog cho thấy object, tên, comment, tag mà không đọc data.",
+  "means": [
+   "Gửi access request được mà không cần `USE CATALOG`.",
+   "Docs khuyên grant cho `account users`."
+  ],
+  "related": [
+   "uc-tags",
+   "usage-privileges"
+  ],
+  "src": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "workspace-acl",
+  "term": "workspace ACL",
+  "full": "",
+  "aliases": [
+   "ACLs",
+   "access control list",
+   "CAN MANAGE RUN",
+   "CAN ATTACH TO"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Permission trên workspace object như job, compute, SQL warehouse, pipeline, notebook, secret scope.",
+  "means": [
+   "Job: CAN MANAGE RUN để run và cancel mà không sửa setting.",
+   "SQL warehouse: CAN USE để query; compute: CAN ATTACH TO để attach notebook.",
+   "Object trong folder kế thừa permission của folder."
+  ],
+  "related": [],
+  "src": {
+   "label": "Access control lists",
+   "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+  }
+ },
+ {
+  "id": "abac",
+  "term": "ABAC",
+  "full": "Attribute-based access control",
+  "aliases": [
+   "ABAC policy",
+   "ABAC policies",
+   "CREATE POLICY"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Policy gắn ở catalog, schema hoặc table, áp row filter hoặc column mask cho object match governed tag.",
+  "means": [
+   "Table mới được tag là tự được bảo vệ; table owner không gỡ được.",
+   "`TO` và `EXCEPT` chọn principal; cần DBR 16.4+ hoặc serverless.",
+   "GA ngày 28/04/2026; DENY policy, policy trên view và cấp metastore còn Beta."
+  ],
+  "related": [
+   "governed-tag",
+   "row-filter",
+   "column-mask"
+  ],
+  "src": {
+   "label": "Core concepts for ABAC",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+  }
+ },
+ {
+  "id": "governed-tag",
+  "term": "governed tag",
+  "full": "",
+  "aliases": [
+   "governed tags",
+   "CREATE GOVERNED TAG",
+   "tag policy"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Tag cấp account có tag policy giới hạn value và người được gán.",
+  "means": [
+   "Gán cần thêm permission `ASSIGN` trên tag.",
+   "ABAC chỉ dùng governed tag; tối đa 1.000 governed tag mỗi account.",
+   "Tag ở catalog, schema kế thừa xuống table, không xuống cột."
+  ],
+  "related": [
+   "abac",
+   "uc-tags",
+   "data-classification"
+  ],
+  "src": {
+   "label": "Governed tags",
+   "url": "https://docs.databricks.com/aws/en/admin/governed-tags/"
+  }
+ },
+ {
+  "id": "row-filter",
+  "term": "row filter",
+  "full": "",
+  "aliases": [
+   "row filters",
+   "SET ROW FILTER",
+   "WITH ROW FILTER"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "SQL UDF trả BOOLEAN, đánh giá lúc query; row trả FALSE bị loại khỏi kết quả.",
+  "means": [
+   "Cấp table: `ALTER TABLE ... SET ROW FILTER fn ON (col)`.",
+   "Mỗi table, mỗi user chỉ một row filter distinct."
+  ],
+  "related": [
+   "column-mask",
+   "abac",
+   "dynamic-view"
+  ],
+  "src": {
+   "label": "Row filters and column masks",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/"
+  }
+ },
+ {
+  "id": "column-mask",
+  "term": "column mask",
+  "full": "",
+  "aliases": [
+   "column masks",
+   "SET MASK"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "SQL UDF nhận giá trị cột và trả giá trị gốc hoặc đã mask lúc query.",
+  "means": [
+   "Kiểu trả về phải cast được về kiểu cột; mỗi cột một mask.",
+   "Không gắn lên view; time travel, clone không chạy với mask cấp table."
+  ],
+  "related": [
+   "row-filter",
+   "abac"
+  ],
+  "src": {
+   "label": "Row filters and column masks",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/"
+  }
+ },
+ {
+  "id": "dynamic-view",
+  "term": "dynamic view",
+  "full": "",
+  "aliases": [
+   "dynamic views",
+   "is_account_group_member"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "View chứa logic lọc row hoặc mask cột theo identity như `is_account_group_member()`.",
+  "means": [
+   "Hợp khi cần join nhiều table hoặc reshape data để chia sẻ.",
+   "Không grant cho user đọc table gốc."
+  ],
+  "related": [
+   "row-filter",
+   "column-mask"
+  ],
+  "src": {
+   "label": "Create a dynamic view",
+   "url": "https://docs.databricks.com/aws/en/views/dynamic"
+  }
+ },
+ {
+  "id": "data-classification",
+  "term": "Data Classification",
+  "full": "",
+  "aliases": [
+   "data classification",
+   "class.email_address",
+   "system.data_classification.results"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Agent AI scan incremental table trong catalog, detect dữ liệu nhạy cảm và gắn system tag `class.*`.",
+  "means": [
+   "Cần serverless; table mới thường được scan trong 24 giờ.",
+   "Kết hợp ABAC policy match `class.*` để mask tự động.",
+   "GA ngày 20/04/2026."
+  ],
+  "related": [
+   "governed-tag",
+   "abac"
+  ],
+  "src": {
+   "label": "Data Classification",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+  }
+ },
+ {
+  "id": "pseudonymization",
+  "term": "pseudonymization",
+  "full": "",
+  "aliases": [
+   "pseudonymisation",
+   "tokenization",
+   "consistent hashing"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Xử lý để data không gắn được với người nếu thiếu thông tin bổ sung được giữ riêng.",
+  "means": [
+   "Data pseudonymize vẫn là personal data theo GDPR.",
+   "Trên Databricks: `sha2` deterministic trong mask UDF, hoặc token với bảng mapping hạn chế access."
+  ],
+  "related": [
+   "column-mask",
+   "right-to-erasure"
+  ],
+  "src": {
+   "label": "GDPR Art. 4(5), pseudonymisation",
+   "url": "https://gdpr-info.eu/art-4-gdpr/"
+  }
+ },
+ {
+  "id": "right-to-erasure",
+  "term": "right to erasure",
+  "full": "",
+  "aliases": [
+   "right-to-erasure",
+   "right to be forgotten",
+   "RTBF"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Quyền của data subject yêu cầu xoá personal data không chậm trễ theo GDPR Art. 17.",
+  "means": [
+   "Trên Delta: DELETE hoặc MERGE, `REORG ... APPLY (PURGE)`, rồi VACUUM.",
+   "Xoá ở bronze trước, lan xuống silver và gold, và cả nguồn ngoài."
+  ],
+  "related": [
+   "pseudonymization"
+  ],
+  "src": {
+   "label": "GDPR Art. 17, right to erasure",
+   "url": "https://gdpr-info.eu/art-17-gdpr/"
+  }
+ },
+ {
+  "id": "uc-tags",
+  "term": "Unity Catalog tag",
+  "full": "",
+  "aliases": [
+   "SET TAGS",
+   "APPLY TAG",
+   "COMMENT ON"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "Cặp key và value tùy chọn gắn lên securable để phân loại và search; comment là metadata mô tả đi kèm.",
+  "means": [
+   "Gán cần ownership hoặc `APPLY TAG` cùng usage privilege.",
+   "Plain text, có thể replicate toàn cầu: không đặt PII.",
+   "Tối đa 50 tag mỗi object."
+  ],
+  "related": [
+   "governed-tag",
+   "browse-privilege"
+  ],
+  "src": {
+   "label": "Apply tags to Unity Catalog securable objects",
+   "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+  }
+ }
+]

@@ -1,0 +1,227 @@
+[
+ {
+  "id": "ops-c01",
+  "front": "Who can read system tables by default?",
+  "back": "Users who are both account admin and metastore admin. Người khác cần `USE CATALOG`, `USE SCHEMA` và `SELECT` trên schema hệ thống.",
+  "ref": {
+   "label": "System tables reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+  }
+ },
+ {
+  "id": "ops-c02",
+  "front": "`system.lakeflow.jobs` returns several rows per job",
+  "back": "It is an SCD2 table: keep the latest `change_time` per `workspace_id, job_id`, then drop rows with `delete_time`. Mỗi lần sửa hoặc xoá job sinh thêm một dòng.",
+  "ref": {
+   "label": "Jobs system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+  }
+ },
+ {
+  "id": "ops-c03",
+  "front": "`job_run_timeline`: long runs and `result_state`",
+  "back": "Runs are sliced into rows of up to one hour; `result_state` and `termination_code` appear only on the final slice. Slice giữa có `result_state` NULL.",
+  "ref": {
+   "label": "Jobs system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+  }
+ },
+ {
+  "id": "ops-c04",
+  "front": "`RETRACTION` rows in `system.billing.usage`",
+  "back": "They negate an incorrect `ORIGINAL` record (negative `usage_quantity`); sum all record types. `RESTATEMENT` chứa giá trị đã sửa.",
+  "ref": {
+   "label": "Billable usage system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+  }
+ },
+ {
+  "id": "ops-c05",
+  "front": "Convert DBUs to USD with system tables",
+  "back": "Join `system.billing.list_prices` on `sku_name` and the price validity window, multiply by `pricing.default`. Đây là list price, không phải giá sau chiết khấu.",
+  "ref": {
+   "label": "Monitor job costs & performance with system tables",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs-cost"
+  }
+ },
+ {
+  "id": "ops-c06",
+  "front": "Runs from `runs/submit` (for example Airflow) in system tables",
+  "back": "`run_type = 'SUBMIT_RUN'`, visible only in the timeline tables, not in `jobs` or `job_tasks`. Trên Jobs UI tìm theo Run ID hoặc Run as.",
+  "ref": {
+   "label": "Jobs system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+  }
+ },
+ {
+  "id": "ops-c07",
+  "front": "Retention of run history in the Jobs UI and Jobs API",
+  "back": "60 days; use `system.lakeflow` tables (365 days) or export results for longer history. Run và output tự xoá sau 60 ngày.",
+  "ref": {
+   "label": "Monitor Lakeflow Jobs",
+   "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+  }
+ },
+ {
+  "id": "ops-c08",
+  "front": "`runs/get-output` returns what?",
+  "back": "Output and metadata of a single task run, including the `dbutils.notebook.exit()` value, first 5 MB only. Gọi với task run ID, không phải job run nhiều task.",
+  "ref": {
+   "label": "jobs command group (Databricks CLI)",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+  }
+ },
+ {
+  "id": "ops-c09",
+  "front": "Who can query a pipeline event log by default?",
+  "back": "Only the pipeline's run-as user, through `event_log(<pipeline_id>)` on a hidden Delta table. Publish event log hoặc tạo view để chia sẻ.",
+  "ref": {
+   "label": "Pipeline event log",
+   "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+  }
+ },
+ {
+  "id": "ops-c10",
+  "front": "Event log field for expectation pass and fail counts",
+  "back": "`details:flow_progress.data_quality.expectations` in `flow_progress` events. Số record bị drop ở `data_quality.dropped_records`.",
+  "ref": {
+   "label": "Pipeline event log",
+   "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+  }
+ },
+ {
+  "id": "ops-c11",
+  "front": "`pipeline_events` system table",
+  "back": "`system.lakeflow_pipeline_events_preview.pipeline_events` (Beta): events of all pipelines in the region, the recommended way to query events. Thay cho việc đọc event log từng pipeline.",
+  "ref": {
+   "label": "Monitor and query events (pipeline_events system table)",
+   "url": "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events"
+  }
+ },
+ {
+  "id": "ops-c12",
+  "front": "Databricks SQL alert evaluation states",
+  "back": "`OK`, `TRIGGERED`, `ERROR`; the legacy `UNKNOWN` state is gone and alert queries cannot take parameters. Bản mới GA ngày 14/05/2026.",
+  "ref": {
+   "label": "Databricks SQL alerts",
+   "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
+  }
+ },
+ {
+  "id": "ops-c13",
+  "front": "What does a repair run rerun?",
+  "back": "Only unsuccessful tasks and their dependents, using the current job and task settings. Repair chỉ cho job có từ 2 task trở lên.",
+  "ref": {
+   "label": "Troubleshoot and repair job failures",
+   "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+  }
+ },
+ {
+  "id": "ops-c14",
+  "front": "`latest_repair_id` in `runs/repair`",
+  "back": "Not needed on the first repair, required on every later repair of the same run; take it from the returned `repair_id`. Đảm bảo các lần repair diễn ra tuần tự.",
+  "ref": {
+   "label": "Jobs API 2.2, Repair a job run",
+   "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+  }
+ },
+ {
+  "id": "ops-c15",
+  "front": "Bundle `mode: development` effects",
+  "back": "Prefix `[dev <user>]`, pipelines `development: true`, schedules paused, concurrent runs allowed, no deployment lock, `--cluster-id` override. Dùng cho target dev.",
+  "ref": {
+   "label": "Declarative Automation Bundles deployment modes",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes"
+  }
+ },
+ {
+  "id": "ops-c16",
+  "front": "Bundle `mode: production` checks",
+  "back": "Pipelines must be `development: false`; current Git branch must equal `git.branch` unless `--force`; recommends `run_as` service principal. Không cho override cluster.",
+  "ref": {
+   "label": "Declarative Automation Bundles deployment modes",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes"
+  }
+ },
+ {
+  "id": "ops-c17",
+  "front": "Databricks Git folders: former name",
+  "back": "Repos. Git folders có thể đặt ở mọi độ sâu dưới `/Workspace/Users/<email>/`, path `/Repos` cũ vẫn chạy.",
+  "ref": {
+   "label": "What happened to Databricks Repos?",
+   "url": "https://docs.databricks.com/aws/en/repos/what-happened-repos"
+  }
+ },
+ {
+  "id": "ops-c18",
+  "front": "Staging and prod jobs: Git folder path or remote Git source?",
+  "back": "Remote Git source on the job: each run snapshots a branch, tag or commit. Databricks khuyên chỉ dùng path Git folder khi phát triển.",
+  "ref": {
+   "label": "Use Git with Lakeflow Jobs",
+   "url": "https://docs.databricks.com/aws/en/jobs/git"
+  }
+ },
+ {
+  "id": "ops-c19",
+  "front": "Spark UI on serverless compute",
+  "back": "Not available, and neither are Spark logs; use the query profile and `system.query.history`. Đây là giới hạn của serverless.",
+  "ref": {
+   "label": "Serverless compute limitations",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+  }
+ },
+ {
+  "id": "ops-c20",
+  "front": "Current jobs from the SCD2 table `system.lakeflow.jobs`",
+  "back": "Take the latest `change_time` row per `workspace_id, job_id` first, then filter `delete_time IS NULL`. Lọc `delete_time` trước thì job đã xoá vẫn hiện với trạng thái cũ.",
+  "ref": {
+   "label": "Jobs system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+  }
+ },
+ {
+  "id": "ops-c21",
+  "front": "SQL alert task status when the alert condition is triggered",
+  "back": "Succeeded; the task fails only on evaluation errors. Rẽ nhánh theo evaluation state trong task output, không theo status của task.",
+  "ref": {
+   "label": "SQL alert task for jobs",
+   "url": "https://docs.databricks.com/aws/en/jobs/tasks/alert"
+  }
+ },
+ {
+  "id": "ops-c22",
+  "front": "System tables for SQL alerts",
+  "back": "`system.alert.alerts` (configuration history) and `system.alert.alert_evaluation_history` (each evaluation and delivery status), 365 days. Dùng để audit alert.",
+  "ref": {
+   "label": "System tables reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+  }
+ },
+ {
+  "id": "ops-c23",
+  "front": "`databricks bundle run --only` with `+`",
+  "back": "`+task` adds upstream tasks, `task+` adds downstream tasks, e.g. `--only load_silver+`. Đây là run mới, không phải repair.",
+  "ref": {
+   "label": "bundle command group",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+  }
+ },
+ {
+  "id": "ops-c24",
+  "front": "Streaming backlog notification never fires on a notebook job",
+  "back": "Jobs must track the active streaming query; remove `awaitTermination()`. Backlog lấy trung bình 10 phút và không áp cho pipeline task.",
+  "ref": {
+   "label": "Add notifications on a job",
+   "url": "https://docs.databricks.com/aws/en/jobs/notifications"
+  }
+ },
+ {
+  "id": "ops-c25",
+  "front": "Repair a run that contains a disabled task",
+  "back": "Repairs use run state, not disabled state; list the task in `rerun_tasks` to force it to run. Task disabled không tự chạy lại.",
+  "ref": {
+   "label": "Troubleshoot and repair job failures",
+   "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+  }
+ }
+]

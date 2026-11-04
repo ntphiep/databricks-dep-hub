@@ -1,0 +1,1416 @@
+{
+ "id": "security",
+ "title": "Security, compliance & governance",
+ "domain": [
+  "S6",
+  "S7"
+ ],
+ "icon": "dbx-unity-catalog",
+ "summary": "Câu hỏi về least privilege, row filter, column mask, ABAC với governed tags, pseudonymization, mask PII trong pipeline, purge cho GDPR, tag, comment và privilege inheritance.",
+ "sections": [
+  {
+   "id": "uc-hierarchy",
+   "title": "Securable hierarchy và privilege inheritance",
+   "icon": "dbx-unity-catalog",
+   "task": "7.2",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Privilege đi xuống theo catalog.schema.object",
+     "caption": "Grant trên catalog phủ mọi schema và object, kể cả object tạo sau; grant trên metastore thì không.",
+     "dir": "DOWN",
+     "nodes": [
+      {
+       "id": "grp",
+       "icon": "users-group",
+       "label": "Group analysts",
+       "sub": "account group",
+       "info": "- Grant cho group, không cho từng user\n- Group đồng bộ từ IdP qua SCIM"
+      },
+      {
+       "id": "ms",
+       "icon": "dbx-unity-catalog",
+       "label": "Metastore",
+       "sub": "CREATE CATALOG",
+       "info": "- Grant ở metastore chỉ cho thao tác cấp metastore như `CREATE CATALOG`, `CREATE EXTERNAL LOCATION`\n- Không kế thừa xuống catalog, ngoại lệ `READ METADATA`"
+      },
+      {
+       "id": "cat",
+       "icon": "database",
+       "label": "Catalog sales",
+       "sub": "USE CATALOG",
+       "info": "- Container object\n- `BROWSE` cấp ở catalog áp cho mọi object bên trong"
+      },
+      {
+       "id": "sch",
+       "icon": "folders",
+       "label": "Schema reporting",
+       "sub": "USE SCHEMA",
+       "info": "- Container object chứa table, view, volume, function\n- Thường mỗi team một schema"
+      },
+      {
+       "id": "tbl",
+       "icon": "table",
+       "label": "Table, view",
+       "sub": "SELECT, MODIFY",
+       "info": "- Đọc cần `USE CATALOG` + `USE SCHEMA` + `SELECT`"
+      },
+      {
+       "id": "vol",
+       "icon": "folder",
+       "label": "Volume",
+       "sub": "READ VOLUME",
+       "info": "- Đọc file cần `READ VOLUME` cùng hai usage privilege"
+      },
+      {
+       "id": "fn",
+       "icon": "code",
+       "label": "Function",
+       "sub": "EXECUTE",
+       "info": "- UDF, model đăng ký trong UC dùng `EXECUTE`"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "ms",
+       "to": "cat",
+       "style": "dashed",
+       "tone": "deny"
+      },
+      {
+       "id": "e2",
+       "from": "cat",
+       "to": "sch",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e3",
+       "from": "sch",
+       "to": "tbl",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e4",
+       "from": "sch",
+       "to": "vol",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e5",
+       "from": "sch",
+       "to": "fn",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e6",
+       "from": "grp",
+       "to": "cat",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "primary",
+       "label": "GRANT cho principal"
+      },
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Privilege kế thừa xuống object con"
+      },
+      {
+       "style": "dashed",
+       "tone": "deny",
+       "label": "Grant metastore không kế thừa"
+      }
+     ],
+     "steps": [
+      {
+       "title": "1. Grant ở catalog",
+       "md": "- `GRANT USE CATALOG, USE SCHEMA, SELECT ON CATALOG sales TO analysts`\n- Group đọc được mọi table hiện có và tạo sau trong catalog",
+       "hl": [
+        "grp",
+        "e6",
+        "cat"
+       ]
+      },
+      {
+       "title": "2. Kế thừa xuống",
+       "md": "- Privilege trên catalog áp cho mọi schema, rồi mọi table, view, volume, function",
+       "hl": [
+        "e2",
+        "e3",
+        "e4",
+        "e5",
+        "sch",
+        "tbl",
+        "vol",
+        "fn"
+       ]
+      },
+      {
+       "title": "3. Metastore là ngoại lệ",
+       "md": "- Grant trên metastore không cho đọc data bên dưới\n- Chỉ `READ METADATA` trên metastore kế thừa xuống",
+       "hl": [
+        "ms",
+        "e1"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Unity Catalog permissions model concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      },
+      {
+       "label": "Unity Catalog privileges reference",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Object model của Unity Catalog",
+     "img": "https://docs.databricks.com/aws/en/assets/images/object-hierarchy-5ba1e04cccbedd84cddd2e051aa54021.png",
+     "alt": "Unity Catalog object model: the metastore contains service and storage credentials, external locations, external metadata, catalogs, connections, shares, recipients, providers and clean rooms; schemas contain tables, views, volumes, functions, models, services and secrets",
+     "caption": "Credential, external location, connection, share, recipient, clean room nằm ngay dưới metastore, không thuộc catalog. Table, view, volume, function, model nằm trong schema.",
+     "credit": {
+      "label": "Databricks docs: What is Unity Catalog?",
+      "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Thao tác thường gặp và privilege cần có",
+     "columns": [
+      "Thao tác",
+      "Privilege cần có",
+      "Ghi chú"
+     ],
+     "rows": [
+      [
+       "Đọc table hoặc view",
+       "`USE CATALOG` + `USE SCHEMA` + `SELECT`",
+       "Có `SELECT` mà thiếu usage privilege vẫn lỗi"
+      ],
+      [
+       "Ghi vào table",
+       "`USE CATALOG` + `USE SCHEMA` + `MODIFY`",
+       "`MODIFY` là composite; `INSERT`, `UPDATE`, `DELETE` (Beta) là child"
+      ],
+      [
+       "Tạo table",
+       "`USE CATALOG` + `USE SCHEMA` + `CREATE TABLE`",
+       "`CREATE TABLE` cấp ở catalog thì áp cho mọi schema"
+      ],
+      [
+       "Chạy UDF",
+       "`USE CATALOG` + `USE SCHEMA` + `EXECUTE`",
+       "Model đăng ký trong UC cũng grant bằng `ON FUNCTION`"
+      ],
+      [
+       "Quản lý catalog",
+       "`MANAGE` trên catalog",
+       "Không cần usage privilege"
+      ],
+      [
+       "Quản lý schema",
+       "`USE CATALOG` + `MANAGE` trên schema",
+       "Không cần `USE SCHEMA` trên chính schema đó"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Unity Catalog permissions model concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      },
+      {
+       "label": "Manage privileges in Unity Catalog",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Kế thừa: chỗ hay chọn sai",
+     "md": "- **Metastore grant** không kế thừa xuống catalog; ngoại lệ là `READ METADATA`\n- **Ownership** không kế thừa, nhưng owner của catalog hoặc schema manage được mọi object con\n- **Grant trên container** áp cho cả object tạo sau, không cần grant lại\n- **ALL PRIVILEGES** không gồm `MANAGE`, `READ METADATA`, `EXTERNAL USE SCHEMA`, `EXTERNAL USE LOCATION`",
+     "src": [
+      {
+       "label": "Unity Catalog permissions model concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "owner-manage",
+   "title": "Owner, MANAGE và BROWSE",
+   "icon": "user-shield",
+   "task": "7.2",
+   "blocks": [
+    {
+     "type": "compare",
+     "title": "Ba cách có quyền trên một object",
+     "items": [
+      {
+       "name": "Owner",
+       "icon": "id-badge-2",
+       "tag": "1 principal",
+       "points": [
+        "Người tạo là owner đầu tiên; owner có thể là user, service principal hoặc group",
+        "Có mọi capability trên object, nhưng `SHOW GRANTS` không hiện `ALL PRIVILEGES`",
+        "Grant, revoke, transfer ownership, drop object",
+        "Không kế thừa xuống con, nhưng manage được object con"
+       ]
+      },
+      {
+       "name": "MANAGE",
+       "icon": "key",
+       "tag": "nhiều principal",
+       "points": [
+        "Grant, revoke, transfer ownership, drop object mà không cần là owner",
+        "Không kèm `SELECT` hay `MODIFY`; user tự grant cho mình được",
+        "Cấp trên container thì có `MANAGE` trên mọi object con",
+        "Composite: `READ METADATA` và `MANAGE ACCESS CONTROL` là child"
+       ]
+      },
+      {
+       "name": "BROWSE",
+       "icon": "search",
+       "tag": "metadata",
+       "points": [
+        "Thấy object, tên, comment, tag mà không đọc data",
+        "Gửi access request được mà không cần `USE CATALOG`",
+        "Cấp ở catalog; docs khuyên cấp cho `account users`"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Unity Catalog permissions model concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      },
+      {
+       "label": "Unity Catalog best practices",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Grant theo group, chuyển owner cho group",
+     "lang": "sql",
+     "code": "-- Read-only access for one schema (current and future tables)\nGRANT USE CATALOG ON CATALOG sales TO `analysts`;\nGRANT USE SCHEMA, SELECT ON SCHEMA sales.reporting TO `analysts`;\n\n-- Production objects are owned by a group, not a person\nALTER TABLE sales.reporting.orders OWNER TO `sales_data_owners`;\n\n-- Delegate grant management without data access\nGRANT MANAGE ON SCHEMA sales.reporting TO `sales_stewards`;\nGRANT USE CATALOG ON CATALOG sales TO `sales_stewards`;\n\n-- Make the catalog discoverable to everyone\nGRANT BROWSE ON CATALOG sales TO `account users`;",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Grant ở schema phủ table tạo sau; thiếu `USE CATALOG` thì vẫn không đọc được"
+      },
+      {
+       "line": 6,
+       "md": "Docs khuyên giao ownership object production cho group"
+      },
+      {
+       "line": 9,
+       "md": "`MANAGE` không cho đọc data; steward tự grant `SELECT` cho mình được"
+      },
+      {
+       "line": 10,
+       "md": "`MANAGE` trên schema cần `USE CATALOG` ở catalog cha, không cần `USE SCHEMA`; `MANAGE` trên catalog không cần usage privilege"
+      },
+      {
+       "line": 13,
+       "md": "`BROWSE` chỉ mở metadata và access request"
+      }
+     ],
+     "src": [
+      {
+       "label": "Manage privileges in Unity Catalog",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges"
+      },
+      {
+       "label": "Unity Catalog best practices",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+      },
+      {
+       "label": "Unity Catalog permissions concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Tín hiệu trong đề",
+     "md": "- **\"table owner shared the table but users still get permission denied\"**: thiếu `USE CATALOG` hoặc `USE SCHEMA`, chỉ owner catalog, schema hoặc người có `MANAGE` cấp được\n- **\"delegate permission management, no data access\"**: `MANAGE`\n- **\"discover datasets and request access\"**: `BROWSE` trên catalog\n- **\"owner left the company\"**: ownership đặt cho group từ đầu",
+     "src": [
+      {
+       "label": "Unity Catalog permissions model concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      },
+      {
+       "label": "Unity Catalog best practices",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+      },
+      {
+       "label": "YouTube, Databricks Events: Unity Catalog Access Control: Permissions, ABAC, and RBAC Explained (09/2026)",
+       "url": "https://www.youtube.com/watch?v=-MdRv8WzbVM"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "least-privilege",
+   "title": "Least privilege cho securable và workspace object",
+   "icon": "lock-access",
+   "task": "6.1",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Workspace ACL hay ra đề",
+     "columns": [
+      "Object",
+      "Permission (thấp tới cao)",
+      "Điểm phân biệt",
+      "Bẫy"
+     ],
+     "rows": [
+      [
+       "Job",
+       "CAN VIEW, CAN MANAGE RUN, IS OWNER, CAN MANAGE",
+       "CAN MANAGE RUN: run now, run với parameter khác, cancel, xem log; không sửa setting",
+       "Run now chạy bằng quyền job owner; group không làm IS OWNER được"
+      ],
+      [
+       "Compute",
+       "CAN VIEW (Beta), CAN ATTACH TO, CAN RESTART, CAN MANAGE",
+       "CAN VIEW xem Spark UI, metrics; ATTACH TO thêm attach notebook; RESTART thêm start, terminate",
+       "Driver log mặc định chỉ CAN MANAGE xem"
+      ],
+      [
+       "SQL warehouse",
+       "CAN VIEW, CAN USE, CAN MONITOR, IS OWNER, CAN MANAGE",
+       "CAN USE: start, run query, không xem query của người khác; CAN MONITOR: thêm query history và monitoring tab",
+       "CAN VIEW xem query, monitoring tab nhưng không chạy query; stop, edit cần IS OWNER hoặc CAN MANAGE"
+      ],
+      [
+       "Lakeflow pipeline",
+       "CAN VIEW, CAN RUN, CAN MANAGE, IS OWNER",
+       "CAN RUN: start, stop pipeline update",
+       "Sửa setting cần CAN MANAGE"
+      ],
+      [
+       "Secret scope",
+       "READ, WRITE, MANAGE",
+       "READ: đọc secret trong scope",
+       "Chỉ MANAGE đổi permission"
+      ],
+      [
+       "Notebook",
+       "CAN VIEW, CAN RUN, CAN EDIT, CAN MANAGE",
+       "CAN RUN: attach, chạy command; CAN EDIT: sửa cell",
+       "Notebook trong folder kế thừa permission của folder"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Access control lists",
+       "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn grant nhỏ nhất đủ dùng",
+     "rows": [
+      {
+       "says": "On-call engineers must trigger and cancel runs but must not edit the job",
+       "pick": "CAN MANAGE RUN trên job",
+       "why": "Đủ run now, cancel, xem log; sửa setting cần CAN MANAGE.",
+       "src": {
+        "label": "Access control lists",
+        "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+       }
+      },
+      {
+       "says": "BI users run queries on a SQL warehouse but must not stop or resize it",
+       "pick": "CAN USE trên warehouse",
+       "why": "CAN USE start và query được; stop, edit thuộc IS OWNER hoặc CAN MANAGE.",
+       "src": {
+        "label": "Access control lists",
+        "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+       }
+      },
+      {
+       "says": "Analysts need read-only access to one schema, including future tables",
+       "pick": "USE CATALOG trên catalog; USE SCHEMA và SELECT trên schema",
+       "why": "Grant ở schema kế thừa cho table mới; không mở các schema khác.",
+       "src": {
+        "label": "Unity Catalog permissions model concepts",
+        "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+       }
+      },
+      {
+       "says": "Production job must not run with a person's identity",
+       "pick": "Run as service principal, owner là group",
+       "why": "Docs khuyên service principal cho job ghi production để tránh ghi đè do user.",
+       "src": {
+        "label": "Unity Catalog best practices",
+        "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+       }
+      },
+      {
+       "says": "Nobody may read table files by bypassing Unity Catalog",
+       "pick": "Managed table, không cấp access thẳng vào cloud storage path",
+       "why": "Access qua storage bỏ qua UC access control, audit và lineage.",
+       "src": {
+        "label": "Unity Catalog best practices",
+        "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Least privilege không chỉ là GRANT",
+     "md": "- Creator của workspace object tự có CAN MANAGE; workspace admin có CAN MANAGE trên mọi object\n- Grant cho group, tránh grant thẳng cho user\n- Principal ngoài UC đọc thẳng storage location thì mọi row filter, column mask đều vô hiệu",
+     "src": [
+      {
+       "label": "Access control lists",
+       "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+      },
+      {
+       "label": "Unity Catalog best practices",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+      },
+      {
+       "label": "Databricks Community, PII redact at ingestion vs dynamic masking (09/2026)",
+       "url": "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rf-cm",
+   "title": "Row filter và column mask cấp table",
+   "icon": "filter",
+   "task": "6.2",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Gắn UDF làm row filter và column mask",
+     "lang": "sql",
+     "code": "-- Row filter: admins see all rows, others see US only\nCREATE FUNCTION gov.fn.us_filter(region STRING)\nRETURN IF(is_account_group_member('admin'), true, region = 'US');\n\nALTER TABLE sales.core.orders SET ROW FILTER gov.fn.us_filter ON (region);\n\n-- Column mask: show the last 4 digits unless in hr_admins\nCREATE FUNCTION gov.fn.ssn_mask(ssn STRING)\nRETURN CASE WHEN is_account_group_member('hr_admins') THEN ssn\n            ELSE concat('***-**-', right(ssn, 4)) END;\n\nALTER TABLE hr.core.employees ALTER COLUMN ssn SET MASK gov.fn.ssn_mask;\n\n-- Remove the filter before dropping its function\nALTER TABLE sales.core.orders DROP ROW FILTER;\nDROP FUNCTION gov.fn.us_filter;",
+     "notes": [
+      {
+       "line": 3,
+       "md": "UDF trả BOOLEAN; row trả FALSE bị loại khỏi kết quả"
+      },
+      {
+       "line": 5,
+       "md": "Mỗi table một row filter; tham số UDF bind vào cột theo thứ tự"
+      },
+      {
+       "line": 9,
+       "md": "Kiểu trả về phải khớp hoặc cast được về kiểu cột"
+      },
+      {
+       "line": 12,
+       "md": "Mỗi cột một mask; cột khác truyền thêm bằng `USING COLUMNS`"
+      },
+      {
+       "line": 16,
+       "md": "Drop function trước thì table rơi vào trạng thái không truy vấn được"
+      }
+     ],
+     "src": [
+      {
+       "label": "Manually apply row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/manually-apply"
+      },
+      {
+       "label": "Row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/"
+      }
+     ]
+    },
+    {
+     "type": "compare",
+     "title": "Chọn table-level, ABAC hay dynamic view",
+     "items": [
+      {
+       "name": "Table-level RF/CM",
+       "icon": "table-options",
+       "tag": "ALTER TABLE",
+       "points": [
+        "Gắn vào từng table, từng cột",
+        "Table owner hoặc user có `MANAGE` + `SELECT` quản lý và gỡ được",
+        "Hợp với số ít table có logic riêng"
+       ]
+      },
+      {
+       "name": "ABAC policy",
+       "icon": "dbx-abac",
+       "tag": "CREATE POLICY",
+       "points": [
+        "Gắn ở catalog, schema, table; match theo governed tag",
+        "Table mới được tag là tự được bảo vệ",
+        "Table owner không gỡ hay sửa được policy cấp trên"
+       ]
+      },
+      {
+       "name": "Dynamic view",
+       "icon": "eye-off",
+       "tag": "CREATE VIEW",
+       "points": [
+        "Logic `is_account_group_member()` nằm trong view",
+        "Dùng khi cần join nhiều table hoặc reshape để chia sẻ",
+        "Không grant cho user đọc table gốc"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "When to use ABAC vs table-level row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm"
+      },
+      {
+       "label": "Create a dynamic view",
+       "url": "https://docs.databricks.com/aws/en/views/dynamic"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn của table-level row filter và column mask",
+     "md": "- Không gắn được lên view\n- Time travel không chạy với row filter, column mask cấp table; với ABAC policy là Beta từ DBR 19\n- Clone không chạy; với ABAC, chỉ principal trong `EXCEPT` clone được\n- OpenSharing provider không share được table có row filter hoặc column mask cấp table\n- Dedicated compute: read từ 15.4 LTS, write từ 16.3; dưới 12.2 LTS fail securely",
+     "src": [
+      {
+       "label": "Row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/"
+      },
+      {
+       "label": "Manually apply row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/manually-apply"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "abac",
+   "title": "ABAC policy với governed tags",
+   "icon": "dbx-abac",
+   "task": "6.2",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Tag cột một lần, policy ở catalog phủ mọi table",
+     "lang": "sql",
+     "code": "-- 1. Account-level governed tag with allowed values\nCREATE GOVERNED TAG pii VALUES ('ssn', 'email', 'phone');\n\n-- 2. Data steward tags columns (needs APPLY TAG + ASSIGN on the tag)\nALTER TABLE hr.core.employees ALTER COLUMN ssn SET TAGS ('pii' = 'ssn');\n\n-- 3. One masking UDF, reused by every policy\nCREATE FUNCTION hr.gov.last_n(val STRING, n INT) RETURNS STRING\nRETURN concat('***-**-', right(val, n));\n\n-- 4. Column mask policy on the whole catalog\nCREATE POLICY mask_ssn\nON CATALOG hr\nCOLUMN MASK hr.gov.last_n\nTO `account users` EXCEPT `compliance`, `etl_sp`\nFOR TABLES\nMATCH COLUMNS has_tag_value('pii', 'ssn') AS ssn\nON COLUMN ssn\nUSING COLUMNS (4);\n\n-- 5. Row filter policy only on tables tagged sensitivity = high\nCREATE POLICY hide_eu\nON SCHEMA prod.customers\nROW FILTER prod.gov.non_eu\nTO `us_analysts`\nFOR TABLES\nWHEN has_tag_value('sensitivity', 'high')\nMATCH COLUMNS has_tag('geo_region') AS region\nUSING COLUMNS (region);\n\nSHOW EFFECTIVE POLICIES ON TABLE hr.core.employees;",
+     "notes": [
+      {
+       "line": 2,
+       "md": "Cần privilege `CREATE` ở account; account admin và workspace admin có sẵn"
+      },
+      {
+       "line": 5,
+       "md": "Tag cột không kế thừa từ table; phải gán trực tiếp lên cột"
+      },
+      {
+       "line": 13,
+       "md": "Scope: `METASTORE` (Beta), `CATALOG`, `SCHEMA`, `TABLE`; docs khuyên gắn ở level cao nhất"
+      },
+      {
+       "line": 15,
+       "md": "`EXCEPT` thấy data gốc; đặt run-as identity của pipeline ở đây"
+      },
+      {
+       "line": 17,
+       "md": "`has_tag_value` trong `MATCH COLUMNS` chỉ xét tag gắn trên cột"
+      },
+      {
+       "line": 18,
+       "md": "Cột bị mask tự bind làm tham số đầu; `USING COLUMNS` truyền tham số còn lại"
+      },
+      {
+       "line": 27,
+       "md": "`WHEN` xét tag của table, kể cả tag kế thừa từ catalog, schema"
+      },
+      {
+       "line": 31,
+       "md": "Thấy cả policy kế thừa từ catalog và schema"
+      }
+     ],
+     "src": [
+      {
+       "label": "Create and manage row filter and column mask policies",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/policies"
+      },
+      {
+       "label": "Core concepts for ABAC",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+      },
+      {
+       "label": "CREATE GOVERNED TAG",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-governed-tag"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Governed tag kế thừa và policy theo cấp",
+     "img": "https://docs.databricks.com/aws/en/assets/images/governed-tags-hierarchy-2740348868f29ddf0611089d4684adec.png",
+     "alt": "Governed tags hierarchy: tag HR on catalog A is inherited by its schema and table, PII tags are set on columns, and policies attach to catalog B, schema B.1 and table B.1.1",
+     "caption": "Tag HR gắn ở catalog A được schema và table con kế thừa; tag PII phải gắn thẳng lên cột vì cột không kế thừa tag. Policy gắn được ở catalog, schema hoặc table.",
+     "credit": {
+      "label": "Databricks docs: Core concepts for attribute-based access control (ABAC)",
+      "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Hành vi ABAC cần nhớ",
+     "columns": [
+      "Khía cạnh",
+      "Hành vi"
+     ],
+     "rows": [
+      [
+       "Không cấp access",
+       "Policy chỉ thêm giới hạn; vẫn cần `SELECT` và usage privilege riêng"
+      ],
+      [
+       "Quyền tạo policy",
+       "`MANAGE` hoặc ownership trên object gắn policy, `EXECUTE` trên UDF"
+      ],
+      [
+       "Compute",
+       "Serverless; standard hoặc dedicated từ DBR 16.4; runtime cũ hơn không đọc được table có ABAC"
+      ],
+      [
+       "Tag",
+       "Chỉ governed tag; đổi tag mất vài phút mới có hiệu lực"
+      ],
+      [
+       "Xung đột",
+       "Một user chỉ được một row filter mỗi table, một mask mỗi cột; hai UDF khác nhau thì query lỗi"
+      ],
+      [
+       "Policy trên view (Beta)",
+       "DBR 19+; không áp cho metric view; tối đa 20 policy xếp lớp mỗi query; `CREATE OR REPLACE VIEW` xoá tag và policy gắn trực tiếp"
+      ],
+      [
+       "DENY policy (Beta)",
+       "Deny `MANAGE ACCESS CONTROL`, thắng mọi grant kể cả ownership; privilege này chỉ deny được, không grant được"
+      ],
+      [
+       "MV, streaming table",
+       "Refresh chạy bằng owner hoặc run-as của pipeline; identity đó bị mask thì data lưu vĩnh viễn bị mask"
+      ],
+      [
+       "Clone, OpenSharing",
+       "Chỉ principal trong `EXCEPT` clone được; share owner phải được exempt"
+      ],
+      [
+       "Quota",
+       "Mỗi policy tối đa 20 principal (`TO` và `EXCEPT`); 50 policy mỗi table, 100 mỗi schema hoặc catalog; 3 điều kiện `MATCH COLUMNS` cho mask, 6 cho row filter"
+      ]
+     ],
+     "src": [
+      {
+       "label": "ABAC requirements, quotas, and limitations",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+      },
+      {
+       "label": "When to use ABAC vs table-level row filters and column masks",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm"
+      },
+      {
+       "label": "Core concepts for ABAC",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+      },
+      {
+       "label": "Unity Catalog permissions concepts",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Thay đổi 2026",
+     "md": "- **Governed tags GA** ngày 02/04/2026; **Data Classification GA** ngày 20/04/2026\n- **ABAC GA** ngày 28/04/2026; query qua view hoặc function dùng identity của session user, không còn của owner view\n- **Cross-engine ABAC GA** ngày 01/10/2026: engine ngoài đọc managed table có policy, serverless của Databricks enforce\n- **Beta**: DENY policy, policy cấp metastore, policy trên view, time travel với ABAC, tag propagation qua lineage",
+     "src": [
+      {
+       "label": "Databricks release notes, April 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/april"
+      },
+      {
+       "label": "Databricks release notes, September 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/september"
+      },
+      {
+       "label": "Databricks release notes, October 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/october"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "anonymize",
+   "title": "Anonymization và pseudonymization",
+   "icon": "fingerprint",
+   "task": "6.3",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Bốn kỹ thuật trong outline",
+     "columns": [
+      "Kỹ thuật",
+      "Cách làm trên Databricks",
+      "Đảo ngược",
+      "Dùng khi"
+     ],
+     "rows": [
+      [
+       "Hashing (consistent hashing)",
+       "`sha2(concat(val, version), 256)` trong mask UDF đánh dấu `DETERMINISTIC`",
+       "Không qua hàm; cùng input cho cùng hash",
+       "Join giữa table mà không lộ giá trị"
+      ],
+      [
+       "Tokenization",
+       "Thay giá trị bằng token; bảng mapping token và giá trị gốc nằm ở schema riêng, chỉ nhóm nhỏ đọc",
+       "Có, qua bảng mapping",
+       "Cần re-identify có kiểm soát"
+      ],
+      [
+       "Suppression",
+       "Mask trả `NULL` hoặc `'***'`, hoặc bỏ hẳn cột",
+       "Không",
+       "Cột không cần cho phân tích"
+      ],
+      [
+       "Generalization",
+       "Làm thô giá trị: `ROUND(salary / 1000) * 1000`, `date_trunc('MONTH', dob)`, chỉ giữ domain email",
+       "Không",
+       "Cần phân phối hoặc aggregate, không cần giá trị cá nhân"
+      ],
+      [
+       "Partial mask, encryption",
+       "`right(ssn, 4)`, `mask()`; `aes_encrypt` với key lấy bằng `secret()`",
+       "Mask: không; encryption: có với key",
+       "Hiển thị một phần; lưu giá trị cần giải mã sau"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Common patterns for row filtering and column masking",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns"
+      },
+      {
+       "label": "mask function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/mask"
+      },
+      {
+       "label": "aes_encrypt function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/aes_encrypt"
+      },
+      {
+       "label": "secret function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/secret"
+      },
+      {
+       "label": "Databricks Community, PII redact at ingestion vs dynamic masking (09/2026)",
+       "url": "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Pseudonymize bằng ABAC, có version để rotate",
+     "lang": "sql",
+     "code": "CREATE FUNCTION gov.fn.pseudonymize(val STRING, version INT)\nRETURNS STRING\nDETERMINISTIC\nRETURN sha2(concat(val, CAST(version AS STRING)), 256);\n\nCREATE POLICY pseudo_email\nON CATALOG crm\nCOLUMN MASK gov.fn.pseudonymize\nTO `data_scientists`\nFOR TABLES\nMATCH COLUMNS has_tag_value('pii', 'email') AS e\nON COLUMN e\nUSING COLUMNS (1);\n\n-- Generalization: keep salary bands only\nCREATE FUNCTION gov.fn.salary_band(salary DOUBLE) RETURNS DOUBLE\nDETERMINISTIC\nRETURN ROUND(salary / 1000) * 1000;",
+     "notes": [
+      {
+       "line": 3,
+       "md": "`DETERMINISTIC` giúp optimizer và cho kết quả giống nhau ở mọi table"
+      },
+      {
+       "line": 4,
+       "md": "`sha2` nhận bitLength 224, 256, 384, 512 (0 nghĩa là 256)"
+      },
+      {
+       "line": 13,
+       "md": "Tăng version để sinh hash mới khi rotate"
+      },
+      {
+       "line": 18,
+       "md": "Trả về cùng kiểu DOUBLE để cast được về cột"
+      }
+     ],
+     "src": [
+      {
+       "label": "Common patterns for row filtering and column masking",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns"
+      },
+      {
+       "label": "sha2 function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/sha2"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Hash vẫn là personal data",
+     "md": "- GDPR: data đã pseudonymize mà gắn lại được với người bằng thông tin bổ sung vẫn là personal data\n- Chỉ data anonymous thật sự mới ra khỏi phạm vi GDPR\n- Hash hay token ở silver không thay cho DELETE khi có erasure request\n- Docs Databricks: xoá hẳn an toàn hơn obfuscation",
+     "src": [
+      {
+       "label": "GDPR Recital 26, anonymous data",
+       "url": "https://gdpr-info.eu/recitals/no-26/"
+      },
+      {
+       "label": "GDPR Art. 4(5), pseudonymisation",
+       "url": "https://gdpr-info.eu/art-4-gdpr/"
+      },
+      {
+       "label": "GDPR and CCPA compliance with Delta Lake",
+       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+      },
+      {
+       "label": "Databricks Community, PII redact at ingestion vs dynamic masking (09/2026)",
+       "url": "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pii-pipeline",
+   "title": "Detect và mask PII trong pipeline batch và streaming",
+   "icon": "zoom-code",
+   "task": "6.4",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Data Classification gắn tag, ABAC policy mask theo tag",
+     "caption": "Tag sinh tự động; policy ở catalog phủ cả table mới; pipeline identity nằm trong EXCEPT.",
+     "dir": "DOWN",
+     "nodes": [
+      {
+       "id": "src",
+       "icon": "cloud-upload",
+       "label": "Kafka, files",
+       "sub": "raw PII",
+       "info": "- Auto Loader hoặc Kafka source\n- PII có thể nằm ở cột chưa ai biết"
+      },
+      {
+       "id": "brz",
+       "icon": "table-import",
+       "label": "bronze ST",
+       "sub": "streaming table",
+       "info": "- Ghi bởi pipeline; run-as identity phải nằm trong `EXCEPT` của mọi policy trên table nguồn"
+      },
+      {
+       "id": "slv",
+       "icon": "table",
+       "label": "silver ST, MV",
+       "sub": "refresh as owner",
+       "info": "- Refresh chạy bằng quyền pipeline owner\n- Owner bị mask thì data lưu bị mask vĩnh viễn"
+      },
+      {
+       "id": "cls",
+       "icon": "zoom-code",
+       "label": "Classification",
+       "sub": "Data Classification",
+       "info": "- Agent AI scan incremental, cần serverless\n- Table mới thường được scan trong 24 giờ\n- Kết quả ở `system.data_classification.results`"
+      },
+      {
+       "id": "pol",
+       "icon": "dbx-abac",
+       "label": "ABAC policy",
+       "sub": "COLUMN MASK",
+       "info": "- `MATCH COLUMNS has_tag('class.email_address')`\n- Gắn ở catalog nên phủ table tạo sau"
+      },
+      {
+       "id": "ana",
+       "icon": "users",
+       "label": "analysts",
+       "sub": "thấy giá trị mask",
+       "info": "- Nằm trong `TO`"
+      },
+      {
+       "id": "cmp",
+       "icon": "user-shield",
+       "label": "compliance",
+       "sub": "EXCEPT, thấy gốc",
+       "info": "- Giữ nhóm exempt nhỏ và theo dõi qua audit log"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "src",
+       "to": "brz",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e2",
+       "from": "brz",
+       "to": "slv",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e3",
+       "from": "cls",
+       "to": "brz",
+       "style": "dashed",
+       "tone": "backup"
+      },
+      {
+       "id": "e4",
+       "from": "cls",
+       "to": "slv",
+       "style": "dashed",
+       "tone": "backup"
+      },
+      {
+       "id": "e5",
+       "from": "pol",
+       "to": "slv",
+       "style": "dashed",
+       "tone": "backup"
+      },
+      {
+       "id": "e6",
+       "from": "slv",
+       "to": "ana",
+       "style": "solid",
+       "tone": "primary"
+      },
+      {
+       "id": "e7",
+       "from": "slv",
+       "to": "cmp",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Data flow của pipeline"
+      },
+      {
+       "style": "dashed",
+       "tone": "backup",
+       "label": "Metadata: tag và policy"
+      },
+      {
+       "style": "solid",
+       "tone": "primary",
+       "label": "Query của user"
+      }
+     ],
+     "steps": [
+      {
+       "title": "1. Ingest",
+       "md": "- Pipeline ghi bronze và silver như bình thường",
+       "hl": [
+        "src",
+        "e1",
+        "brz",
+        "e2",
+        "slv"
+       ]
+      },
+      {
+       "title": "2. Detect",
+       "md": "- Data Classification scan table, gắn system tag như `class.email_address`, `class.us_ssn`",
+       "hl": [
+        "cls",
+        "e3",
+        "e4"
+       ]
+      },
+      {
+       "title": "3. Mask",
+       "md": "- ABAC policy match tag, mask lúc query cho `TO`; `EXCEPT` thấy giá trị gốc",
+       "hl": [
+        "pol",
+        "e5",
+        "e6",
+        "e7",
+        "ana",
+        "cmp"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "Data Classification",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+      },
+      {
+       "label": "ABAC requirements, quotas, and limitations",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+      },
+      {
+       "label": "Use Unity Catalog with pipelines",
+       "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+      },
+      {
+       "label": "Databricks blog, ABAC, governed tags and data classification are GA (05/2026)",
+       "url": "https://www.databricks.com/blog/abac-row-filtering-and-column-masking-policies-governed-tags-and-data-classification-are-now"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Kết quả Data Classification",
+     "img": "https://docs.databricks.com/aws/en/assets/images/data-classification-results-page-0553128af82e4ff2305748dedf1e58a2.png",
+     "alt": "Data Classification results page in Catalog Explorer: tables scanned, classified tags with detected columns, auto-tagging status, compliance framework and unmasked user access in the last 7 days",
+     "caption": "Trang Data Classification liệt kê classified tag, số cột detected, Auto-tagging Active hoặc Inactive và Unmasked user access trong 7 ngày; từ đây bật auto-tagging hoặc tạo masking policy.",
+     "credit": {
+      "label": "Databricks docs: Data Classification",
+      "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Mask ngay trong định nghĩa pipeline",
+     "lang": "sql",
+     "code": "-- Streaming table that publishes with a mask and a row filter\nCREATE OR REFRESH STREAMING TABLE crm.silver.customers (\n  id INT,\n  name STRING,\n  region STRING,\n  ssn STRING MASK crm.gov.ssn_mask\n)\nWITH ROW FILTER crm.gov.us_filter ON (region)\nAS SELECT * FROM STREAM read_files('s3://bucket/customers/');\n\n-- Free-text PII: mask entities inside a string\nSELECT ticket_id,\n       ai_mask(body, array('person', 'email', 'phone')) AS body_masked\nFROM crm.bronze.tickets;",
+     "notes": [
+      {
+       "line": 2,
+       "md": "Thêm, đổi hay gỡ mask và row filter của ST, MV đều qua `CREATE OR REFRESH`"
+      },
+      {
+       "line": 8,
+       "md": "Refresh chạy với quyền owner; query thì `CURRENT_USER`, `IS_MEMBER` lấy theo người query"
+      },
+      {
+       "line": 13,
+       "md": "`ai_mask` (Public Preview) thay entity bằng `[MASKED]`; kết quả có thể khác nhau giữa lần chạy"
+      }
+     ],
+     "src": [
+      {
+       "label": "CREATE STREAMING TABLE",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-streaming-table"
+      },
+      {
+       "label": "Use Unity Catalog with pipelines",
+       "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+      },
+      {
+       "label": "ai_mask function",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_mask"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "tip",
+     "title": "Data Classification: điều kiện và quyền",
+     "md": "- Bật cho catalog cần ownership hoặc `MANAGE`; bật hết catalog hiện có không tự bật catalog tạo sau\n- Auto-tagging cần `USE CATALOG`, `APPLY TAG` trên catalog và `ASSIGN` trên tag\n- Mặc định chỉ account admin có `MANAGE`, `ASSIGN` trên system tag của Data Classification\n- Tắt auto-tagging không gỡ tag đã gán",
+     "src": [
+      {
+       "label": "Data Classification",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "PII lọt qua đường ít ai để ý",
+     "md": "- File của materialized view có thể chứa cột upstream ngoài định nghĩa, gồm PII, để refresh incremental; không share storage cho consumer không tin cậy\n- Data Classification scan table, ST, MV; scan view là Beta và không gắn tag `class.*` lên cột của view",
+     "src": [
+      {
+       "label": "Use Unity Catalog with pipelines",
+       "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+      },
+      {
+       "label": "Data Classification",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "purge",
+   "title": "Purge dữ liệu cho GDPR right-to-erasure",
+   "icon": "eraser",
+   "task": "6.5",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Năm bước xoá hẳn một user",
+     "items": [
+      {
+       "title": "1. Ghi request vào control table",
+       "md": "- Table `gdpr_requests` giữ `user_id` cần xoá\n- Job theo lịch đọc table này; GDPR yêu cầu xoá không chậm trễ, docs lấy ví dụ một tháng"
+      },
+      {
+       "title": "2. Xoá ở bronze trước",
+       "md": "- `MERGE INTO ... WHEN MATCHED THEN DELETE` cho nhiều user một lần\n- Thiết kế dùng `user_id` thay natural key để tách PII khỏi data khác"
+      },
+      {
+       "title": "3. Lan xuống silver, gold",
+       "md": "- **Materialized view**: tự xử lý delete sau refresh\n- **Streaming table**: DELETE bằng DML, rồi đọc nguồn với `skipChangeCommits`\n- Full refresh chỉ khi nguồn còn đủ history"
+      },
+      {
+       "title": "4. Purge soft-delete",
+       "md": "- Table có deletion vectors: `REORG TABLE ... APPLY (PURGE)` rewrite file chứa row đã xoá\n- Áp cho cả Delta table, MV và streaming table"
+      },
+      {
+       "title": "5. Xoá file cũ",
+       "md": "- `VACUUM` xoá file không còn được tham chiếu, gồm file của change data feed\n- Predictive Optimization chạy VACUUM tự động trên managed table\n- Xoá cả ở nguồn ngoài như Kafka, cloud storage"
+      }
+     ],
+     "src": [
+      {
+       "label": "GDPR and CCPA compliance with Delta Lake",
+       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+      },
+      {
+       "label": "Deletion vectors in Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+      },
+      {
+       "label": "REORG TABLE",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table"
+      },
+      {
+       "label": "Use Delta Lake change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+      },
+      {
+       "label": "GDPR Art. 17, right to erasure",
+       "url": "https://gdpr-info.eu/art-17-gdpr/"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "SQL và option cho từng bước",
+     "lang": "sql",
+     "code": "-- Step 2: delete many users at once in bronze\nMERGE INTO crm.bronze.users AS t\nUSING (SELECT user_id FROM crm.ops.gdpr_requests) AS r\nON t.user_id = r.user_id\nWHEN MATCHED THEN DELETE;\n\n-- Step 3: streaming tables accept DML\nDELETE FROM crm.silver.users_st WHERE user_id IN (SELECT user_id FROM crm.ops.gdpr_requests);\n\n-- Step 4: rewrite files that still hold soft-deleted rows\nREORG TABLE crm.bronze.users APPLY (PURGE);\n\n-- Step 5: remove files older than the retention window (default 7 days)\nVACUUM crm.bronze.users;\n\n-- Python, downstream stream: ignore delete and update commits\n-- spark.readStream.option(\"skipChangeCommits\", \"true\").table(\"crm.bronze.users\")",
+     "notes": [
+      {
+       "line": 2,
+       "md": "Sau khi MERGE xong, đánh dấu request đã xử lý trong control table"
+      },
+      {
+       "line": 8,
+       "md": "DML lên streaming table không được đổi schema"
+      },
+      {
+       "line": 11,
+       "md": "Chỉ rewrite file có soft-delete; chạy lại không có tác dụng thêm"
+      },
+      {
+       "line": 14,
+       "md": "Retention lấy từ `delta.deletedFileRetentionDuration`; time travel về trước mốc này mất"
+      },
+      {
+       "line": 17,
+       "md": "Không có option này thì stream đọc table vừa bị DELETE sẽ fail"
+      }
+     ],
+     "src": [
+      {
+       "label": "GDPR and CCPA compliance with Delta Lake",
+       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+      },
+      {
+       "label": "REORG TABLE",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table"
+      },
+      {
+       "label": "VACUUM",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum"
+      },
+      {
+       "label": "Use Unity Catalog with pipelines",
+       "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "DELETE chưa phải là xoá",
+     "md": "- Sau DELETE, row cũ vẫn đọc được bằng time travel tới khi VACUUM xoá file\n- Deletion vectors chỉ đánh dấu row; Parquet file vẫn chứa data tới khi `REORG ... APPLY (PURGE)`\n- OPTIMIZE không bảo đảm áp hết deletion vector\n- Change data feed giữ cả row bị xoá; file CDF bị VACUUM xoá theo retention của table",
+     "src": [
+      {
+       "label": "Deletion vectors in Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+      },
+      {
+       "label": "Use Delta Lake change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+      },
+      {
+       "label": "GDPR and CCPA compliance with Delta Lake",
+       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+      },
+      {
+       "label": "YouTube, Databricks: Becoming GDPR and CCPA Compliant Using DLT (07/2024)",
+       "url": "https://www.youtube.com/watch?v=qIz0QM-L_p0"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tags-comments",
+   "title": "Tags và comments cho discoverability",
+   "icon": "tags",
+   "task": "7.1",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Ba loại metadata gắn lên securable",
+     "columns": [
+      "Loại",
+      "Ai định nghĩa",
+      "Quyền để gán",
+      "Dùng cho"
+     ],
+     "rows": [
+      [
+       "Tag thường",
+       "Bất kỳ ai gán",
+       "Owner, hoặc `APPLY TAG` + `USE SCHEMA` + `USE CATALOG`",
+       "Phân loại, search; không dùng được trong ABAC"
+      ],
+      [
+       "Governed tag",
+       "Admin ở account, kèm tag policy giới hạn value",
+       "Như trên, thêm `ASSIGN` trên tag",
+       "ABAC, data classification, cost center, certified và deprecated"
+      ],
+      [
+       "System tag",
+       "Databricks, ví dụ `system.certification_status`, `class.*`",
+       "Như governed tag; key và value không sửa được",
+       "Chuẩn hoá classification và lifecycle"
+      ],
+      [
+       "Comment",
+       "Owner hoặc người có quyền sửa",
+       "Catalog, schema: owner hoặc `MANAGE`; table, cột: owner hoặc `MODIFY` + `SELECT`; view: chỉ owner",
+       "Mô tả cho user có `BROWSE`; có AI-generated comment"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Apply tags to Unity Catalog securable objects",
+       "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+      },
+      {
+       "label": "Governed tags",
+       "url": "https://docs.databricks.com/aws/en/admin/governed-tags/"
+      },
+      {
+       "label": "Add comments to data and AI assets",
+       "url": "https://docs.databricks.com/aws/en/comments/"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Gán governed tag và system tag",
+     "img": "https://docs.databricks.com/aws/en/assets/images/assign-governed-tags-26c797aeffc17392f5fd1cf05172d39e.png",
+     "alt": "Assign tags dialog with a key drop-down listing governed tags such as pii and Marketing and system tags such as system.certification_status, with an Include system tags toggle",
+     "caption": "Dialog Assign tags liệt kê governed tag như `pii` cùng system tag như `system.certification_status`; tag kế thừa từ object cha phải sửa ở catalog, không sửa ở table.",
+     "credit": {
+      "label": "Databricks docs: Apply tags to Unity Catalog securable objects",
+      "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Gắn tag, comment và tra cứu",
+     "lang": "sql",
+     "code": "ALTER TABLE sales.reporting.orders SET TAGS ('domain' = 'sales', 'tier' = 'gold');\nALTER TABLE sales.reporting.orders ALTER COLUMN email SET TAGS ('pii' = 'email');\n\nCOMMENT ON TABLE sales.reporting.orders IS 'One row per order line, refreshed hourly';\nCOMMENT ON COLUMN sales.reporting.orders.email IS 'Customer email, masked by policy';\n\nSELECT table_name, column_name, tag_name, tag_value\nFROM sales.information_schema.column_tags\nWHERE tag_name = 'pii';",
+     "notes": [
+      {
+       "line": 2,
+       "md": "Mỗi lệnh ALTER chỉ tag một cột; COMMENT thì không bị giới hạn này"
+      },
+      {
+       "line": 4,
+       "md": "Đổi comment ghi một `SET TBLPROPERTIES` vào table history"
+      },
+      {
+       "line": 7,
+       "md": "Còn có `CATALOG_TAGS`, `SCHEMA_TAGS`, `TABLE_TAGS`, `VOLUME_TAGS`"
+      }
+     ],
+     "src": [
+      {
+       "label": "Apply tags to Unity Catalog securable objects",
+       "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+      },
+      {
+       "label": "COMMENT ON",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-comment"
+      },
+      {
+       "label": "INFORMATION_SCHEMA.COLUMN_TAGS",
+       "url": "https://docs.databricks.com/aws/en/sql/language-manual/information-schema/column_tags"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn của tag",
+     "md": "- Tag lưu dạng plain text và có thể được replicate toàn cầu: không đặt PII vào tag\n- Key phân biệt hoa thường; tối đa 50 tag mỗi object, 1.000 tag cột mỗi table; 1.000 governed tag mỗi account, 500 value mỗi tag\n- Tag ở catalog, schema kế thừa xuống table khi search và khi đánh giá ABAC, nhưng không xuống cột\n- Tag propagation (Beta) dùng lineage gắn governed tag sang table và cột dẫn xuất qua CTAS, `INSERT ... SELECT`, MERGE",
+     "src": [
+      {
+       "label": "Apply tags to Unity Catalog securable objects",
+       "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+      },
+      {
+       "label": "Governed tags",
+       "url": "https://docs.databricks.com/aws/en/admin/governed-tags/"
+      },
+      {
+       "label": "Databricks release notes, October 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/october"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

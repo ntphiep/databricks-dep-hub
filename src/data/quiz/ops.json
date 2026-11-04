@@ -1,0 +1,1236 @@
+[
+ {
+  "id": "ops-01",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A FinOps lead asks for the list-price cost in USD of every Lakeflow Job over the last 90 days, across all workspaces in the region, including jobs that were deleted last month. The report must be refreshed daily with SQL and must not depend on manual exports.\nWhich approach meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Export the Runs tab of the Jobs UI in each workspace every day, load the files into a Delta table, and multiply each run duration by the cluster DBU rate."
+   },
+   {
+    "k": "B",
+    "t": "Query `system.billing.usage` where `billing_origin_product = 'JOBS'`, join `list_prices` by SKU and price window, group by `usage_metadata.job_id`."
+   },
+   {
+    "k": "C",
+    "t": "Call `GET /api/2.2/jobs/runs/list` in every workspace each night and sum `run_duration` multiplied by the number of workers configured on each job cluster."
+   },
+   {
+    "k": "D",
+    "t": "Query `system.compute.node_timeline` for every cluster, sum the minutes each node was running, and multiply them by the published DBU rate of each instance type."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: cost USD, 90 ngày, mọi workspace, job đã xoá, refresh bằng SQL.\n- `system.billing.usage` là global, giữ 365 ngày, có `usage_metadata.job_id` cho jobs compute và serverless.\n- `list_prices.pricing.default` đổi DBU sang USD theo khoảng `price_start_time`, `price_end_time`.",
+  "wrong": {
+   "A": "Jobs UI chỉ giữ run 60 ngày, từng workspace một và không có DBU thực tế.",
+   "C": "Jobs API chỉ trả run trong 60 ngày của một workspace và không có số DBU đã tính tiền.",
+   "D": "`node_timeline` là utilization theo phút, không phải billable usage, và chỉ giữ 90 ngày."
+  },
+  "refs": [
+   {
+    "label": "Monitor job costs & performance with system tables",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs-cost"
+   },
+   {
+    "label": "Billable usage system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+   },
+   {
+    "label": "Pricing system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/pricing"
+   }
+  ]
+ },
+ {
+  "id": "ops-02",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.1",
+  "source": "original",
+  "select": 1,
+  "stem": "An engineer writes `SELECT COUNT(*) FROM system.lakeflow.jobs WHERE workspace_id = '1234567890123456'` to count the jobs in a workspace. The result is roughly three times the number of jobs shown in the Jobs UI, and some of the counted jobs were deleted months ago.\nHow should the engineer fix the query?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Filter on `run_type = 'JOB_RUN'` so that one-time runs submitted through `runs/submit` by external orchestrators are excluded from the count."
+   },
+   {
+    "k": "B",
+    "t": "Add `record_type = 'ORIGINAL'` so that retraction and restatement rows are not counted twice."
+   },
+   {
+    "k": "C",
+    "t": "Keep the latest `change_time` row per `workspace_id, job_id` with `ROW_NUMBER()`, then drop rows where `delete_time` is set."
+   },
+   {
+    "k": "D",
+    "t": "Query `system.lakeflow.job_run_timeline` instead, because `jobs` keeps one row per hourly slice of each run."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: số dòng gấp nhiều lần số job, có cả job đã xoá.\n- `system.lakeflow.jobs` là SCD2: mỗi lần sửa job sinh một dòng mới, xoá job cũng sinh dòng có `delete_time`.\n- Dedupe theo `change_time` mới nhất rồi mới lọc `delete_time IS NULL`.",
+  "wrong": {
+   "A": "`runs/submit` không xuất hiện trong `jobs`; `run_type` là cột của bảng timeline.",
+   "B": "`record_type` là cột của `system.billing.usage`, không có trong `system.lakeflow.jobs`.",
+   "D": "Slice theo giờ là đặc điểm của `job_run_timeline`, không phải `jobs`; bảng timeline đếm run chứ không đếm job."
+  },
+  "refs": [
+   {
+    "label": "Jobs system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+   }
+  ]
+ },
+ {
+  "id": "ops-03",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A FinOps engineer builds a daily cost dashboard on `system.billing.usage`. Two issues appear: totals for earlier days change slightly after corrections are published, and for all-purpose clusters the `identity_metadata.run_as` value shows the person who created the cluster, while finance wants the current cluster owner.\nWhich TWO changes produce correct numbers and owners? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Sum `usage_quantity` across all record types, because `RETRACTION` rows carry negated quantities that cancel the incorrect `ORIGINAL` rows."
+   },
+   {
+    "k": "B",
+    "t": "Filter to `record_type = 'ORIGINAL'` so that corrected values are not counted twice."
+   },
+   {
+    "k": "C",
+    "t": "Join `usage_metadata.cluster_id` to `system.compute.clusters` and take `owned_by` from the matching cluster record."
+   },
+   {
+    "k": "D",
+    "t": "Read `identity_metadata.owned_by`, which holds the cluster owner for all-purpose compute usage."
+   },
+   {
+    "k": "E",
+    "t": "Compute cost per cluster from `system.compute.node_timeline` instead, because `system.billing.usage` omits usage that runs on all-purpose compute."
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Tín hiệu: số ngày cũ thay đổi, cần owner hiện tại của all-purpose cluster.\n- `RETRACTION` có `usage_quantity` âm; cộng mọi record type thì correction tự triệt tiêu.\n- Với all-purpose compute, `run_as` là người tạo; owner lấy từ `system.compute.clusters.owned_by`.",
+  "wrong": {
+   "B": "Chỉ giữ `ORIGINAL` bỏ qua retraction và restatement, nên giữ lại số sai.",
+   "D": "`identity_metadata.owned_by` chỉ áp dụng cho SQL warehouse usage.",
+   "E": "`system.billing.usage` có all-purpose usage qua `usage_metadata.cluster_id`; `node_timeline` không phải dữ liệu billing."
+  },
+  "refs": [
+   {
+    "label": "Billable usage system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+   },
+   {
+    "label": "Monitor costs using system tables",
+    "url": "https://docs.databricks.com/aws/en/admin/usage/system-tables"
+   }
+  ]
+ },
+ {
+  "id": "ops-04",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A security team must report every change to Unity Catalog grants made during the last 7 days in workspaces of the region, including grants made through the UI, SQL and REST API. The report must show who made the change, on which securable, and whether the request succeeded.\nWhich source should the team query?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`system.information_schema.table_privileges`, filtered on the governed catalogs and compared with yesterday's snapshot to find new grants."
+   },
+   {
+    "k": "B",
+    "t": "`DESCRIBE HISTORY` on each governed table, filtered on the `GRANT` operation and joined with the user who ran it."
+   },
+   {
+    "k": "C",
+    "t": "`system.query.history`, filtered on statements whose `statement_text` starts with `GRANT` or `REVOKE` in the last 7 days."
+   },
+   {
+    "k": "D",
+    "t": "`system.access.audit`, filtered on `service_name = 'unityCatalog'` and `action_name = 'updatePermissions'` with an `event_date` predicate."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: ai đổi grant, trên securable nào, thành công hay không, qua mọi kênh.\n- `system.access.audit` ghi `user_identity.email`, `request_params` (`securable_full_name`, `changes`) và `response.statusCode`.\n- Filter `event_date` để query nhanh hơn `event_time`.",
+  "wrong": {
+   "A": "`information_schema` chỉ cho trạng thái grant hiện tại, không cho biết ai đổi và khi nào.",
+   "B": "`DESCRIBE HISTORY` ghi thay đổi dữ liệu và metadata của Delta table, không ghi grant Unity Catalog.",
+   "C": "`query.history` chỉ có câu SQL; grant làm qua UI hoặc REST API không có ở đây."
+  },
+  "refs": [
+   {
+    "label": "Audit log system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs"
+   },
+   {
+    "label": "Audit log reference",
+    "url": "https://docs.databricks.com/aws/en/admin/account-settings/audit-logs"
+   }
+  ]
+ },
+ {
+  "id": "ops-05",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.2",
+  "source": "original",
+  "select": 1,
+  "stem": "An on-call script must detect failed runs of job 123456 within 10 minutes and print the error of each failed task. The team considered querying `system.lakeflow.job_run_timeline`, but record availability is typically within one hour.\nWhich approach gives the needed latency and detail?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Query `system.lakeflow.job_task_run_timeline` every 10 minutes and read `termination_code` of the failed tasks."
+   },
+   {
+    "k": "B",
+    "t": "Run `databricks bundle summary` every 10 minutes from the CI runner and parse the status of the deployed job from its JSON output."
+   },
+   {
+    "k": "C",
+    "t": "Call `databricks jobs list-runs --job-id 123456 --completed-only`, then `databricks jobs get-run` per failed run."
+   },
+   {
+    "k": "D",
+    "t": "Call `databricks jobs get-run-output` once with the job run ID of the multi-task run to read the error message of every task at once."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: biết run fail trong 10 phút, cần lỗi từng task.\n- Jobs API trả trạng thái của run ngay khi task kết thúc; `runs/get` có mảng `tasks` với `status.state` và `termination_details`.\n- `list-runs --completed-only` lọc run đã kết thúc.",
+  "wrong": {
+   "A": "System table Lakeflow thường có record trong 1 giờ, không đáp ứng 10 phút.",
+   "B": "`bundle summary` in config và resource của bundle, không có run status.",
+   "D": "`get-run-output` nhận task run ID của một task, không trả output của mọi task trong một run nhiều task."
+  },
+  "refs": [
+   {
+    "label": "Jobs API 2.2, Get a single job run",
+    "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+   },
+   {
+    "label": "jobs command group (Databricks CLI)",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+   },
+   {
+    "label": "Jobs system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+   }
+  ]
+ },
+ {
+  "id": "ops-06",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A platform engineer writes a Python monitor with the Databricks SDK. For one Lakeflow pipeline it must return only `ERROR` and `WARN` events recorded after `2026-11-01T00:00:00Z`, newest first, without reading the whole event history into memory.\nWhich call should the engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`w.pipelines.get_update(pipeline_id, update_id)` for each recent update, then filter the returned `state` field in a Python loop."
+   },
+   {
+    "k": "B",
+    "t": "`w.pipelines.list_updates(pipeline_id=pid, filter=\"level in ('ERROR', 'WARN')\")`, then read each returned update in a loop."
+   },
+   {
+    "k": "C",
+    "t": "`w.jobs.get_run_output(run_id)` on the pipeline task run of the Lakeflow Job that triggers the pipeline every night."
+   },
+   {
+    "k": "D",
+    "t": "`w.pipelines.list_pipeline_events(pipeline_id=pid, filter=\"level in ('ERROR', 'WARN') AND timestamp > '2026-11-01T00:00:00Z'\")`."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: event của pipeline, lọc theo level và thời gian ở server.\n- `GET /api/2.0/pipelines/{id}/events` nhận `filter` kiểu SQL trên `level`, `id`, `timestamp`; mặc định sắp giảm dần theo timestamp.\n- SDK trả iterator nên phân trang tự động.",
+  "wrong": {
+   "A": "`get_update` trả trạng thái của một update, không trả event và không lọc theo level.",
+   "B": "`list_updates` không có tham số `filter` và trả update, không trả event.",
+   "C": "`get_run_output` thuộc Jobs API và chỉ trả output của task, không có event của pipeline."
+  },
+  "refs": [
+   {
+    "label": "Pipelines API, List pipeline events",
+    "url": "https://docs.databricks.com/api/workspace/pipelines/listpipelineevents"
+   },
+   {
+    "label": "Databricks SDK for Python, w.pipelines",
+    "url": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/pipelines/pipelines.html"
+   }
+  ]
+ },
+ {
+  "id": "ops-07",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A data engineer must build a daily report of how many records passed and failed each expectation in a Lakeflow pipeline, per dataset. The report is a scheduled SQL query over a view on the pipeline's published event log and must not call the Pipelines API.\nWhich event type and field contain these metrics?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Events with `event_type = 'update_progress'`, field `details:update_progress.state`."
+   },
+   {
+    "k": "B",
+    "t": "Events with `event_type = 'flow_definition'`, field `details:flow_definition.output_dataset`."
+   },
+   {
+    "k": "C",
+    "t": "Events with `event_type = 'flow_progress'`, field `details:flow_progress.data_quality`."
+   },
+   {
+    "k": "D",
+    "t": "Events with `event_type = 'user_action'`, field `details:user_action.action`."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: số record passed và failed theo expectation.\n- Metric expectation nằm trong `details:flow_progress.data_quality.expectations` với `name`, `dataset`, `passed_records`, `failed_records`.\n- Số record bị drop nằm ở `details:flow_progress.data_quality.dropped_records`.",
+  "wrong": {
+   "A": "`update_progress` chỉ cho trạng thái của update như `COMPLETED`, `FAILED`.",
+   "B": "`flow_definition` mô tả lineage giữa input và output dataset.",
+   "D": "`user_action` ghi thao tác của user như start hoặc cancel update, dùng cho audit."
+  },
+  "refs": [
+   {
+    "label": "Pipeline event log",
+    "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+   },
+   {
+    "label": "Pipeline event log schema",
+    "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema"
+   }
+  ]
+ },
+ {
+  "id": "ops-08",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.3",
+  "source": "original",
+  "select": 2,
+  "stem": "A Lakeflow pipeline publishes to Unity Catalog with default settings. An analyst who is not the pipeline's run-as user must build a dashboard on the pipeline event log, but the event log table is not visible in Catalog Explorer and `event_log()` returns a permission error. The team wants to follow Databricks recommendations.\nWhich TWO actions should the team take? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Publish the event log to a named table by setting `catalog`, `schema` and `name` in the pipeline `event_log` setting."
+   },
+   {
+    "k": "B",
+    "t": "Create a view over the event log table and grant the analyst `SELECT` on the view instead of on the event log table."
+   },
+   {
+    "k": "C",
+    "t": "Delete the hidden event log table so the pipeline recreates it with open permissions for all users on the next triggered update."
+   },
+   {
+    "k": "D",
+    "t": "Point the dashboard at `system.lakeflow.pipeline_update_timeline`, which stores the same expectation metrics."
+   },
+   {
+    "k": "E",
+    "t": "Switch the pipeline to development mode so that all workspace users can read its event log."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: event log ẩn, chỉ run-as user đọc được, cần cho người khác đọc.\n- Publish event log đặt tên table trong catalog và schema chọn trước.\n- Databricks khuyên tạo view trên event log rồi mới cấp quyền, vì share trực tiếp có thể lộ metadata của schema.",
+  "wrong": {
+   "C": "Docs cấm xoá event log; xoá có thể làm pipeline fail ở các update sau.",
+   "D": "`pipeline_update_timeline` có kết quả update, không có metric expectation.",
+   "E": "Development mode không thay đổi quyền đọc event log; quyền mặc định vẫn chỉ thuộc run-as user."
+  },
+  "refs": [
+   {
+    "label": "Pipeline event log",
+    "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+   }
+  ]
+ },
+ {
+  "id": "ops-09",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A materialized view in a Lakeflow pipeline used to refresh incrementally, but after a code change every update performs a full recompute and costs have tripled. The engineer wants the reason the planner rejected incremental refresh.\nWhere should the engineer look?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Events with `event_type = 'cluster_resources'`, field `details:cluster_resources.avg_task_slot_utilization`."
+   },
+   {
+    "k": "B",
+    "t": "Events with `event_type = 'autoscale'`, field `details:autoscale.requested_num_executors`."
+   },
+   {
+    "k": "C",
+    "t": "Events with `event_type = 'create_update'`, field `details:create_update.full_refresh`."
+   },
+   {
+    "k": "D",
+    "t": "Events with `event_type = 'planning_information'`, field `details:planning_information`."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: materialized view mất incremental refresh, cần lý do.\n- `planning_information` liệt kê từng technique, technique được chọn và `incrementalization_issues` như operator không incrementalize được.\n- Đây là bước debug chuẩn trong docs của event log.",
+  "wrong": {
+   "A": "`cluster_resources` đo task slot và executor, không giải thích lựa chọn refresh.",
+   "B": "`autoscale` ghi yêu cầu resize cluster trên classic compute.",
+   "C": "`create_update` ghi config khi bắt đầu update, không ghi quyết định của planner."
+  },
+  "refs": [
+   {
+    "label": "Pipeline event log",
+    "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+   },
+   {
+    "label": "Pipeline event log schema",
+    "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema"
+   }
+  ]
+ },
+ {
+  "id": "ops-10",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A FinOps team wants a Slack message whenever yesterday's serverless DBU usage in a workspace exceeds 5,000 DBUs. The check should run every morning, use data the platform already collects, and require the LEAST custom code and maintenance.\nWhat should the team implement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A scheduled notebook job that calls the billing API, compares yesterday's usage with the threshold, and posts to a Slack webhook with `requests`."
+   },
+   {
+    "k": "B",
+    "t": "A duration warning notification with a health rule on every serverless job, sent to a Slack system destination configured by an admin."
+   },
+   {
+    "k": "C",
+    "t": "A Databricks SQL alert on yesterday's serverless `usage_quantity` from `system.billing.usage`, condition > 5000, daily, to Slack."
+   },
+   {
+    "k": "D",
+    "t": "An event hook in each Lakeflow pipeline that posts to Slack when a `flow_progress` event reports high usage."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: ngưỡng cost, chạy theo lịch, LEAST custom code.\n- SQL alert chạy query theo schedule, so condition và gửi tới notification destination như Slack.\n- Docs liệt kê alert trên system tables billing để bắt chi tiêu bất thường.",
+  "wrong": {
+   "A": "Notebook và code gọi webhook là custom code phải tự bảo trì.",
+   "B": "Duration warning đo thời gian chạy của run, không đo DBU.",
+   "D": "Event hook chỉ thấy event của một pipeline và event log không chứa DBU usage."
+  },
+  "refs": [
+   {
+    "label": "Databricks SQL alerts",
+    "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
+   },
+   {
+    "label": "Create an alert",
+    "url": "https://docs.databricks.com/aws/en/sql/user/alerts/create"
+   }
+  ]
+ },
+ {
+  "id": "ops-11",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow Job loads a gold table and then publishes it to downstream consumers. Before publishing, the job must evaluate an existing data quality check defined as a Databricks SQL alert and run the `publish` task only when the check is not triggered. The alert query is not parameterized.\nWhich design works?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add a SQL alert task that references a legacy alert, because legacy alerts keep the `UNKNOWN` state for empty results."
+   },
+   {
+    "k": "B",
+    "t": "Add a SQL alert task and pass the job parameter `run_date` into the alert query to check only the current partition."
+   },
+   {
+    "k": "C",
+    "t": "Add a SQL alert task for the alert on a serverless or pro SQL warehouse, and branch to `publish` on its result."
+   },
+   {
+    "k": "D",
+    "t": "Keep the alert's own schedule and add a `depends_on` from `publish` to the alert so the job waits for its next scheduled evaluation."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: kiểm tra trong job rồi rẽ nhánh task sau.\n- SQL alert task chạy query của alert, trả trạng thái evaluation làm task output để task sau rẽ nhánh.\n- Cần quyền CAN RUN trên alert và serverless hoặc pro SQL warehouse.",
+  "wrong": {
+   "A": "SQL alert task chỉ hỗ trợ Databricks SQL alerts bản mới, không hỗ trợ legacy alerts.",
+   "B": "SQL alert task không nhận parameter; query có parameter thì dùng SQL task.",
+   "D": "Schedule của alert độc lập với job; `depends_on` chỉ trỏ tới task trong job."
+  },
+  "refs": [
+   {
+    "label": "SQL alert task for jobs",
+    "url": "https://docs.databricks.com/aws/en/jobs/tasks/alert"
+   },
+   {
+    "label": "Databricks release notes, June 2026",
+    "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/june"
+   }
+  ]
+ },
+ {
+  "id": "ops-12",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A job has three tasks: `ingest`, `audit_report` and `publish`. Last night `audit_report` failed, but `publish`, the only leaf task, succeeded. The run shows Succeeded with failures, and the on-call engineer configured job-level notifications only for Failure, so no message was sent.\nWhat change ensures the team hears about this kind of run?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable Mute notifications for skipped runs so that partial failures are reported as failures."
+   },
+   {
+    "k": "B",
+    "t": "Add a failure notification on the `audit_report` task, or select Success on the job-level notification."
+   },
+   {
+    "k": "C",
+    "t": "Set the job's maximum concurrent runs to 1 so that partial failures fail the whole run."
+   },
+   {
+    "k": "D",
+    "t": "Add a duration warning threshold on the job so that every run longer than expected also sends a Failure notification."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: status Succeeded with failures, chỉ cấu hình Failure.\n- Status của run tính theo leaf task; leaf task thành công thì run được coi là success.\n- Docs: muốn nhận thông báo cho trạng thái này phải chọn Success, hoặc đặt notification ở cấp task.",
+  "wrong": {
+   "A": "Mute chỉ bỏ thông báo cho run skipped, không đổi cách tính status.",
+   "C": "Max concurrent runs điều khiển số run song song, không liên quan status.",
+   "D": "Duration warning gửi event riêng khi vượt ngưỡng thời gian, không biến run thành Failed."
+  },
+  "refs": [
+   {
+    "label": "Monitor Lakeflow Jobs",
+    "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+   },
+   {
+    "label": "Add notifications on a job",
+    "url": "https://docs.databricks.com/aws/en/jobs/notifications"
+   }
+  ]
+ },
+ {
+  "id": "ops-13",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A serverless job takes 9 minutes end to end, but the notebook code itself runs for about 3 minutes in development. The team wants to know where the extra time goes before changing any code, and then apply the fix with the least effort.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Open the Spark UI of the serverless compute and inspect the Stages tab for skewed tasks and spill during the run."
+   },
+   {
+    "k": "B",
+    "t": "Query `system.billing.usage` for the run and compare `usage_quantity` with the previous week."
+   },
+   {
+    "k": "C",
+    "t": "Check the run breakdown by phase; if Waiting for resources dominates, use performance-optimized mode."
+   },
+   {
+    "k": "D",
+    "t": "Read the matrix view colors of the last ten runs, then increase the job timeout to 30 minutes."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: thời gian ngoài code, serverless, sửa ít nhất.\n- Run breakdown chia Queued, Waiting for resources, Library installation, Running.\n- Serverless standard mode khởi động 4 tới 6 phút; performance-optimized mode giảm thời gian này.",
+  "wrong": {
+   "A": "Serverless không có Spark UI.",
+   "B": "Billing cho biết DBU, không cho biết thời gian nằm ở phase nào.",
+   "D": "Matrix view chỉ cho status và duration tổng; tăng timeout không giảm thời gian."
+  },
+  "refs": [
+   {
+    "label": "Diagnose Lakeflow Jobs performance",
+    "url": "https://docs.databricks.com/aws/en/jobs/diagnose-job-performance"
+   },
+   {
+    "label": "Serverless compute limitations",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+   }
+  ]
+ },
+ {
+  "id": "ops-14",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A Structured Streaming job on a classic job cluster starts, but the Spark UI never shows a Streaming tab and the task fails after a few seconds. The engineer needs the exception and stack trace that stopped the stream from starting.\nWhere should the engineer look first?",
+  "options": [
+   {
+    "k": "A",
+    "t": "The executor logs of each worker, opened from the Spark UI Executors tab."
+   },
+   {
+    "k": "B",
+    "t": "The driver logs of the cluster: standard error and log4j output."
+   },
+   {
+    "k": "C",
+    "t": "The compute event log, filtered on `TERMINATING` events."
+   },
+   {
+    "k": "D",
+    "t": "The Metrics tab of the cluster, for CPU and memory at the failure time."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: không có Streaming tab, cần stack trace lúc khởi động.\n- Docs: stream không start vì exception thì xem driver logs để thấy stack trace.\n- Print và log của notebook, job, library đều vào driver log.",
+  "wrong": {
+   "A": "Executor logs dùng khi một số task chạy sai; stream chưa start thì chưa có task.",
+   "C": "Compute event log ghi lifecycle của cluster, không có exception của code.",
+   "D": "Metrics cho CPU và memory, không cho message lỗi."
+  },
+  "refs": [
+   {
+    "label": "Debugging with the Spark UI",
+    "url": "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui"
+   },
+   {
+    "label": "Manage classic compute",
+    "url": "https://docs.databricks.com/aws/en/compute/clusters-manage"
+   }
+  ]
+ },
+ {
+  "id": "ops-15",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.1",
+  "source": "original",
+  "select": 2,
+  "stem": "Job clusters terminate when each run ends. An audit requires the driver and worker logs of every production run to be kept in Unity Catalog storage, and the team also needs to explain why one job cluster was terminated unexpectedly yesterday.\nWhich TWO actions meet these needs? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Configure compute log delivery on the job cluster with a Unity Catalog volume path as the destination."
+   },
+   {
+    "k": "B",
+    "t": "Open the compute event log of the terminated cluster and read the termination event details."
+   },
+   {
+    "k": "C",
+    "t": "Set `spark.databricks.acl.needAdminPermissionToViewLogs` to `false` so the logs are retained after termination."
+   },
+   {
+    "k": "D",
+    "t": "Query `system.query.history` for the driver stack trace of the terminated cluster."
+   },
+   {
+    "k": "E",
+    "t": "Rely on the Driver logs tab, which keeps logs of terminated job clusters for 365 days."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: giữ log sau khi cluster tắt, giải thích lý do terminate.\n- Compute log delivery gửi driver, worker, event log mỗi 5 phút; volume là đích khuyên dùng.\n- Compute event log ghi lifecycle event như terminate, giữ 60 ngày.",
+  "wrong": {
+   "C": "Property này chỉ đổi ai được xem driver log, không đổi retention.",
+   "D": "`query.history` ghi câu query, không có driver log của classic cluster.",
+   "E": "Docs không nêu retention nào cho Driver logs tab; cách giữ log được docs mô tả là compute log delivery."
+  },
+  "refs": [
+   {
+    "label": "Compute configuration reference",
+    "url": "https://docs.databricks.com/aws/en/compute/configure"
+   },
+   {
+    "label": "Manage classic compute",
+    "url": "https://docs.databricks.com/aws/en/compute/clusters-manage"
+   }
+  ]
+ },
+ {
+  "id": "ops-16",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A notebook on serverless compute fails intermittently on a large join. The engineer opens the compute selector to find the Spark UI, as they did on classic clusters, but there is no Spark UI and no driver log tab.\nWhich tool should the engineer use to diagnose the failing query?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable the Spark UI with a Spark configuration in the serverless environment settings."
+   },
+   {
+    "k": "B",
+    "t": "Attach a compute-scoped init script that writes Spark event logs to a volume."
+   },
+   {
+    "k": "C",
+    "t": "Open the query profile from query history, and check `system.query.history` for the error message."
+   },
+   {
+    "k": "D",
+    "t": "Read the compute event log of the serverless compute to find the stage that failed and its executor."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: serverless, không có Spark UI.\n- Docs: serverless không có Spark UI và Spark log; dùng query profile.\n- `system.query.history` có `execution_status`, `error_message` cho serverless notebook và job.",
+  "wrong": {
+   "A": "Serverless không có cách bật Spark UI; phần lớn Spark config không được hỗ trợ.",
+   "B": "Serverless không hỗ trợ compute-scoped init script.",
+   "D": "Serverless không có compute event log."
+  },
+  "refs": [
+   {
+    "label": "Serverless compute limitations",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+   },
+   {
+    "label": "Query history system table reference",
+    "url": "https://docs.databricks.com/aws/en/admin/system-tables/query-history"
+   }
+  ]
+ },
+ {
+  "id": "ops-17",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A job runs `ingest` (2 hours), then `transform`, then `publish`. Last night `ingest` succeeded, `transform` failed because the job parameter `run_date` was set to the wrong value, and `publish` did not run. The team wants to recover with the least compute and without re-ingesting.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run now with different parameters, setting `run_date` to the correct value for the failed day."
+   },
+   {
+    "k": "B",
+    "t": "Submit a one-time run with `runs/submit` that contains only `transform` and `publish`."
+   },
+   {
+    "k": "C",
+    "t": "Delete the failed run, fix the default value of `run_date`, and wait for the next scheduled run."
+   },
+   {
+    "k": "D",
+    "t": "Repair the run with the correct `run_date` entered in the Repair job run dialog."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: task đầu đã thành công và tốn 2 giờ, lỗi do parameter.\n- Repair run chỉ chạy task không thành công và task phụ thuộc, giữ kết quả `ingest`.\n- Parameter nhập trong dialog Repair job run ghi đè giá trị cũ.",
+  "wrong": {
+   "A": "Run now tạo run mới và chạy lại `ingest` 2 giờ.",
+   "B": "`runs/submit` tạo run không gắn với job và phải định nghĩa lại task, cluster, dependency.",
+   "C": "Chờ lịch kế tiếp làm trễ dữ liệu và vẫn chạy lại toàn bộ job."
+  },
+  "refs": [
+   {
+    "label": "Troubleshoot and repair job failures",
+    "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+   },
+   {
+    "label": "Configure job parameters",
+    "url": "https://docs.databricks.com/aws/en/jobs/job-parameters"
+   }
+  ]
+ },
+ {
+  "id": "ops-18",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.2",
+  "source": "original",
+  "select": 1,
+  "stem": "An automation script repaired run 455644833 with `POST /api/2.2/jobs/runs/repair` and the body `{\"run_id\": 455644833, \"rerun_all_failed_tasks\": true}`. The repair failed again on a different task. The script sends the same body a second time, and the request is rejected.\nWhat must the script change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `latest_repair_id` with the `repair_id` returned by the first repair request."
+   },
+   {
+    "k": "B",
+    "t": "Replace `run_id` with the run ID of the first repair, because each repair creates a new job run."
+   },
+   {
+    "k": "C",
+    "t": "Wait 60 days until the first repair expires from the run history."
+   },
+   {
+    "k": "D",
+    "t": "Call `runs/cancel` on the original run before repairing it a second time."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: lần repair thứ hai trên cùng run bị từ chối.\n- `latest_repair_id` không cần ở lần đầu nhưng bắt buộc ở các lần repair sau.\n- Response của repair trả `repair_id` để dùng cho lần kế tiếp.",
+  "wrong": {
+   "B": "Repair chạy trong run gốc và hiện trong history của run gốc, không tạo job run mới.",
+   "C": "60 ngày là retention của run history, không liên quan điều kiện repair.",
+   "D": "Run gốc đã kết thúc; repair chỉ yêu cầu run không đang chạy."
+  },
+  "refs": [
+   {
+    "label": "Jobs API 2.2, Repair a job run",
+    "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+   }
+  ]
+ },
+ {
+  "id": "ops-19",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.2",
+  "source": "original",
+  "select": 1,
+  "stem": "Task `load_orders` appends new rows to a Delta table and then updates a watermark table. It failed after appending part of the batch. The team plans to repair the run as soon as the source is fixed, and repairs will be part of the standard runbook.\nWhat should the team change before relying on repairs?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Nothing, because a repair resumes the failed task from the last successful Spark stage."
+   },
+   {
+    "k": "B",
+    "t": "Enable `rerun_dependent_tasks` so the repair rolls back the partial append before rerunning."
+   },
+   {
+    "k": "C",
+    "t": "Make the task idempotent, for example by using `MERGE` or overwrite instead of a plain append."
+   },
+   {
+    "k": "D",
+    "t": "Switch the task to a shared all-purpose cluster so the repair reuses the cached partial result."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: task đã ghi một phần rồi fail, repair sẽ dùng thường xuyên.\n- Repair chạy lại task từ đầu; Lakeflow Jobs không làm task idempotent.\n- Docs khuyên dùng overwrite hoặc merge thay append để tránh dữ liệu trùng.",
+  "wrong": {
+   "A": "Repair chạy lại toàn bộ task, không tiếp tục từ stage.",
+   "B": "`rerun_dependent_tasks` chỉ chạy lại task downstream, không rollback dữ liệu.",
+   "D": "Đổi compute không ngăn ghi trùng khi task chạy lại từ đầu."
+  },
+  "refs": [
+   {
+    "label": "Troubleshoot and repair job failures",
+    "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+   }
+  ]
+ },
+ {
+  "id": "ops-20",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.3",
+  "source": "original",
+  "select": 2,
+  "stem": "A team defines `prod` in `databricks.yml` with `mode: production` and `git: branch: main`. A new engineer asks what this target does differently from the `dev` target with `mode: development` when running `databricks bundle deploy -t prod`.\nWhich TWO statements are correct for the `prod` target? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Deployment fails if the current Git branch is not `main`, unless `--force` is passed."
+   },
+   {
+    "k": "B",
+    "t": "All job schedules and triggers in the bundle are paused after deployment until someone unpauses them."
+   },
+   {
+    "k": "C",
+    "t": "Every resource name is prefixed with `[dev <user>]` and tagged `dev`."
+   },
+   {
+    "k": "D",
+    "t": "`--cluster-id` can override every cluster definition in the bundle."
+   },
+   {
+    "k": "E",
+    "t": "Deployment validates that the Lakeflow pipelines in the bundle are marked `development: false`."
+   }
+  ],
+  "answer": [
+   "A",
+   "E"
+  ],
+  "explain": "- Tín hiệu: so sánh `mode: production` với `mode: development`.\n- Production kiểm tra Git branch theo `git.branch` (bỏ qua bằng `--force`) và kiểm tra pipeline có `development: false`.\n- Pause schedule, prefix tên, override cluster là hành vi của development mode.",
+  "wrong": {
+   "B": "Pause schedule và trigger là hành vi của development mode.",
+   "C": "Prefix `[dev <user>]` và tag `dev` là hành vi của development mode.",
+   "D": "Production mode không cho override cluster bằng `--cluster-id`."
+  },
+  "refs": [
+   {
+    "label": "Declarative Automation Bundles deployment modes",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes"
+   },
+   {
+    "label": "bundle command group",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+   }
+  ]
+ },
+ {
+  "id": "ops-21",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A job named `orders_daily` was created in the UI two years ago and has its run history and permissions. The team now manages everything with Declarative Automation Bundles and wants the bundle to take over this exact job, without creating a second copy, before the next deployment.\nWhat should the engineer run?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`databricks bundle generate job --existing-job-id <job-id> --bind`, then `databricks bundle deploy`."
+   },
+   {
+    "k": "B",
+    "t": "`databricks bundle generate job --existing-job-id <job-id>`, then `databricks bundle deploy`."
+   },
+   {
+    "k": "C",
+    "t": "Copy the job JSON from the UI into `resources/orders_daily.job.yml`, then `databricks bundle deploy --force`."
+   },
+   {
+    "k": "D",
+    "t": "`databricks bundle deploy`, because the bundle matches existing jobs by name."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: giữ đúng job cũ, không tạo bản thứ hai.\n- `bundle generate` chỉ sinh YAML; không bind thì deploy tạo job mới.\n- `--bind` hoặc `bundle deployment bind` gắn resource vào job có sẵn.",
+  "wrong": {
+   "B": "Thiếu `--bind` nên deploy tạo job mới thay vì cập nhật job cũ.",
+   "C": "`--force` bỏ qua kiểm tra Git branch, không bind job; deploy vẫn tạo job mới.",
+   "D": "Bundle theo dõi resource bằng ID trong state, không bằng tên."
+  },
+  "refs": [
+   {
+    "label": "bundle command group",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+   }
+  ]
+ },
+ {
+  "id": "ops-22",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.4",
+  "source": "original",
+  "select": 1,
+  "stem": "Admins created a production Git folder `/Workspace/Prod/orders` on branch `main`; most users have Can Run on it. Notebooks there must match `main` within minutes after each pull request merge. The team uses GitHub and wants no long-lived Databricks tokens in GitHub secrets.\nWhich setup meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Ask each developer to open the production Git folder and pull `main` from the Git dialog right after merging their pull request."
+   },
+   {
+    "k": "B",
+    "t": "A scheduled job that copies notebooks every hour from a developer's Git folder under `/Workspace/Users/` to `/Workspace/Prod/orders`."
+   },
+   {
+    "k": "C",
+    "t": "A GitHub Actions workflow that stores a personal access token of a workspace admin in a secret and runs `databricks workspace import-dir` on every push."
+   },
+   {
+    "k": "D",
+    "t": "On push to `main`, a GitHub Actions job signs in with `github-oidc` as a service principal and runs `databricks repos update ... --branch main`."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: sync production Git folder khi merge, không có token lâu dài.\n- Docs: production Git folder chỉ được automation cập nhật, dùng Repos API qua GitHub Actions.\n- Workload identity federation với service principal không cần lưu Databricks secret.",
+  "wrong": {
+   "A": "Thao tác tay dễ quên và user thường chỉ có Can Run trên folder này.",
+   "B": "Copy từ folder cá nhân bỏ qua Git và review; lịch 1 giờ không đáp ứng vài phút.",
+   "C": "Personal access token của admin là secret lâu dài; import-dir không giữ folder gắn với Git branch."
+  },
+  "refs": [
+   {
+    "label": "CI/CD with Databricks Git folders",
+    "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+   },
+   {
+    "label": "GitHub Actions",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/ci-cd/github"
+   }
+  ]
+ },
+ {
+  "id": "ops-23",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.4",
+  "source": "original",
+  "select": 1,
+  "stem": "Production jobs run notebooks from a production Git folder that a GitHub Actions workflow updates after each merge to `main`. Twice this month a run started while the folder was being updated, and its tasks used a mix of old and new files. The team wants every task in a run to use one consistent commit of `main`, with no folder sync step to maintain.\nWhat should the data engineer change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Configure the tasks to use a remote Git repository source on branch `main`, so each run snapshots one commit."
+   },
+   {
+    "k": "B",
+    "t": "Add a first task that sleeps 10 minutes so the Git folder update finishes before the notebooks start."
+   },
+   {
+    "k": "C",
+    "t": "Replace `databricks repos update` in the workflow with `databricks workspace import-dir` of the repository."
+   },
+   {
+    "k": "D",
+    "t": "Move the production Git folder under the service principal's `/Workspace/Users/` folder so only it can update the folder."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: run bị lẫn file cũ và mới, muốn một commit nhất quán, không còn bước sync.\n- Remote Git source: khi run bắt đầu, Databricks snapshot branch hoặc commit, mọi task dùng cùng version.\n- Docs khuyên path Git folder chỉ cho development, staging và prod dùng remote Git source.",
+  "wrong": {
+   "B": "Chờ cố định không bảo đảm sync xong và vẫn giữ bước sync.",
+   "C": "`import-dir` vẫn là bước sync, vẫn có thể chạy giữa lúc job đọc file.",
+   "D": "Đổi chỗ folder không thay đổi việc run đọc file trong lúc folder đang được cập nhật."
+  },
+  "refs": [
+   {
+    "label": "Use Git with Lakeflow Jobs",
+    "url": "https://docs.databricks.com/aws/en/jobs/git"
+   },
+   {
+    "label": "CI/CD with Databricks Git folders",
+    "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+   }
+  ]
+ },
+ {
+  "id": "ops-24",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow Job runs the SQL alert task `check_nulls`, and the task `publish` depends on it with the default Run if setting. The alert triggers when the null rate in a gold table is above 1%. Last night the null rate was 4%, the alert notified its subscribers, and `publish` still ran. The team wants `publish` to run only when the condition is not triggered.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Change the alert query so it divides by zero when the null rate is high, which makes the alert task fail and blocks `publish`."
+   },
+   {
+    "k": "B",
+    "t": "Add an If/else condition task on the evaluation state output of `check_nulls`, and run `publish` only on the non-triggered branch."
+   },
+   {
+    "k": "C",
+    "t": "Set `publish` to run only if all dependencies succeeded, because the alert task reports Failed when its condition is triggered."
+   },
+   {
+    "k": "D",
+    "t": "Pause the alert's own schedule so that the evaluation inside the job sets the task status to Failed when triggered."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: alert triggered nhưng task sau vẫn chạy với Run if mặc định.\n- SQL alert task báo Succeeded dù condition triggered hay không; Failed chỉ khi lỗi evaluate.\n- Evaluation state nằm trong task output để task sau rẽ nhánh.",
+  "wrong": {
+   "A": "Ép lỗi query biến kiểm tra data quality thành lỗi kỹ thuật và che lỗi thật.",
+   "C": "Task không Failed khi triggered nên điều kiện này vẫn cho `publish` chạy.",
+   "D": "Task evaluate độc lập với schedule của alert; pause schedule không đổi status."
+  },
+  "refs": [
+   {
+    "label": "SQL alert task for jobs",
+    "url": "https://docs.databricks.com/aws/en/jobs/tasks/alert"
+   }
+  ]
+ },
+ {
+  "id": "ops-25",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A monitoring script calls `GET /api/2.2/jobs/runs/get` for one run of a job that has 340 tasks, and counts failed tasks from the `tasks` array in the response. The count is always lower than the number of failed tasks shown in the Jobs UI, and the API returns no error.\nWhat should the script do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Call `runs/get-output` with the job run ID, which returns all task results of a multi-task run in one response."
+   },
+   {
+    "k": "B",
+    "t": "Read `next_page_token` and call `runs/get` again with `page_token` until no token is returned."
+   },
+   {
+    "k": "C",
+    "t": "Add a `limit=500` query parameter to `runs/get` so that the whole `tasks` array is returned."
+   },
+   {
+    "k": "D",
+    "t": "Call `runs/get` again after the run terminates, because the `tasks` array is complete only for finished runs."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: job nhiều hơn 100 task, số đếm thiếu, không lỗi.\n- `runs/get` trả 100 phần tử đầu của `tasks`, `job_clusters`, `job_parameters`, `repair_history`; phần còn lại qua `next_page_token`.",
+  "wrong": {
+   "A": "`get-output` nhận task run ID và trả output của một task, tối đa 5 MB.",
+   "C": "`runs/get` không có parameter `limit`; phân trang dùng `page_token`.",
+   "D": "Run đã kết thúc vẫn chỉ trả 100 phần tử đầu; thiếu là do phân trang, không do trạng thái run."
+  },
+  "refs": [
+   {
+    "label": "Get a single job run",
+    "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+   }
+  ]
+ },
+ {
+  "id": "ops-26",
+  "topic": "ops",
+  "domain": "S4",
+  "task": "4.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A continuous Lakeflow Job runs a Python notebook task that reads Kafka with Structured Streaming. The team configured a Streaming backlog notification with a threshold on `STREAMING_BACKLOG_SECONDS`, but no notification arrived during a known 2-hour backlog. The notebook ends with `query.awaitTermination()`.\nWhat is the most likely cause?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Streaming backlog notifications fire only for Lakeflow pipeline tasks, not for notebook tasks."
+   },
+   {
+    "k": "B",
+    "t": "The metric is evaluated as a 24-hour maximum, so a 2-hour backlog stays under the threshold."
+   },
+   {
+    "k": "C",
+    "t": "The Jobs service cannot track the active streaming query because the notebook calls `awaitTermination()`."
+   },
+   {
+    "k": "D",
+    "t": "Notifications on continuous jobs are muted until the last retry by default."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: notebook task, có `awaitTermination()`, không nhận notification backlog.\n- Docs: streaming backlog notification cần Jobs theo dõi được streaming query đang chạy; không dùng `awaitTermination()` trong job.",
+  "wrong": {
+   "A": "Ngược lại: pipeline task không hỗ trợ streaming backlog notification.",
+   "B": "Backlog lấy trung bình 10 phút, không phải max 24 giờ.",
+   "D": "Mute until the last retry là tuỳ chọn của task notification, không bật mặc định."
+  },
+  "refs": [
+   {
+    "label": "Add notifications on a job",
+    "url": "https://docs.databricks.com/aws/en/jobs/notifications"
+   }
+  ]
+ },
+ {
+  "id": "ops-27",
+  "topic": "ops",
+  "domain": "S8",
+  "task": "8.3",
+  "source": "original",
+  "select": 1,
+  "stem": "The bundle job `orders_job` chains the tasks `ingest`, `clean`, `load_silver`, `build_gold` and `publish` in that order. In the `dev` target, an engineer changed only `load_silver` and wants to run it and every task after it, without rerunning `ingest` and `clean`. There is no failed run to repair.\nWhich command should the engineer run?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`databricks bundle run -t dev --only +load_silver orders_job`"
+   },
+   {
+    "k": "B",
+    "t": "`databricks bundle run -t dev --only load_silver orders_job`"
+   },
+   {
+    "k": "C",
+    "t": "`databricks bundle deploy -t dev --only load_silver+`"
+   },
+   {
+    "k": "D",
+    "t": "`databricks bundle run -t dev --only load_silver+ orders_job`"
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: chạy một task và mọi task phía sau, không phải repair.\n- Hậu tố `+` thêm task downstream; tiền tố `+` thêm task upstream.",
+  "wrong": {
+   "A": "Tiền tố `+` chạy cả `ingest` và `clean`, đúng thứ cần tránh.",
+   "B": "Không có `+` thì chỉ chạy đúng `load_silver`.",
+   "C": "`bundle deploy` không chạy task và không có cú pháp chọn task kiểu này."
+  },
+  "refs": [
+   {
+    "label": "bundle command group",
+    "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+   }
+  ]
+ }
+]

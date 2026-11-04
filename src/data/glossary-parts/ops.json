@@ -1,0 +1,351 @@
+[
+ {
+  "id": "system-tables",
+  "term": "system tables",
+  "full": "",
+  "aliases": [
+   "system table",
+   "System tables"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Schema chỉ đọc trong catalog `system` do Databricks quản lý, chứa dữ liệu billing, compute, audit, Lakeflow của account.",
+  "means": [
+   "Cần Unity Catalog; mặc định chỉ account admin kiêm metastore admin đọc được.",
+   "Miễn phí, chỉ trả compute khi query; phần lớn giữ 365 ngày.",
+   "Đề hỏi bảng nào trả lời câu hỏi cost, audit, workload."
+  ],
+  "related": [
+   "billing-usage",
+   "lakeflow-system-tables",
+   "audit-log"
+  ],
+  "src": {
+   "label": "System tables reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+  }
+ },
+ {
+  "id": "billing-usage",
+  "term": "system.billing.usage",
+  "full": "",
+  "aliases": [
+   "billing.usage",
+   "usage_metadata",
+   "billing_origin_product"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "System table global ghi DBU tiêu thụ theo SKU, workspace, job, pipeline, warehouse, tag và identity.",
+  "means": [
+   "Cột chính: `usage_quantity`, `usage_metadata`, `custom_tags`, `identity_metadata`, `record_type`.",
+   "Record thường có trong 12 giờ; `RETRACTION` mang số âm.",
+   "Join `list_prices` để ra USD."
+  ],
+  "related": [
+   "list-prices",
+   "system-tables"
+  ],
+  "src": {
+   "label": "Billable usage system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+  }
+ },
+ {
+  "id": "list-prices",
+  "term": "system.billing.list_prices",
+  "full": "",
+  "aliases": [
+   "list_prices",
+   "pricing.default"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "System table lịch sử list price của từng SKU, mỗi lần đổi giá thêm một dòng.",
+  "means": [
+   "Join theo `sku_name` và khoảng `price_start_time`, `price_end_time`.",
+   "`pricing.default` là list price, không gồm chiết khấu."
+  ],
+  "related": [
+   "billing-usage"
+  ],
+  "src": {
+   "label": "Pricing system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/pricing"
+  }
+ },
+ {
+  "id": "lakeflow-system-tables",
+  "term": "system.lakeflow",
+  "full": "",
+  "aliases": [
+   "job_run_timeline",
+   "job_task_run_timeline",
+   "pipeline_update_timeline"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Schema system tables cho Lakeflow Jobs và Lakeflow Pipelines: metadata job, task, pipeline và timeline của run, update.",
+  "means": [
+   "`jobs`, `job_tasks`, `pipelines` là SCD2, dedupe theo `change_time`.",
+   "Timeline cắt run dài thành slice tối đa 1 giờ.",
+   "Regional, giữ 365 ngày, record có trong khoảng 1 giờ."
+  ],
+  "related": [
+   "billing-usage",
+   "system-tables"
+  ],
+  "src": {
+   "label": "Jobs system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+  }
+ },
+ {
+  "id": "audit-log",
+  "term": "system.access.audit",
+  "full": "",
+  "aliases": [
+   "audit log",
+   "audit logs",
+   "Audit log"
+  ],
+  "cat": "Unity Catalog & Security",
+  "what": "System table audit log ghi ai thực hiện hành động nào, trên service nào, kết quả ra sao.",
+  "means": [
+   "Filter theo `service_name`, `action_name`, `event_date`.",
+   "Account event có `workspace_id` bằng 0.",
+   "Đề hỏi ai đổi grant, ai đọc table."
+  ],
+  "related": [
+   "system-tables"
+  ],
+  "src": {
+   "label": "Audit log system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs"
+  }
+ },
+ {
+  "id": "compute-system-tables",
+  "term": "system.compute",
+  "full": "",
+  "aliases": [
+   "system.compute.clusters",
+   "node_timeline",
+   "warehouse_events"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Schema system tables về classic compute, node utilization và SQL warehouse event.",
+  "means": [
+   "`clusters` có `owned_by`, `cluster_source`, `dbr_version`, là SCD2.",
+   "`node_timeline` cho CPU, memory theo phút, giữ 90 ngày.",
+   "`warehouse_events` ghi scale up, scale down, start, stop."
+  ],
+  "related": [
+   "system-tables"
+  ],
+  "src": {
+   "label": "Compute system tables reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/compute"
+  }
+ },
+ {
+  "id": "query-history",
+  "term": "system.query.history",
+  "full": "",
+  "aliases": [
+   "query history",
+   "Query history"
+  ],
+  "cat": "Compute & Performance",
+  "what": "System table ghi từng câu query trên SQL warehouse, serverless compute và Lakeflow pipelines.",
+  "means": [
+   "Có `execution_status`, `error_message`, `total_duration_ms`, `query_source`.",
+   "Mặc định chỉ admin đọc được.",
+   "Dùng tìm query lỗi hoặc chậm khi không có Spark UI."
+  ],
+  "related": [
+   "system-tables"
+  ],
+  "src": {
+   "label": "Query history system table reference",
+   "url": "https://docs.databricks.com/aws/en/admin/system-tables/query-history"
+  }
+ },
+ {
+  "id": "pipeline-event-log",
+  "term": "pipeline event log",
+  "full": "",
+  "aliases": [
+   "event log",
+   "event_log()",
+   "event_log"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Delta table ẩn của mỗi Lakeflow pipeline, ghi progress, data quality, lineage, audit và resource event.",
+  "means": [
+   "Đọc bằng `event_log(<pipeline_id>)`; mặc định chỉ run-as user.",
+   "Field `details` là JSON, đọc bằng toán tử `:`.",
+   "Không được xoá event log."
+  ],
+  "related": [
+   "pipeline-events",
+   "event-hooks"
+  ],
+  "src": {
+   "label": "Pipeline event log",
+   "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+  }
+ },
+ {
+  "id": "pipeline-events",
+  "term": "pipeline_events",
+  "full": "",
+  "aliases": [
+   "system.lakeflow_pipeline_events_preview.pipeline_events",
+   "pipeline events system table"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "System table Beta gom event của mọi pipeline trong các workspace cùng region.",
+  "means": [
+   "Databricks khuyên dùng thay event log từng pipeline.",
+   "Có sẵn dashboard mẫu cho update, throughput, backlog, lỗi."
+  ],
+  "related": [
+   "pipeline-event-log"
+  ],
+  "src": {
+   "label": "Monitor and query events (pipeline_events system table)",
+   "url": "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events"
+  }
+ },
+ {
+  "id": "event-hooks",
+  "term": "event hook",
+  "full": "",
+  "aliases": [
+   "event hooks",
+   "on_event_hook"
+  ],
+  "cat": "Lakeflow & Streaming",
+  "what": "Python callback trong Lakeflow pipeline, chạy khi event được ghi vào event log.",
+  "means": [
+   "Khai báo bằng `@dp.on_event_hook`; chỉ chạy với event `STABLE`.",
+   "Public Preview; theo dõi bằng event `hook_progress`."
+  ],
+  "related": [
+   "pipeline-event-log"
+  ],
+  "src": {
+   "label": "Define custom monitoring of pipelines with event hooks",
+   "url": "https://docs.databricks.com/aws/en/ldp/event-hooks"
+  }
+ },
+ {
+  "id": "sql-alerts",
+  "term": "Databricks SQL alerts",
+  "full": "",
+  "aliases": [
+   "SQL alert",
+   "SQL alerts",
+   "Lakehouse alerts",
+   "SQL alert task"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Alert chạy query theo schedule, so condition với kết quả và gửi notification khi condition thoả.",
+  "means": [
+   "Trạng thái `OK`, `TRIGGERED`, `ERROR`; không nhận query có parameter.",
+   "SQL alert task chạy alert trong Lakeflow Jobs để rẽ nhánh.",
+   "Exam guide gọi là Databricks Lakehouse alerts."
+  ],
+  "related": [],
+  "src": {
+   "label": "Databricks SQL alerts",
+   "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
+  }
+ },
+ {
+  "id": "repair-run",
+  "term": "repair run",
+  "full": "",
+  "aliases": [
+   "Repair run",
+   "repair-run",
+   "runs/repair",
+   "rerun_tasks"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Chạy lại các task không thành công của một job run cùng task phụ thuộc, trong chính run gốc.",
+  "means": [
+   "Dùng setting hiện tại của job; cho phép override parameter.",
+   "Lần repair sau cần `latest_repair_id`.",
+   "Chỉ cho job có từ 2 task."
+  ],
+  "related": [],
+  "src": {
+   "label": "Troubleshoot and repair job failures",
+   "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+  }
+ },
+ {
+  "id": "compute-log-delivery",
+  "term": "compute log delivery",
+  "full": "",
+  "aliases": [
+   "cluster log delivery",
+   "cluster_log_conf",
+   "cluster logs"
+  ],
+  "cat": "Compute & Performance",
+  "what": "Cấu hình gửi driver, worker và event log của compute tới volume, S3 hoặc DBFS.",
+  "means": [
+   "Gửi mỗi 5 phút, archive mỗi giờ, tới khi compute terminate.",
+   "Volume là đích khuyên dùng với Unity Catalog."
+  ],
+  "related": [],
+  "src": {
+   "label": "Compute configuration reference",
+   "url": "https://docs.databricks.com/aws/en/compute/configure"
+  }
+ },
+ {
+  "id": "deployment-mode",
+  "term": "deployment mode",
+  "full": "",
+  "aliases": [
+   "mode: development",
+   "mode: production",
+   "presets"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Mapping `mode` của target trong bundle, áp một nhóm hành vi mặc định cho development hoặc production.",
+  "means": [
+   "Development: prefix tên, pause schedule, bỏ deployment lock.",
+   "Production: kiểm tra Git branch và pipeline `development: false`.",
+   "`presets` ghi đè hành vi của mode."
+  ],
+  "related": [],
+  "src": {
+   "label": "Declarative Automation Bundles deployment modes",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes"
+  }
+ },
+ {
+  "id": "git-folders",
+  "term": "Databricks Git folders",
+  "full": "",
+  "aliases": [
+   "Git folders",
+   "Git folder",
+   "Repos",
+   "Databricks Repos"
+  ],
+  "cat": "DevOps & Ops",
+  "what": "Git client tích hợp trong workspace, đồng bộ folder với remote repository; tên cũ là Repos.",
+  "means": [
+   "Developer làm trên Git folder riêng dưới `/Workspace/Users/`.",
+   "Production Git folder chỉ do automation cập nhật qua Repos API.",
+   "Job staging, prod nên dùng remote Git source."
+  ],
+  "related": [],
+  "src": {
+   "label": "What happened to Databricks Repos?",
+   "url": "https://docs.databricks.com/aws/en/repos/what-happened-repos"
+  }
+ }
+]

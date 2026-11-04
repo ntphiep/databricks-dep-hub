@@ -1,0 +1,209 @@
+[
+ {
+  "id": "pip-c01",
+  "front": "Current Python import for Lakeflow Pipelines",
+  "back": "`from pyspark import pipelines as dp`; `import dlt` still works. Code mới dùng module `dp`.",
+  "ref": {
+   "label": "Lakeflow pipelines Python reference",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+  }
+ },
+ {
+  "id": "pip-c02",
+  "front": "`@dp.table` vs `@dp.materialized_view`",
+  "back": "`@dp.table` with a streaming DataFrame creates a streaming table; `@dp.materialized_view` uses a batch read. Kiểu read quyết định loại dataset.",
+  "ref": {
+   "label": "Lakeflow pipelines Python reference",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+  }
+ },
+ {
+  "id": "pip-c03",
+  "front": "Python operations never allowed in pipeline dataset code",
+  "back": "`collect()`, `count()`, `toPandas()`, `save()`, `saveAsTable()`, `start()`, `toTable()`. Hàm dataset chỉ return DataFrame.",
+  "ref": {
+   "label": "Lakeflow pipelines Python reference",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/python-ref"
+  }
+ },
+ {
+  "id": "pip-c04",
+  "front": "Auto Loader in a pipeline: checkpoint and schema location?",
+  "back": "Managed automatically by Lakeflow Pipelines. Ngoài pipeline thì phải set `checkpointLocation` và `cloudFiles.schemaLocation`.",
+  "ref": {
+   "label": "What is Auto Loader?",
+   "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/"
+  }
+ },
+ {
+  "id": "pip-c05",
+  "front": "Recommended Auto Loader file detection mode",
+  "back": "File notification mode with file events (`cloudFiles.useManagedFileEvents`). Một queue cho mọi stream trên external location.",
+  "ref": {
+   "label": "Auto Loader file notification mode",
+   "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode"
+  }
+ },
+ {
+  "id": "pip-c06",
+  "front": "Schema evolution mode: never fail, keep new fields",
+  "back": "`rescue`: new columns go to `_rescued_data`. `addNewColumns` (default) fail rồi restart với schema mới.",
+  "ref": {
+   "label": "Auto Loader schema inference and evolution",
+   "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema"
+  }
+ },
+ {
+  "id": "pip-c08",
+  "front": "Materialized view: best fit",
+  "back": "Aggregates and joins over data that is updated or deleted; always correct at refresh. Incremental refresh chỉ trên serverless.",
+  "ref": {
+   "label": "Pipeline concepts",
+   "url": "https://docs.databricks.com/aws/en/ldp/concepts/"
+  }
+ },
+ {
+  "id": "pip-c09",
+  "front": "Query changed on a streaming table",
+  "back": "Only new rows use the new logic; run a full refresh to reprocess old rows. Row cũ không tự tính lại.",
+  "ref": {
+   "label": "Streaming tables",
+   "url": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables"
+  }
+ },
+ {
+  "id": "pip-c10",
+  "front": "Add a source to a streaming table without full refresh",
+  "back": "Define another append flow (`CREATE FLOW ... INSERT INTO target BY NAME`). Không cần `UNION`.",
+  "ref": {
+   "label": "Pipeline flows",
+   "url": "https://docs.databricks.com/aws/en/ldp/concepts/flows"
+  }
+ },
+ {
+  "id": "pip-c11",
+  "front": "One-time backfill into a streaming table",
+  "back": "`INSERT ONCE INTO` flow (or `once=True`); re-runs only on full refresh. Dùng cho dữ liệu lịch sử.",
+  "ref": {
+   "label": "CREATE FLOW (pipelines)",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow"
+  }
+ },
+ {
+  "id": "pip-c12",
+  "front": "AUTO CDC former name",
+  "back": "APPLY CHANGES (`dlt.apply_changes`); same syntax. Exam guide dùng tên AUTO CDC.",
+  "ref": {
+   "label": "The AUTO CDC APIs",
+   "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+  }
+ },
+ {
+  "id": "pip-c13",
+  "front": "Default `stored_as_scd_type`",
+  "back": "SCD Type 1. Truyền 2 hoặc `STORED AS SCD TYPE 2` để giữ history với `__START_AT`, `__END_AT`.",
+  "ref": {
+   "label": "create_auto_cdc_flow",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+  }
+ },
+ {
+  "id": "pip-c14",
+  "front": "Late CDC event with an older sequence value (SCD Type 1)",
+  "back": "Discarded; the highest `SEQUENCE BY` value wins. Thứ tự tới không quyết định.",
+  "ref": {
+   "label": "The AUTO CDC APIs",
+   "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+  }
+ },
+ {
+  "id": "pip-c15",
+  "front": "`TRACK HISTORY ON`",
+  "back": "Only the listed columns create new SCD Type 2 versions; other columns update the current version. Giảm số version thừa.",
+  "ref": {
+   "label": "AUTO CDC INTO (pipelines)",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into"
+  }
+ },
+ {
+  "id": "pip-c16",
+  "front": "`APPLY AS TRUNCATE WHEN` limitation",
+  "back": "Supported only for SCD Type 1. SCD Type 2 không hỗ trợ truncate.",
+  "ref": {
+   "label": "create_auto_cdc_flow",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes"
+  }
+ },
+ {
+  "id": "pip-c17",
+  "front": "Source has only periodic full snapshots",
+  "back": "AUTO CDC FROM SNAPSHOT (`create_auto_cdc_from_snapshot_flow`). So sánh snapshot để suy ra thay đổi.",
+  "ref": {
+   "label": "The AUTO CDC APIs",
+   "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+  }
+ },
+ {
+  "id": "pip-c18",
+  "front": "Lakeflow-only features vs Apache Spark Declarative Pipelines",
+  "back": "AUTO CDC, expectations, queryable event log, update flows, foreachBatch sinks, continuous mode. SDP có streaming table, materialized view, flow.",
+  "ref": {
+   "label": "Apache Spark Declarative Pipelines (Databricks docs)",
+   "url": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines"
+  }
+ },
+ {
+  "id": "pip-c19",
+  "front": "Delta sink and update output mode",
+  "back": "Not supported; Delta sinks take append and complete. Dùng `foreachBatch` với `MERGE` để có hành vi giống update.",
+  "ref": {
+   "label": "Output modes",
+   "url": "https://docs.databricks.com/aws/en/structured-streaming/output-mode"
+  }
+ },
+ {
+  "id": "pip-c20",
+  "front": "Exactly-once writes inside `foreachBatch`",
+  "back": "Pass `txnAppId` and `txnVersion = batchId` to each Delta write. `foreachBatch` tự nó chỉ at-least-once.",
+  "ref": {
+   "label": "Delta table streaming reads and writes",
+   "url": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake"
+  }
+ },
+ {
+  "id": "pip-c21",
+  "front": "Full refresh vs reset streaming flow checkpoints",
+  "back": "Full refresh clears streaming table data and checkpoints; reset checkpoints keeps the data and reprocesses the source. Reset chỉ áp cho streaming table, chọn flow qua `reset_checkpoint_selection`.",
+  "ref": {
+   "label": "Run a pipeline update",
+   "url": "https://docs.databricks.com/aws/en/ldp/updates"
+  }
+ },
+ {
+  "id": "pip-c22",
+  "front": "Block accidental full refresh of a table",
+  "back": "Set `pipelines.reset.allowed` to `false` on the table. Dùng cho bronze đọc Kafka hay file có retention ngắn.",
+  "ref": {
+   "label": "Run a pipeline update",
+   "url": "https://docs.databricks.com/aws/en/ldp/updates"
+  }
+ },
+ {
+  "id": "pip-c23",
+  "front": "NULL values in the AUTO CDC sequencing column",
+  "back": "Not supported. Lọc hoặc sửa NULL trước khi vào flow AUTO CDC.",
+  "ref": {
+   "label": "Change data capture and snapshots",
+   "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+  }
+ },
+ {
+  "id": "pip-c24",
+  "front": "Add or reorder streaming sources without a new checkpoint",
+  "back": "Source evolution on Databricks Runtime 18.2+: enable `spark.sql.streaming.queryEvolution.enableSourceEvolution` and name every source with `.name()`. Mặc định source được nhận diện theo vị trí.",
+  "ref": {
+   "label": "Structured Streaming checkpoints",
+   "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"
+  }
+ }
+]

@@ -1,0 +1,1131 @@
+[
+ {
+  "id": "sec-01",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A data platform team must give the `analysts` group read-only access to every current and future table in the schema `sales.reporting`. The group must not see data in any other schema of the `sales` catalog, and the team follows least privilege.\nWhich set of grants meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`GRANT SELECT ON CATALOG sales TO analysts`, so that the privilege is inherited by every schema and table in the catalog"
+   },
+   {
+    "k": "B",
+    "t": "`GRANT USE CATALOG ON CATALOG sales`, then `GRANT USE SCHEMA, SELECT ON SCHEMA sales.reporting`, both to `analysts`"
+   },
+   {
+    "k": "C",
+    "t": "`GRANT USE CATALOG ON CATALOG sales`, then `GRANT ALL PRIVILEGES ON SCHEMA sales.reporting`, both to `analysts`"
+   },
+   {
+    "k": "D",
+    "t": "`GRANT USE CATALOG` and `USE SCHEMA`, then `GRANT SELECT` on each table that exists in `sales.reporting` today"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: read-only, mọi table hiện có và tạo sau, chỉ một schema.\n- Đọc table cần `USE CATALOG` + `USE SCHEMA` + `SELECT`.\n- Grant ở schema kế thừa xuống mọi table hiện có và tạo sau.",
+  "wrong": {
+   "A": "Mở mọi schema trong catalog và vẫn thiếu `USE CATALOG`, `USE SCHEMA` nên chưa đọc được.",
+   "C": "`ALL PRIVILEGES` gồm cả `MODIFY`, vượt quá read-only.",
+   "D": "Grant từng table không phủ table tạo sau."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions model concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   },
+   {
+    "label": "Manage privileges in Unity Catalog",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges"
+   }
+  ]
+ },
+ {
+  "id": "sec-02",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.1",
+  "source": "original",
+  "select": 1,
+  "stem": "An on-call rotation group must be able to start a production Lakeflow Job with different parameters, cancel a stuck run, and read the Spark UI and logs of each run. The group must not be able to change the job's tasks, schedule or permissions. The job is owned by a service principal.\nWhich permission should be granted to the group on the job?",
+  "options": [
+   {
+    "k": "A",
+    "t": "CAN VIEW"
+   },
+   {
+    "k": "B",
+    "t": "CAN MANAGE on the job"
+   },
+   {
+    "k": "C",
+    "t": "CAN MANAGE RUN"
+   },
+   {
+    "k": "D",
+    "t": "IS OWNER"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: run now với parameter khác, cancel, xem log, không sửa setting.\n- CAN MANAGE RUN gồm run now, run với parameter khác, cancel run, xem Spark UI và log.\n- Edit job settings và modify permissions cần IS OWNER hoặc CAN MANAGE.",
+  "wrong": {
+   "A": "CAN VIEW chỉ xem detail và result, không run hay cancel được.",
+   "B": "CAN MANAGE cho sửa setting và permission, vượt least privilege.",
+   "D": "Job chỉ có một owner và group không được làm IS OWNER."
+  },
+  "refs": [
+   {
+    "label": "Access control lists",
+    "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+   }
+  ]
+ },
+ {
+  "id": "sec-03",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A company is moving a nightly ingestion job that writes to Unity Catalog managed tables in `prod` into production. The security review lists two goals: a person leaving the company must not break the job or the ownership of its tables, and nobody should be able to read the table data without Unity Catalog access control.\nWhich TWO actions meet these goals? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run the job as a service principal and grant that principal only the privileges the job needs on `prod`"
+   },
+   {
+    "k": "B",
+    "t": "Grant `ALL PRIVILEGES` on catalog `prod` to the data engineering group so that failed runs can be fixed quickly"
+   },
+   {
+    "k": "C",
+    "t": "Transfer ownership of the production tables to an account group with `ALTER TABLE ... OWNER TO`"
+   },
+   {
+    "k": "D",
+    "t": "Give the analyst team read access to the cloud storage path of the tables to avoid warehouse cost"
+   },
+   {
+    "k": "E",
+    "t": "Keep the creating engineer as owner of the job and tables, and add a second engineer as a backup owner"
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Tín hiệu: không phụ thuộc một người, không bỏ qua UC.\n- Docs khuyên service principal chạy job ghi production và giao ownership object production cho group.\n- Access thẳng vào storage bỏ qua access control, audit và lineage của UC.",
+  "wrong": {
+   "B": "`ALL PRIVILEGES` trên catalog trái least privilege.",
+   "D": "Đọc thẳng storage path bỏ qua Unity Catalog và mọi row filter, column mask.",
+   "E": "Mỗi object chỉ có một owner; owner là cá nhân thì gãy khi người đó rời đi."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog best practices",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices"
+   },
+   {
+    "label": "Access control lists",
+    "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+   }
+  ]
+ },
+ {
+  "id": "sec-04",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A governance team must mask every column that holds a social security number in the catalog `hr` for all users except the `compliance` group. New tables are added every month, and table owners must not be able to remove or change the protection. Data stewards already tag SSN columns with the governed tag `pii = ssn`.\nWhat should the team implement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run `ALTER TABLE ... ALTER COLUMN ... SET MASK` on each SSN column and add a monthly job that applies the mask to new tables"
+   },
+   {
+    "k": "B",
+    "t": "Create a dynamic view over each table that uses `is_account_group_member('compliance')` and revoke `SELECT` on the base tables"
+   },
+   {
+    "k": "C",
+    "t": "Grant `APPLY TAG` and `ASSIGN` on the `pii` tag only to the compliance group so other users cannot read tagged columns"
+   },
+   {
+    "k": "D",
+    "t": "Create a column mask policy `ON CATALOG hr` for `account users` `EXCEPT compliance` matching `has_tag_value('pii', 'ssn')`"
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: mọi table kể cả table mới, owner không gỡ được, đã có governed tag.\n- ABAC policy ở catalog match cột theo tag nên phủ table mới được tag.\n- Policy gắn ở cấp trên thì table owner không sửa, gỡ hay bypass được.",
+  "wrong": {
+   "A": "Mask cấp table do table owner quản lý và gỡ được; phải lặp lại cho mỗi table.",
+   "B": "Phải tạo và duy trì một view cho mỗi table; table mới không tự được bảo vệ.",
+   "C": "Quyền gán tag không giới hạn ai đọc cột; tag không tự mask data."
+  },
+  "refs": [
+   {
+    "label": "Core concepts for ABAC",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+   },
+   {
+    "label": "When to use ABAC vs table-level row filters and column masks",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm"
+   }
+  ]
+ },
+ {
+  "id": "sec-05",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.2",
+  "source": "original",
+  "select": 1,
+  "stem": "An engineer creates this policy on schema `sales.eu`:\n`CREATE POLICY region_filter ON SCHEMA sales.eu ROW FILTER gov.allow_region TO analysts FOR TABLES MATCH COLUMNS has_tag('region') AS r USING COLUMNS (r);`\nThe governed tag `region` is set on table `sales.eu.orders`, but no tag is set on its column `region_code`. Analysts still see every row of `orders`.\nWhat is the cause?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Row filter policies can be attached only at catalog level, so a schema-level policy is ignored"
+   },
+   {
+    "k": "B",
+    "t": "`MATCH COLUMNS` checks only tags set directly on columns; tags do not propagate from a table to its columns"
+   },
+   {
+    "k": "C",
+    "t": "Governed tag assignments take up to 24 hours to propagate before policies use them"
+   },
+   {
+    "k": "D",
+    "t": "The policy needs a `WHEN has_tag('region')` clause because `MATCH COLUMNS` is evaluated only after `WHEN` succeeds"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: tag ở table, cột không có tag, policy dùng `MATCH COLUMNS`.\n- `has_tag()` trong `MATCH COLUMNS` chỉ xét tag gắn trực tiếp lên cột.\n- Không có cột nào match nên policy không áp và data trả về không lọc.",
+  "wrong": {
+   "A": "Row filter policy gắn được ở catalog, schema hoặc table.",
+   "C": "Docs ghi đổi tag mất vài phút, không phải 24 giờ; lỗi ở đây là không có tag cột.",
+   "D": "`WHEN` là tùy chọn, mặc định TRUE; thêm `WHEN` không làm cột được match."
+  },
+  "refs": [
+   {
+    "label": "Core concepts for ABAC",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+   },
+   {
+    "label": "ABAC requirements, quotas, and limitations",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+   }
+  ]
+ },
+ {
+  "id": "sec-06",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A column mask policy on catalog `crm` masks columns tagged `pii = email` for `account users` except the `compliance` group. A Lakeflow pipeline owned by the service principal `etl_sp` reads `crm.bronze.customers` and refreshes the materialized view `crm.gold.customer_360`. Members of `compliance` now see masked emails in the materialized view, although they see real emails in the bronze table.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run a full refresh of the materialized view while signed in as a member of `compliance` so the policy is evaluated for that group"
+   },
+   {
+    "k": "B",
+    "t": "Grant `SELECT` on the materialized view directly to `compliance` so the mask is evaluated for that group"
+   },
+   {
+    "k": "C",
+    "t": "Add `etl_sp` to the `EXCEPT` clause of the policy so the refresh reads unmasked data, then refresh the view"
+   },
+   {
+    "k": "D",
+    "t": "Recreate `customer_360` as a streaming table, because ABAC policies do not apply to streaming tables"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: MV chứa giá trị đã mask cho mọi người, pipeline owner là `etl_sp`.\n- Refresh MV, streaming table đánh giá policy bằng owner hoặc run-as identity của pipeline.\n- Identity đó bị mask thì MV lưu vĩnh viễn data đã mask; phải đưa vào `EXCEPT`.",
+  "wrong": {
+   "A": "Refresh vẫn chạy bằng identity của pipeline, không theo người gọi refresh.",
+   "B": "Data trong MV đã bị mask lúc ghi; grant thêm không trả lại giá trị gốc.",
+   "D": "ABAC áp cho cả table, MV và streaming table; streaming table gặp cùng vấn đề."
+  },
+  "refs": [
+   {
+    "label": "ABAC requirements, quotas, and limitations",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+   },
+   {
+    "label": "Use Unity Catalog with pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+   }
+  ]
+ },
+ {
+  "id": "sec-07",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.2",
+  "source": "original",
+  "select": 2,
+  "stem": "A governance team protects catalog `sales` with ABAC policies attached at catalog level, while a few table owners have also set table-level row filters with `ALTER TABLE ... SET ROW FILTER`. Before an audit, the team reviews how the two mechanisms interact for the same users and tables.\nWhich TWO statements are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "If an ABAC policy and a table-level filter resolve to different row filter functions for the same user and table, the query fails with an error"
+   },
+   {
+    "k": "B",
+    "t": "A table owner can drop an ABAC policy that a catalog owner attached at catalog level whenever the policy filters or masks a table that this owner holds"
+   },
+   {
+    "k": "C",
+    "t": "ABAC policies match only governed tags; an ungoverned tag with the same key is not used by policy conditions"
+   },
+   {
+    "k": "D",
+    "t": "An ABAC row filter policy grants `SELECT` to the principals in its `TO` clause, so no separate grant is needed"
+   },
+   {
+    "k": "E",
+    "t": "A table-level row filter can be attached to a view with `ALTER VIEW ... SET ROW FILTER`"
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Mỗi user chỉ được một row filter distinct trên một table; hai function khác nhau thì Databricks chặn và báo lỗi.\n- ABAC dùng governed tag, không dùng tag thường.\n- Policy chỉ thêm giới hạn, không cấp access.",
+  "wrong": {
+   "B": "Policy cấp catalog không bị table owner sửa, gỡ hay bypass.",
+   "D": "ABAC và table-level filter đều không cấp access; vẫn cần GRANT riêng.",
+   "E": "Row filter và column mask cấp table không gắn được lên view."
+  },
+  "refs": [
+   {
+    "label": "When to use ABAC vs table-level row filters and column masks",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm"
+   },
+   {
+    "label": "ABAC requirements, quotas, and limitations",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+   },
+   {
+    "label": "Row filters and column masks",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/"
+   }
+  ]
+ },
+ {
+  "id": "sec-08",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.3",
+  "source": "original",
+  "select": 1,
+  "stem": "Data scientists must join `crm.orders` and `crm.web_events` on customer email without seeing any real email address. The same email must produce the same value in both tables, and the security team wants to rotate the transformation each year without changing the masking function.\nWhich masking approach meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A mask UDF that returns `mask(email)` so letters and digits are replaced by fixed characters"
+   },
+   {
+    "k": "B",
+    "t": "A deterministic mask UDF that returns `sha2(concat(email, CAST(version AS STRING)), 256)`, with `version` passed by the policy"
+   },
+   {
+    "k": "C",
+    "t": "A mask UDF that returns `NULL` for the email column for the `data_scientists` group"
+   },
+   {
+    "k": "D",
+    "t": "A mask UDF that keeps only the domain part of the email with `regexp_extract(email, '@(.*)$', 1)` so that values still group by company"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: join được, cùng input cùng output, rotate được.\n- Consistent hashing cho cùng hash ở mọi table; tham số version truyền qua `USING COLUMNS`.\n- Tăng version để sinh hash mới mà không sửa function.",
+  "wrong": {
+   "A": "`mask()` thay từng ký tự theo loại nên nhiều email khác nhau cho cùng kết quả, join sai.",
+   "C": "Suppression bỏ hẳn giá trị, không join được.",
+   "D": "Generalization về domain làm nhiều khách hàng trùng nhau."
+  },
+  "refs": [
+   {
+    "label": "Common patterns for row filtering and column masking",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns"
+   },
+   {
+    "label": "mask function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/mask"
+   }
+  ]
+ },
+ {
+  "id": "sec-09",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A silver table replaces customer emails with salted SHA-256 hashes. The salt is stored in a secret scope that the data team can read. A manager proposes to skip GDPR erasure requests for the silver table because the data is now anonymized.\nWhich assessment is correct?",
+  "options": [
+   {
+    "k": "A",
+    "t": "The proposal is correct because SHA-256 cannot be reversed, so hashed values are anonymous data"
+   },
+   {
+    "k": "B",
+    "t": "The proposal is correct only if the table also has an ABAC column mask on the hash column"
+   },
+   {
+    "k": "C",
+    "t": "The proposal is wrong only for bronze tables; silver and gold tables fall outside GDPR once a salted hash replaces every direct identifier in them"
+   },
+   {
+    "k": "D",
+    "t": "The proposal is wrong: hashed values that can be linked back with additional information are pseudonymized personal data and must be erased"
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: hash có salt, team vẫn đọc được salt, bảo là anonymized.\n- GDPR: data pseudonymize mà gắn lại được với người bằng thông tin bổ sung vẫn là personal data.\n- Docs Databricks: xoá hẳn an toàn hơn obfuscation.",
+  "wrong": {
+   "A": "Không đảo ngược hàm hash không có nghĩa là anonymous; còn salt và giá trị gốc ở nơi khác.",
+   "B": "Column mask chỉ đổi cách hiển thị, không đổi bản chất data đã lưu.",
+   "C": "GDPR áp cho mọi personal data, không theo layer."
+  },
+  "refs": [
+   {
+    "label": "GDPR Recital 26, anonymous data",
+    "url": "https://gdpr-info.eu/recitals/no-26/"
+   },
+   {
+    "label": "GDPR Art. 4(5), pseudonymisation",
+    "url": "https://gdpr-info.eu/art-4-gdpr/"
+   },
+   {
+    "label": "GDPR and CCPA compliance with Delta Lake",
+    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+   }
+  ]
+ },
+ {
+  "id": "sec-10",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A company has 4,000 tables across the `lakehouse` catalog, ingested by batch jobs and streaming pipelines. Nobody knows which columns hold emails or phone numbers, and new tables arrive daily. The CISO wants such columns detected and masked for everyone outside the `privacy` group with the LEAST operational overhead.\nWhat should the data engineer implement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A nightly job that samples every string column with regular expressions and runs `ALTER TABLE ... SET MASK` on each matching column it finds"
+   },
+   {
+    "k": "B",
+    "t": "Enable Data Classification with automatic tagging on the catalog and create ABAC column mask policies that match the `class.*` tags"
+   },
+   {
+    "k": "C",
+    "t": "Apply `ai_mask()` to every string column in each pipeline before writing the bronze tables"
+   },
+   {
+    "k": "D",
+    "t": "Create a dynamic view per table that masks columns whose names contain `email` or `phone`"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: không biết cột nào chứa PII, table mới mỗi ngày, LEAST operational overhead.\n- Data Classification scan incremental và gắn system tag như `class.email_address` cho cột match.\n- ABAC policy ở catalog match tag đó nên phủ cả table mới.",
+  "wrong": {
+   "A": "Tự viết và duy trì scanner, mask cấp table gỡ được và phải lặp cho từng table.",
+   "C": "Sửa mọi pipeline và mất giá trị gốc cho cả nhóm `privacy`; kết quả AI có thể khác nhau giữa lần chạy.",
+   "D": "Phụ thuộc tên cột và phải duy trì view cho mỗi table."
+  },
+  "refs": [
+   {
+    "label": "Data Classification",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+   },
+   {
+    "label": "Core concepts for ABAC",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+   }
+  ]
+ },
+ {
+  "id": "sec-11",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A team defines a streaming table in a Lakeflow pipeline with SQL. The table ingests customer files that include an `ssn` column. Analysts must see only masked SSNs and only rows for their region, and the protection must be versioned with the pipeline source code.\nHow should the engineer define the table?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`CREATE OR REFRESH STREAMING TABLE ... (ssn STRING MASK gov.ssn_mask, ...) WITH ROW FILTER gov.region_filter ON (region) AS SELECT ...`"
+   },
+   {
+    "k": "B",
+    "t": "Create the streaming table, then run `ALTER TABLE ... ALTER COLUMN ssn SET MASK` and `SET ROW FILTER` from a separate notebook after each pipeline update"
+   },
+   {
+    "k": "C",
+    "t": "Add `EXPECT (ssn IS NULL) ON VIOLATION DROP ROW` so rows with an SSN never reach the table"
+   },
+   {
+    "k": "D",
+    "t": "Publish the table as is and grant analysts access only to a dynamic view that masks `ssn`"
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: streaming table trong pipeline, mask và row filter, đi cùng source code.\n- `CREATE OR REFRESH STREAMING TABLE` nhận `MASK` ở cột và `WITH ROW FILTER` ở table.\n- Docs: thêm, đổi, gỡ mask và row filter của streaming table qua `CREATE OR REFRESH`.",
+  "wrong": {
+   "B": "Mask và row filter của streaming table nên quản lý qua `CREATE OR REFRESH`, không phải lệnh ALTER bên ngoài.",
+   "C": "Expectation bỏ cả row, mất data hợp lệ, và không lọc theo region.",
+   "D": "Không nằm trong định nghĩa pipeline và cần duy trì thêm một object."
+  },
+  "refs": [
+   {
+    "label": "CREATE STREAMING TABLE",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-streaming-table"
+   },
+   {
+    "label": "Use Unity Catalog with pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+   }
+  ]
+ },
+ {
+  "id": "sec-12",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.4",
+  "source": "original",
+  "select": 2,
+  "stem": "A governance lead plans to turn on Databricks Data Classification for several catalogs that hold batch and streaming tables. The lead must explain what the workspace needs, when new tables are covered, and what happens to existing tags if automatic tagging is turned off later.\nWhich TWO statements about Data Classification are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "The workspace must have serverless compute available"
+   },
+   {
+    "k": "B",
+    "t": "Enabling all available catalogs also enables catalogs that are created later"
+   },
+   {
+    "k": "C",
+    "t": "Disabling automatic tagging removes the `class.*` tags already applied"
+   },
+   {
+    "k": "D",
+    "t": "New tables and columns in an enabled catalog are typically scanned within 24 hours"
+   },
+   {
+    "k": "E",
+    "t": "Only account admins can view classification results, regardless of catalog privileges"
+   }
+  ],
+  "answer": [
+   "A",
+   "D"
+  ],
+  "explain": "- Data Classification cần serverless compute.\n- Table và cột mới thường được scan trong 24 giờ.\n- Kết quả lưu ở `system.data_classification.results`.",
+  "wrong": {
+   "B": "Bật mọi catalog hiện có không tự bật catalog tạo sau.",
+   "C": "Tắt tagging chỉ dừng tag mới; tag cũ giữ nguyên.",
+   "E": "User có `MANAGE`, `READ METADATA`, hoặc `USE CATALOG` + `USE SCHEMA` + `SELECT` trên catalog xem được kết quả."
+  },
+  "refs": [
+   {
+    "label": "Data Classification",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+   }
+  ]
+ },
+ {
+  "id": "sec-13",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A Delta table with deletion vectors enabled receives `DELETE FROM crm.bronze.users WHERE user_id = 42` for a right-to-erasure request. An audit later finds the user's values still present in the table's Parquet files under the current version.\nWhich sequence permanently removes the data?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run `OPTIMIZE crm.bronze.users`, which always applies every deletion vector during compaction"
+   },
+   {
+    "k": "B",
+    "t": "Run `VACUUM crm.bronze.users RETAIN 0 HOURS`, which removes the deleted rows from all current data files of the table"
+   },
+   {
+    "k": "C",
+    "t": "Run `REORG TABLE crm.bronze.users APPLY (PURGE)`, then `VACUUM` once the retention threshold has passed"
+   },
+   {
+    "k": "D",
+    "t": "Read the table's change data feed and overwrite the user's rows with NULL values"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: deletion vectors, data vẫn nằm trong Parquet của version hiện tại.\n- Deletion vector chỉ soft-delete; `REORG ... APPLY (PURGE)` rewrite file chứa row đã xoá.\n- File cũ vẫn còn tới khi VACUUM xoá theo retention.",
+  "wrong": {
+   "A": "Compaction không bảo đảm áp hết thay đổi trong deletion vector.",
+   "B": "File hiện tại vẫn được tham chiếu nên VACUUM không xoá; retention 0 giờ còn bị safety check chặn và docs khuyên tối thiểu 7 ngày.",
+   "D": "Ghi đè NULL là obfuscation, không xoá, và vẫn để lại file cũ."
+  },
+  "refs": [
+   {
+    "label": "Deletion vectors in Databricks",
+    "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+   },
+   {
+    "label": "REORG TABLE",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table"
+   },
+   {
+    "label": "GDPR and CCPA compliance with Delta Lake",
+    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+   }
+  ]
+ },
+ {
+  "id": "sec-14",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow pipeline streams from the Delta table `bronze.users` into the streaming table `silver.users`, and a materialized view `gold.user_stats` aggregates silver. After a GDPR job runs `DELETE` on `bronze.users`, the next pipeline update fails on the silver flow. The Kafka source of bronze keeps only 7 days of data.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Delete the same users from `silver.users` with DML and read `bronze.users` with the `skipChangeCommits` option"
+   },
+   {
+    "k": "B",
+    "t": "Run a full refresh of `silver.users` after every GDPR batch so the stream restarts from scratch and reprocesses bronze"
+   },
+   {
+    "k": "C",
+    "t": "Delete the checkpoint of the silver flow and restart it from the latest offset"
+   },
+   {
+    "k": "D",
+    "t": "Replace the `DELETE` with a column mask on bronze so the stream never sees a non-append commit"
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: stream fail sau DELETE ở nguồn, Kafka chỉ giữ 7 ngày.\n- Docs: DELETE ở nguồn, DELETE ở streaming table, rồi đọc nguồn với `skipChangeCommits`.\n- Materialized view tự xử lý delete sau refresh.",
+  "wrong": {
+   "B": "Full refresh xử lý lại toàn bộ; data Kafka quá 7 ngày không còn nên mất data.",
+   "C": "Bỏ checkpoint làm mất state và có thể bỏ sót hoặc lặp data.",
+   "D": "Mask không xoá data nên không đáp ứng right to erasure."
+  },
+  "refs": [
+   {
+    "label": "GDPR and CCPA compliance with Delta Lake",
+    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+   },
+   {
+    "label": "Use Unity Catalog with pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+   }
+  ]
+ },
+ {
+  "id": "sec-15",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.5",
+  "source": "original",
+  "select": 2,
+  "stem": "A managed Delta table has change data feed and deletion vectors enabled and uses default table properties. The privacy office requires that data of an erased user can no longer be read in any way.\nWhich TWO statements are correct after the team runs `DELETE` for that user? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Time travel to a version before the delete can still return the user's rows until VACUUM removes the old files"
+   },
+   {
+    "k": "B",
+    "t": "`DELETE` on a table with deletion vectors rewrites the affected Parquet files immediately"
+   },
+   {
+    "k": "C",
+    "t": "By default VACUUM keeps removed data files for 30 days"
+   },
+   {
+    "k": "D",
+    "t": "The change data feed records for the delete contain the deleted rows, and VACUUM removes change data files per the table retention"
+   },
+   {
+    "k": "E",
+    "t": "Change data feed records are kept permanently in `_delta_log` and must be removed with `REORG TABLE ... APPLY (PURGE)` after each delete"
+   }
+  ],
+  "answer": [
+   "A",
+   "D"
+  ],
+  "explain": "- Delta giữ history, nên time travel còn đọc row cũ tới khi VACUUM xoá file.\n- CDF ghi cả data của row bị xoá; VACUUM xoá change data file theo retention của table.\n- Retention mặc định của VACUUM là 7 ngày (`delta.deletedFileRetentionDuration`).",
+  "wrong": {
+   "B": "Deletion vectors chỉ đánh dấu row; Parquet chỉ được rewrite khi purge.",
+   "C": "Mặc định là 7 ngày; 30 ngày là history retention của transaction log.",
+   "E": "Change data file nằm trong `_change_data` và bị VACUUM xoá; `REORG` không phải cách xoá CDF."
+  },
+  "refs": [
+   {
+    "label": "GDPR and CCPA compliance with Delta Lake",
+    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+   },
+   {
+    "label": "Use Delta Lake change data feed on Databricks",
+    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   },
+   {
+    "label": "VACUUM",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum"
+   }
+  ]
+ },
+ {
+  "id": "sec-16",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.1",
+  "source": "original",
+  "select": 1,
+  "stem": "Analysts across the company cannot find curated datasets in the `sales` catalog. The governance team wants every analyst to discover tables by search, read a description of each table and column, see classification tags, and request access, without being able to read any data.\nWhich approach meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Grant `USE CATALOG` on `sales` and `USE SCHEMA` on every schema to `account users` so that all objects become visible in search"
+   },
+   {
+    "k": "B",
+    "t": "Store descriptions and owner contact emails as tag values so search returns them"
+   },
+   {
+    "k": "C",
+    "t": "Add table and column comments and governed tags, and grant `BROWSE` on catalog `sales` to `account users`"
+   },
+   {
+    "k": "D",
+    "t": "Create a dynamic view per table that returns ten sample rows to all users"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: discover, đọc mô tả, thấy tag, request access, không đọc data.\n- Comment và tag là metadata để search.\n- `BROWSE` cho thấy object, comment, tag và gửi access request mà không cần usage privilege.",
+  "wrong": {
+   "A": "Usage privilege không cần cho việc discover và mở rộng quyền hơn mức cần.",
+   "B": "Tag lưu plain text và có thể replicate toàn cầu; docs cấm đặt thông tin cá nhân vào tag.",
+   "D": "Lộ data mẫu, trái yêu cầu không đọc data."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions model concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   },
+   {
+    "label": "Add comments to data and AI assets",
+    "url": "https://docs.databricks.com/aws/en/comments/"
+   },
+   {
+    "label": "Apply tags to Unity Catalog securable objects",
+    "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+   }
+  ]
+ },
+ {
+  "id": "sec-17",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A data office wants the tag key `sensitivity` to accept only the values `low`, `medium` and `high`, and only the `data_stewards` group may assign it. The tag will later drive ABAC policies across all workspaces in the account.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Grant `APPLY TAG` on every catalog only to `data_stewards` and document the three allowed values of `sensitivity` in each catalog and schema comment"
+   },
+   {
+    "k": "B",
+    "t": "Create a governed tag with `CREATE GOVERNED TAG sensitivity VALUES ('low', 'medium', 'high')` and give `ASSIGN` on it to `data_stewards`"
+   },
+   {
+    "k": "C",
+    "t": "Create a cluster policy that adds a `sensitivity` custom tag to every compute resource"
+   },
+   {
+    "k": "D",
+    "t": "Add a `CHECK` constraint on every table so the `sensitivity` table property accepts only the three values"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: giới hạn value, giới hạn ai gán, dùng cho ABAC ở mọi workspace.\n- Governed tag là account-level, có tag policy giới hạn value và permission `ASSIGN`.\n- ABAC chỉ dùng governed tag.",
+  "wrong": {
+   "A": "`APPLY TAG` không giới hạn value; owner object vẫn tự gán được; tag thường không dùng cho ABAC.",
+   "C": "Governed tag không áp cho compute; custom tag của compute không phải tag trên securable.",
+   "D": "CHECK constraint áp cho data trong cột, không áp cho tag."
+  },
+  "refs": [
+   {
+    "label": "Governed tags",
+    "url": "https://docs.databricks.com/aws/en/admin/governed-tags/"
+   },
+   {
+    "label": "CREATE GOVERNED TAG",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-governed-tag"
+   },
+   {
+    "label": "Apply tags to Unity Catalog securable objects",
+    "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+   }
+  ]
+ },
+ {
+  "id": "sec-18",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.2",
+  "source": "original",
+  "select": 1,
+  "stem": "The owner of table `prod.sales.orders` runs `GRANT SELECT ON TABLE prod.sales.orders TO marketing`. Members of `marketing` still get a permission error when they query the table from a SQL warehouse on which they have CAN USE. They have no other grants in `prod`.\nWhat is the most likely cause?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Only a metastore admin can grant `SELECT` on a table in a production catalog"
+   },
+   {
+    "k": "B",
+    "t": "`marketing` also needs `MODIFY` on the table because queries read the transaction log"
+   },
+   {
+    "k": "C",
+    "t": "`SELECT` takes effect only when granted at catalog level, from where it is inherited"
+   },
+   {
+    "k": "D",
+    "t": "`marketing` lacks `USE CATALOG` on `prod` and `USE SCHEMA` on `prod.sales`"
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: có `SELECT` trên table nhưng vẫn lỗi, không có grant nào khác.\n- Đọc table cần cả `USE CATALOG` và `USE SCHEMA` trên parent.\n- Chỉ owner catalog, schema hoặc người có `MANAGE` cấp được usage privilege, nên table owner không tự mở ra ngoài ranh giới.",
+  "wrong": {
+   "A": "Table owner grant được privilege trên table của mình.",
+   "B": "Đọc chỉ cần `SELECT`; `MODIFY` là quyền ghi.",
+   "C": "`SELECT` grant ở table có hiệu lực; catalog-level chỉ là một lựa chọn khác."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions model concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   }
+  ]
+ },
+ {
+  "id": "sec-19",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A data steward receives `MANAGE` on catalog `finance` so that they can grant and revoke privileges for the finance team. When the steward runs `SELECT * FROM finance.gl.journal`, the query fails with a permission error.\nWhich statement explains the behavior?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`MANAGE` does not include data privileges such as `SELECT`, but the steward can grant them to themselves"
+   },
+   {
+    "k": "B",
+    "t": "`MANAGE` on a catalog is not inherited by the schemas and tables in it, so it has no effect at all on the table `finance.gl.journal`"
+   },
+   {
+    "k": "C",
+    "t": "`MANAGE` requires the steward to also be the catalog owner before it takes effect"
+   },
+   {
+    "k": "D",
+    "t": "`MANAGE` is a metastore-level privilege and cannot be granted on a catalog"
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: có `MANAGE` trên catalog nhưng SELECT lỗi.\n- `MANAGE` không gồm `SELECT`, `MODIFY`; user có thể tự grant data privilege cho mình.\n- Đọc data vẫn cần `USE CATALOG` và `USE SCHEMA`.",
+  "wrong": {
+   "B": "`MANAGE` cấp ở container được kế thừa xuống mọi object con.",
+   "C": "`MANAGE` không cần ownership; nhiều principal giữ được cùng lúc.",
+   "D": "`MANAGE` cấp được trên catalog, schema và object."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions model concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   }
+  ]
+ },
+ {
+  "id": "sec-20",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A platform team gives the `bi_support` group access to a production SQL warehouse. Members must start the warehouse, run their own diagnostic queries, and inspect queries that other users ran together with the monitoring tab when dashboards slow down. They must not stop, edit or delete the warehouse.\nWhich permission is the least privilege that meets every requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "CAN VIEW"
+   },
+   {
+    "k": "B",
+    "t": "CAN USE"
+   },
+   {
+    "k": "C",
+    "t": "CAN MONITOR"
+   },
+   {
+    "k": "D",
+    "t": "CAN MANAGE"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: vừa chạy query vừa xem query của người khác và monitoring tab, không stop hay edit.\n- CAN MONITOR gồm start, run query, xem warehouse queries và monitoring tab; stop, edit, delete thuộc IS OWNER và CAN MANAGE.",
+  "wrong": {
+   "A": "CAN VIEW xem được query và monitoring tab nhưng không start warehouse, không chạy query.",
+   "B": "CAN USE chạy query nhưng không xem query của người khác và monitoring tab.",
+   "D": "CAN MANAGE cho stop, edit, delete và đổi permission, vượt least privilege."
+  },
+  "refs": [
+   {
+    "label": "Access control lists",
+    "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+   }
+  ]
+ },
+ {
+  "id": "sec-21",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A data steward receives `MANAGE` on schema `finance.gl` and has no privileges on catalog `finance`. When the steward runs `GRANT SELECT ON TABLE finance.gl.journal TO auditors`, the command fails with a permission error. The steward must manage access only inside this schema.\nWhich additional grant fixes the problem with least privilege?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`USE SCHEMA` on schema `finance.gl`"
+   },
+   {
+    "k": "B",
+    "t": "`USE CATALOG` on catalog `finance`"
+   },
+   {
+    "k": "C",
+    "t": "`MANAGE` on catalog `finance`"
+   },
+   {
+    "k": "D",
+    "t": "`ALL PRIVILEGES` on schema `finance.gl`"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: có `MANAGE` trên schema, thiếu mọi quyền ở catalog.\n- `MANAGE` trên schema cần `USE CATALOG` ở catalog cha, không cần `USE SCHEMA` trên chính schema đó.",
+  "wrong": {
+   "A": "`MANAGE` trên schema không đòi `USE SCHEMA`; thiếu vẫn là `USE CATALOG`.",
+   "C": "Mở quyền quản lý cả catalog, vượt phạm vi một schema.",
+   "D": "`ALL PRIVILEGES` cho data access và không chứa `MANAGE`; vẫn thiếu `USE CATALOG`."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   }
+  ]
+ },
+ {
+  "id": "sec-22",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A security team must ensure that no member of the `contractors` group can grant, revoke or transfer access on any table in catalog `finance`, including tables that a contractor created and therefore owns. The rule must also cover tables created later, and the team accepts a Beta feature.\nWhat should the team implement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Revoke `MANAGE` from `contractors` on catalog `finance` and audit grants weekly."
+   },
+   {
+    "k": "B",
+    "t": "An ABAC DENY policy on catalog `finance` that denies `MANAGE ACCESS CONTROL` to `contractors`."
+   },
+   {
+    "k": "C",
+    "t": "A GRANT policy that grants `MANAGE ACCESS CONTROL` only to the governance group on catalog `finance`."
+   },
+   {
+    "k": "D",
+    "t": "Transfer ownership of every current table in `finance` to a governance group with `ALTER TABLE ... OWNER TO`."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: chặn cả owner, phủ table tạo sau, chấp nhận Beta.\n- DENY policy deny `MANAGE ACCESS CONTROL`, thắng mọi grant kể cả ownership, và kế thừa xuống object con.",
+  "wrong": {
+   "A": "Owner vẫn grant và revoke được trên object mình sở hữu.",
+   "C": "`MANAGE ACCESS CONTROL` chỉ deny được, không grant được; grant cho nhóm khác cũng không chặn owner.",
+   "D": "Không phủ table contractor tạo sau này."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog permissions concepts",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+   },
+   {
+    "label": "Databricks release notes, September 2026",
+    "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/september"
+   }
+  ]
+ },
+ {
+  "id": "sec-23",
+  "topic": "security",
+  "domain": "S6",
+  "task": "6.4",
+  "source": "original",
+  "select": 2,
+  "stem": "A team publishes `crm.gold.customer_summary`, a materialized view whose definition selects only `customer_id`, `segment` and `lifetime_value` from a silver table that also holds emails. A partner team asks for direct read access to the materialized view's underlying cloud storage path for an external engine. Data Classification is enabled on catalog `crm` with default settings.\nWhich TWO statements are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "The underlying files can hold upstream columns, including PII, to support incremental refresh, so the path must not go to untrusted consumers."
+   },
+   {
+    "k": "B",
+    "t": "Because the definition excludes emails, the underlying files contain only the three selected columns."
+   },
+   {
+    "k": "C",
+    "t": "Data Classification scans tables, streaming tables and materialized views; scanning regular views is a Beta option."
+   },
+   {
+    "k": "D",
+    "t": "Once view scanning is enabled, Data Classification tags the columns of regular views with `class.*` tags."
+   },
+   {
+    "k": "E",
+    "t": "Direct file reads are safe, because the column masks defined on the silver table are also enforced on reads of the storage path."
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Tín hiệu: share storage path của MV, MV đọc từ table có PII.\n- Docs: file của MV có thể chứa data upstream ngoài định nghĩa để refresh incremental.\n- Data Classification mặc định scan table, ST, MV; scan view là Beta.",
+  "wrong": {
+   "B": "Docs nêu rõ file có thể chứa cột upstream không có trong định nghĩa.",
+   "D": "View được classify nhưng cột của view không được gắn tag `class.*`.",
+   "E": "Đọc thẳng storage bỏ qua Unity Catalog nên mask không áp."
+  },
+  "refs": [
+   {
+    "label": "Use Unity Catalog with pipelines",
+    "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+   },
+   {
+    "label": "Data Classification",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+   }
+  ]
+ },
+ {
+  "id": "sec-24",
+  "topic": "security",
+  "domain": "S7",
+  "task": "7.1",
+  "source": "original",
+  "select": 1,
+  "stem": "Stewards tag email columns in silver tables with the governed tag `pii = email`. Gold tables are built from silver with CTAS and MERGE in scheduled jobs, and new gold columns that hold emails are often left untagged, so ABAC column masks miss them. The team wants tags to follow the data downstream automatically and accepts a Beta feature.\nWhat should the team enable?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Tag propagation for the governed tag `pii`, so Unity Catalog applies it to derived tables and columns through lineage."
+   },
+   {
+    "k": "B",
+    "t": "The tag `pii = email` on the silver catalog, because catalog tags inherit to every column of every table."
+   },
+   {
+    "k": "C",
+    "t": "`APPLY TAG` on the gold schema for every job service principal, so jobs tag columns as they write."
+   },
+   {
+    "k": "D",
+    "t": "A comment on each gold column that holds emails, so that catalog search and ABAC column conditions can match the column."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: tag phải đi theo data qua CTAS, MERGE, chấp nhận Beta.\n- Tag propagation (Beta, 10/2026) dùng lineage gắn governed tag cho table và cột dẫn xuất.",
+  "wrong": {
+   "B": "Tag catalog kế thừa xuống table, không xuống cột.",
+   "C": "Quyền gán tag không tự gán tag; job vẫn phải viết lệnh `SET TAGS`.",
+   "D": "ABAC chỉ match governed tag, không đọc comment."
+  },
+  "refs": [
+   {
+    "label": "Databricks release notes, October 2026",
+    "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/october"
+   },
+   {
+    "label": "Apply tags to Unity Catalog securable objects",
+    "url": "https://docs.databricks.com/aws/en/database-objects/tags"
+   }
+  ]
+ }
+]

@@ -1,0 +1,1441 @@
+{
+ "id": "ops",
+ "title": "Monitoring, debugging & deploying",
+ "domain": [
+  "S4",
+  "S8"
+ ],
+ "icon": "dbx-system-tables",
+ "summary": "Câu hỏi về system tables cho cost và audit, API và event log để monitor job, pipeline, SQL alerts, chẩn đoán lỗi, repair run và deploy bundle qua Git CI/CD.",
+ "sections": [
+  {
+   "id": "system-tables",
+   "title": "Bản đồ system tables",
+   "icon": "dbx-system-tables",
+   "task": "4.1",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "System tables hay ra đề",
+     "columns": [
+      "Table",
+      "Cột chính",
+      "Trả lời câu hỏi",
+      "Lưu ý"
+     ],
+     "rows": [
+      [
+       "`system.billing.usage`",
+       "`usage_quantity`, `sku_name`, `usage_metadata.job_id`, `.dlt_pipeline_id`, `.warehouse_id`, `.cluster_id`, `custom_tags`, `identity_metadata.run_as`, `billing_origin_product`, `record_type`",
+       "DBU theo job, pipeline, warehouse, tag, identity",
+       "Global; thường có trong 12 giờ"
+      ],
+      [
+       "`system.billing.list_prices`",
+       "`sku_name`, `pricing.default`, `currency_code`, `price_start_time`, `price_end_time`",
+       "Đổi DBU sang USD theo list price",
+       "Global; join theo khoảng hiệu lực của giá"
+      ],
+      [
+       "`system.lakeflow.jobs`, `job_tasks`",
+       "`job_id`, `name`, `change_time`, `delete_time`, `run_as_user_name`",
+       "Metadata job và task",
+       "SCD2: lấy dòng `change_time` mới nhất"
+      ],
+      [
+       "`system.lakeflow.job_run_timeline`, `job_task_run_timeline`",
+       "`run_id`, `period_start_time`, `period_end_time`, `result_state`, `termination_code`, `compute_ids`, `run_type`",
+       "Thời gian chạy, tỷ lệ fail, số lần repair",
+       "Run dài bị cắt thành slice tối đa 1 giờ"
+      ],
+      [
+       "`system.lakeflow.pipelines`, `pipeline_update_timeline`",
+       "`pipeline_id`, `update_id`, `update_type`, `result_state`, `trigger_type`",
+       "Lịch sử update của pipeline",
+       "`result_state`: `COMPLETED`, `FAILED`, `CANCELED`"
+      ],
+      [
+       "`system.compute.clusters`, `node_timeline`",
+       "`cluster_id`, `owned_by`, `cluster_source`, `dbr_version`; `cpu_user_percent`, `mem_used_percent`",
+       "Owner và config compute, utilization theo phút",
+       "`clusters` là SCD2; `node_timeline` giữ 90 ngày"
+      ],
+      [
+       "`system.compute.warehouse_events`",
+       "`warehouse_id`, `event_type`, `cluster_count`, `event_time`",
+       "SQL warehouse scale up, scale down, start, stop",
+       "Regional"
+      ],
+      [
+       "`system.access.audit`",
+       "`event_date`, `service_name`, `action_name`, `user_identity.email`, `request_params`, `response`, `source_ip_address`",
+       "Ai làm gì, trên securable nào, khi nào",
+       "Account event có `workspace_id` = 0; filter `event_date`"
+      ],
+      [
+       "`system.query.history`",
+       "`statement_id`, `executed_by`, `execution_status`, `error_message`, `total_duration_ms`, `compute`, `query_source`",
+       "Query chậm hoặc lỗi trên SQL warehouse, serverless, pipeline",
+       "Mặc định chỉ admin đọc được"
+      ]
+     ],
+     "src": [
+      {
+       "label": "System tables reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+      },
+      {
+       "label": "Billable usage system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+      },
+      {
+       "label": "Pricing system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/pricing"
+      },
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      },
+      {
+       "label": "Compute system tables reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/compute"
+      },
+      {
+       "label": "Warehouse events system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/warehouse-events"
+      },
+      {
+       "label": "Audit log system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs"
+      },
+      {
+       "label": "Query history system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/query-history"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Quan hệ giữa các system table",
+     "img": "https://docs.databricks.com/aws/en/assets/images/system-tables-erd-690b80220d077015a023f90d59ff7560.svg",
+     "alt": "Entity relationship diagram of the Databricks system tables with their columns and join keys",
+     "caption": "ERD chính thức cho biết cột join giữa các system table, ví dụ `system.lakeflow.jobs` với `job_tasks` qua `job_id`. Table SCD2 như `jobs` có cột `change_time`.",
+     "credit": {
+      "label": "Databricks docs: System tables reference",
+      "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+     }
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Bẫy khi query system tables",
+     "md": "- **Access**: chỉ user vừa là account admin vừa là metastore admin đọc được mặc định; user khác cần `USE CATALOG`, `USE SCHEMA`, `SELECT`\n- **Regional**: `system.lakeflow`, `system.access.audit` (workspace event), `system.query.history` chỉ chứa workspace cùng region\n- **SCD2**: `jobs`, `job_tasks`, `pipelines`, `clusters`: lấy dòng `change_time` mới nhất rồi mới lọc `delete_time IS NULL`; lọc trước thì job đã xoá vẫn hiện\n- **Retention**: phần lớn 365 ngày, `node_timeline` 90 ngày; configurable retention (Beta) cho 30 tới 3.650 ngày",
+     "src": [
+      {
+       "label": "System tables reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+      },
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      },
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cost-sql",
+   "title": "Cost attribution bằng system.billing.usage",
+   "icon": "coin",
+   "task": "4.1",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Cost USD theo job, join list_prices và lakeflow.jobs",
+     "lang": "sql",
+     "code": "-- USD list cost per job, last 30 days\nWITH job_usage AS (\n  SELECT\n    u.workspace_id,\n    u.usage_metadata.job_id AS job_id,\n    u.usage_quantity * p.pricing.default AS usage_usd\n  FROM system.billing.usage u\n  JOIN system.billing.list_prices p\n    ON u.sku_name = p.sku_name\n   AND p.price_start_time <= u.usage_start_time\n   AND (p.price_end_time >= u.usage_start_time OR p.price_end_time IS NULL)\n   AND p.currency_code = 'USD'\n  WHERE u.billing_origin_product = 'JOBS'\n    AND u.usage_date >= current_date() - INTERVAL 30 DAYS\n),\nlatest_jobs AS (\n  SELECT workspace_id, job_id, name\n  FROM system.lakeflow.jobs\n  QUALIFY ROW_NUMBER() OVER (\n    PARTITION BY workspace_id, job_id ORDER BY change_time DESC) = 1\n)\nSELECT j.name, u.job_id, ROUND(SUM(u.usage_usd), 2) AS usd\nFROM job_usage u\nLEFT JOIN latest_jobs j USING (workspace_id, job_id)\nGROUP BY ALL\nORDER BY usd DESC\nLIMIT 20",
+     "notes": [
+      {
+       "line": 5,
+       "md": "`usage_metadata.job_id` có giá trị cho jobs compute và serverless job, rỗng cho all-purpose compute"
+      },
+      {
+       "line": 6,
+       "md": "`pricing.default` là list price, không phải giá sau chiết khấu"
+      },
+      {
+       "line": 10,
+       "md": "Giá đổi theo thời gian: join theo `price_start_time` và `price_end_time`"
+      },
+      {
+       "line": 13,
+       "md": "`billing_origin_product` tách JOBS, DLT, SQL, ALL_PURPOSE dù dùng chung SKU"
+      },
+      {
+       "line": 19,
+       "md": "Dedupe SCD2 để lấy tên job hiện tại"
+      }
+     ],
+     "src": [
+      {
+       "label": "Monitor job costs & performance with system tables",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs-cost"
+      },
+      {
+       "label": "Pricing system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/pricing"
+      },
+      {
+       "label": "Billable usage system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Cost theo custom tag và theo pipeline",
+     "lang": "sql",
+     "code": "-- DBUs by custom tag this month\nSELECT\n  custom_tags['cost_center'] AS cost_center,\n  sku_name,\n  SUM(usage_quantity) AS dbus\nFROM system.billing.usage\nWHERE usage_date >= date_trunc('MONTH', current_date())\n  AND custom_tags['cost_center'] IS NOT NULL\nGROUP BY ALL\nHAVING dbus != 0\n\n-- DBUs and run-as identity of one pipeline\nSELECT sku_name, usage_date,\n  collect_set(identity_metadata.run_as) AS users,\n  SUM(usage_quantity) AS dbus\nFROM system.billing.usage\nWHERE usage_metadata.dlt_pipeline_id = :pipeline_id\nGROUP BY ALL",
+     "notes": [
+      {
+       "line": 3,
+       "md": "`custom_tags` là map tag gắn trên usage record"
+      },
+      {
+       "line": 10,
+       "md": "Tổng có `RETRACTION` âm triệt tiêu bản `ORIGINAL` sai"
+      },
+      {
+       "line": 17,
+       "md": "`dlt_pipeline_id` là cột cho Lakeflow Pipelines, giữ tên cũ DLT"
+      }
+     ],
+     "src": [
+      {
+       "label": "Monitor costs using system tables",
+       "url": "https://docs.databricks.com/aws/en/admin/usage/system-tables"
+      },
+      {
+       "label": "Pipeline event log",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+      },
+      {
+       "label": "Billable usage system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "exam",
+     "title": "Tín hiệu trong đề",
+     "md": "- **\"cost per job across all workspaces\"**: `system.billing.usage` join `system.lakeflow.job_run_timeline` hoặc `jobs`, không dùng Jobs UI\n- **\"in USD\"**: nhân `usage_quantity` với `list_prices.pricing.default`\n- **\"by team or cost center\"**: filter `custom_tags`\n- **All-purpose compute**: cost theo job chỉ là ước lượng vì compute dùng chung",
+     "src": [
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      },
+      {
+       "label": "Monitor costs using system tables",
+       "url": "https://docs.databricks.com/aws/en/admin/usage/system-tables"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "audit-workload",
+   "title": "Auditing và workload monitoring",
+   "icon": "dbx-system-tables",
+   "task": "4.1",
+   "blocks": [
+    {
+     "type": "code",
+     "title": "Run fail gần đây và thay đổi permission",
+     "lang": "sql",
+     "code": "-- Failed job runs in the last 7 days\nSELECT workspace_id, job_id, run_id, result_state,\n  termination_code, period_end_time\nFROM system.lakeflow.job_run_timeline\nWHERE period_start_time > current_timestamp() - INTERVAL 7 DAYS\n  AND result_state IN ('FAILED', 'TIMED_OUT', 'ERROR')\n\n-- Who changed Unity Catalog permissions in the last 7 days\nSELECT event_time,\n  user_identity.email AS actor,\n  request_params['securable_full_name'] AS securable,\n  request_params['changes'] AS changes,\n  response.statusCode AS status\nFROM system.access.audit\nWHERE event_date >= current_date() - INTERVAL 7 DAYS\n  AND service_name = 'unityCatalog'\n  AND action_name = 'updatePermissions'\nORDER BY event_time DESC",
+     "notes": [
+      {
+       "line": 6,
+       "md": "`result_state` chỉ có ở slice cuối của run, slice giữa là NULL; giá trị khác: `SUCCEEDED`, `SKIPPED`, `CANCELLED`, `BLOCKED`"
+      },
+      {
+       "line": 15,
+       "md": "Filter `event_date` thay `event_time` để query nhanh hơn"
+      },
+      {
+       "line": 16,
+       "md": "Job event dùng `service_name = 'jobs'`, ví dụ `runNow`, `repairRun`"
+      }
+     ],
+     "src": [
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      },
+      {
+       "label": "Audit log system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs"
+      },
+      {
+       "label": "Audit log reference",
+       "url": "https://docs.databricks.com/aws/en/admin/account-settings/audit-logs"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Câu hỏi và bảng cần query",
+     "columns": [
+      "Câu hỏi",
+      "Bảng",
+      "Cột hoặc filter"
+     ],
+     "rows": [
+      [
+       "Job nào được repair nhiều nhất",
+       "`system.lakeflow.job_run_timeline`",
+       "Đếm dòng có `result_state` theo `run_id`, trừ 1"
+      ],
+      [
+       "Job nào chạy trên all-purpose compute",
+       "`job_task_run_timeline` join `compute.clusters`",
+       "`EXPLODE(compute_ids)`, `cluster_source` là `UI` hoặc `API`"
+      ],
+      [
+       "Owner thật của all-purpose compute",
+       "`system.compute.clusters`",
+       "`owned_by`; `identity_metadata.run_as` chỉ là người tạo"
+      ],
+      [
+       "Job lâu không chạy",
+       "`jobs` join `job_run_timeline`",
+       "`MAX(period_start_time)` với `run_type = 'JOB_RUN'`"
+      ],
+      [
+       "Query lỗi trên warehouse",
+       "`system.query.history`",
+       "`execution_status = 'FAILED'`, `error_message`"
+      ],
+      [
+       "Run từ `runs/submit` (Airflow)",
+       "`job_run_timeline`",
+       "`run_type = 'SUBMIT_RUN'`; không có trong `jobs`"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      },
+      {
+       "label": "Billable usage system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/billing"
+      },
+      {
+       "label": "Query history system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/query-history"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "api-cli-sdk",
+   "title": "Monitor job và pipeline bằng REST API, CLI, SDK",
+   "icon": "dbx-databricks-cli",
+   "task": "4.2",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Endpoint dùng để monitor",
+     "columns": [
+      "Việc",
+      "REST API",
+      "CLI",
+      "Python SDK"
+     ],
+     "rows": [
+      [
+       "Liệt kê run",
+       "`GET /api/2.2/jobs/runs/list`",
+       "`jobs list-runs --active-only`",
+       "`w.jobs.list_runs()`"
+      ],
+      [
+       "Chi tiết run, task, repair history",
+       "`GET /api/2.2/jobs/runs/get`",
+       "`jobs get-run RUN_ID`",
+       "`w.jobs.get_run()`"
+      ],
+      [
+       "Output của task (`dbutils.notebook.exit`)",
+       "`GET /api/2.2/jobs/runs/get-output`",
+       "`jobs get-run-output`",
+       "`w.jobs.get_run_output()`"
+      ],
+      [
+       "Lịch sử update pipeline",
+       "`GET /api/2.0/pipelines/{id}/updates`",
+       "`pipelines list-updates`",
+       "`w.pipelines.list_updates()`"
+      ],
+      [
+       "Event của pipeline",
+       "`GET /api/2.0/pipelines/{id}/events`",
+       "`pipelines list-pipeline-events`",
+       "`w.pipelines.list_pipeline_events()`"
+      ]
+     ],
+     "src": [
+      {
+       "label": "jobs command group (Databricks CLI)",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+      },
+      {
+       "label": "pipelines command group (Databricks CLI)",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/pipelines-commands"
+      },
+      {
+       "label": "Jobs API 2.2, Get a single job run",
+       "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+      },
+      {
+       "label": "Pipelines API, List pipeline events",
+       "url": "https://docs.databricks.com/api/workspace/pipelines/listpipelineevents"
+      },
+      {
+       "label": "Databricks SDK for Python, w.jobs",
+       "url": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/jobs/jobs.html"
+      },
+      {
+       "label": "Databricks SDK for Python, w.pipelines",
+       "url": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/pipelines/pipelines.html"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "CLI và SDK",
+     "lang": "bash",
+     "code": "# CLI: list failed runs, inspect one, read pipeline errors\ndatabricks jobs list-runs --job-id 123456 --completed-only --limit 25\ndatabricks jobs get-run 987654\ndatabricks jobs get-run-output 987655        # task run id\ndatabricks pipelines list-updates <pipeline-id>\ndatabricks pipelines list-pipeline-events <pipeline-id> \\\n  --filter \"level='ERROR'\" --max-results 50\n\n# Python SDK: same endpoints\nfrom databricks.sdk import WorkspaceClient\nw = WorkspaceClient()\nfor r in w.jobs.list_runs(job_id=123456, completed_only=True):\n    print(r.run_id, r.status.state, r.status.termination_details)\nfor e in w.pipelines.list_pipeline_events(\n        pipeline_id=\"<pipeline-id>\", filter=\"level='ERROR'\"):\n    print(e.timestamp, e.event_type, e.message)",
+     "notes": [
+      {
+       "line": 4,
+       "md": "`get-run-output` nhận task run ID, trả tối đa 5 MB output"
+      },
+      {
+       "line": 7,
+       "md": "`filter` nhận `level`, `id`, `timestamp`; `max_results` tối đa 1000"
+      },
+      {
+       "line": 13,
+       "md": "`status.state` thay field `state` đã deprecated trong Jobs API 2.2"
+      }
+     ],
+     "src": [
+      {
+       "label": "jobs command group (Databricks CLI)",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+      },
+      {
+       "label": "pipelines command group (Databricks CLI)",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/pipelines-commands"
+      },
+      {
+       "label": "Databricks SDK for Python, w.jobs",
+       "url": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/jobs/jobs.html"
+      },
+      {
+       "label": "Databricks SDK for Python, w.pipelines",
+       "url": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/pipelines/pipelines.html"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Giới hạn của API",
+     "md": "- **60 ngày**: run history và output tự xoá sau 60 ngày; cần lâu hơn thì dùng `system.lakeflow` (365 ngày)\n- **Phân trang**: `runs/get` trả 100 phần tử đầu của `tasks`, `job_clusters`, `job_parameters`, `repair_history`, phần còn lại qua `next_page_token`\n- **Một workspace**: API chỉ thấy workspace đang gọi; báo cáo nhiều workspace dùng system tables",
+     "src": [
+      {
+       "label": "Jobs API 2.2, Get a single job run",
+       "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+      },
+      {
+       "label": "Monitor Lakeflow Jobs",
+       "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+      },
+      {
+       "label": "Jobs system table reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "event-log",
+   "title": "Pipeline event log",
+   "icon": "dbx-spark-declarative-pipelines",
+   "task": "4.3",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "event_type cần nhớ",
+     "columns": [
+      "event_type",
+      "Trong `details`",
+      "Dùng để"
+     ],
+     "rows": [
+      [
+       "`create_update`",
+       "Toàn bộ config của update",
+       "Biết update bắt đầu lúc nào, với config gì"
+      ],
+      [
+       "`update_progress`",
+       "`update_progress.state`",
+       "Trạng thái update: `COMPLETED`, `FAILED`, `CANCELED`"
+      ],
+      [
+       "`flow_progress`",
+       "`metrics.num_output_rows`, `metrics.backlog_bytes`, `data_quality.dropped_records`, `data_quality.expectations`",
+       "Row count, backlog, kết quả expectation"
+      ],
+      [
+       "`flow_definition`",
+       "`output_dataset`, `input_datasets`",
+       "Lineage giữa các dataset"
+      ],
+      [
+       "`planning_information`",
+       "`technique_information`, `incrementalization_issues`",
+       "Vì sao materialized view không refresh incremental"
+      ],
+      [
+       "`user_action`",
+       "Người tạo pipeline, start hoặc cancel update",
+       "Audit trên từng pipeline"
+      ],
+      [
+       "`cluster_resources`, `autoscale`",
+       "Task slot, executor được yêu cầu",
+       "Tune enhanced autoscaling trên classic compute"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Pipeline event log",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+      },
+      {
+       "label": "Pipeline event log schema",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Expectation failures trên dashboard pipeline events",
+     "img": "https://docs.databricks.com/aws/en/assets/images/pipeline-events-monitoring-tables-health-a8e7c891b91bf8ff1b289407aa4ef45a.png",
+     "alt": "Expectation Failures chart: sum of rows failed and maximum failure percentage over check time across selected tables and expectations",
+     "caption": "Dashboard dựng sẵn trên `pipeline_events` system table (Beta) vẽ số row fail và failure percentage lớn nhất theo thời gian cho mọi table, không cần query event log từng pipeline.",
+     "credit": {
+      "label": "Databricks docs: Monitor and query events",
+      "url": "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Kết quả expectation từ event log",
+     "lang": "sql",
+     "code": "-- Expectation pass/fail per dataset, one pipeline\nCREATE VIEW event_log_raw AS\nSELECT * FROM event_log('<pipeline-id>');\n\nSELECT\n  origin.update_id,\n  e.dataset,\n  e.name AS expectation,\n  SUM(e.passed_records) AS passed,\n  SUM(e.failed_records) AS failed\nFROM (\n  SELECT origin, explode(from_json(\n    details:flow_progress.data_quality.expectations,\n    'array<struct<name:string,dataset:string,passed_records:bigint,failed_records:bigint>>'\n  )) AS e\n  FROM event_log_raw\n  WHERE event_type = 'flow_progress'\n)\nGROUP BY ALL",
+     "notes": [
+      {
+       "line": 3,
+       "md": "`event_log()` đọc hidden Delta table; mặc định chỉ run-as user query được"
+      },
+      {
+       "line": 13,
+       "md": "`details` là JSON string, đọc bằng toán tử `:`"
+      },
+      {
+       "line": 17,
+       "md": "Metric expectation nằm trong event `flow_progress`"
+      }
+     ],
+     "src": [
+      {
+       "label": "Pipeline event log",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+      },
+      {
+       "label": "Pipeline event log schema",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "pipeline_events system table và event hooks",
+     "md": "- **`system.lakeflow_pipeline_events_preview.pipeline_events`** (Beta) gom event của mọi pipeline trong region, Databricks khuyên dùng thay event log từng pipeline\n- **Publish event log**: đặt `catalog`, `schema`, `name` trong setting `event_log` để table hiện trong Unity Catalog\n- **Event hook** (Public Preview): `@dp.on_event_hook` chạy Python callback cho event có `maturity_level` là `STABLE`\n- Field `EVOLVING` hoặc `DEPRECATED` không nên dùng để build alert",
+     "src": [
+      {
+       "label": "Monitor and query events (pipeline_events system table)",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events"
+      },
+      {
+       "label": "Pipeline event log",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs"
+      },
+      {
+       "label": "Define custom monitoring of pipelines with event hooks",
+       "url": "https://docs.databricks.com/aws/en/ldp/event-hooks"
+      },
+      {
+       "label": "Pipeline event log schema",
+       "url": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "alerts",
+   "title": "Databricks SQL alerts và phạm vi dùng",
+   "icon": "dbx-databricks-sql",
+   "task": "4.4",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Alert theo phạm vi trong exam guide",
+     "columns": [
+      "Phạm vi",
+      "Query của alert đọc từ"
+     ],
+     "rows": [
+      [
+       "Governed business metric",
+       "Unity Catalog metric view, gọi bằng tên đầy đủ"
+      ],
+      [
+       "Data quality, anomaly",
+       "Kết quả data quality monitor, anomaly detection, profile metric"
+      ],
+      [
+       "Usage và cost",
+       "`system.billing.usage` cho serverless hoặc managed ingestion"
+      ],
+      [
+       "SQL warehouse và query health",
+       "`system.compute.warehouse_events`, `system.query.history`"
+      ],
+      [
+       "Audit và security event",
+       "`system.access.audit`"
+      ],
+      [
+       "AI agent quality",
+       "Metric của production monitoring cho agent"
+      ],
+      [
+       "Lakeflow Job branching",
+       "SQL alert task trong job, task sau rẽ nhánh theo kết quả"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Databricks SQL alerts",
+       "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
+      },
+      {
+       "label": "SQL alert task for jobs",
+       "url": "https://docs.databricks.com/aws/en/jobs/tasks/alert"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn cơ chế alert",
+     "rows": [
+      {
+       "says": "notify when a SQL query result crosses a threshold on a schedule",
+       "pick": "Databricks SQL alert",
+       "why": "Alert sở hữu query, chạy theo schedule trên SQL warehouse, so condition rồi gửi email, Slack, webhook.",
+       "src": {
+        "label": "Create an alert",
+        "url": "https://docs.databricks.com/aws/en/sql/user/alerts/create"
+       }
+      },
+      {
+       "says": "check a condition inside a job and branch downstream tasks",
+       "pick": "SQL alert task",
+       "why": "Task Succeeded dù condition triggered hay không, Failed chỉ khi lỗi; task sau rẽ nhánh theo evaluation state trong task output.",
+       "src": {
+        "label": "SQL alert task for jobs",
+        "url": "https://docs.databricks.com/aws/en/jobs/tasks/alert"
+       }
+      },
+      {
+       "says": "notify on job failure, long duration or streaming backlog",
+       "pick": "Job notifications",
+       "why": "Gắn trên job hoặc task, không cần viết query; tối đa 3 system destination cho mỗi loại event.",
+       "src": {
+        "label": "Add notifications on a job",
+        "url": "https://docs.databricks.com/aws/en/jobs/notifications"
+       }
+      },
+      {
+       "says": "custom Python action on every pipeline event",
+       "pick": "Event hook",
+       "why": "Callback Python chạy trong pipeline khi event được ghi vào event log.",
+       "src": {
+        "label": "Define custom monitoring of pipelines with event hooks",
+        "url": "https://docs.databricks.com/aws/en/ldp/event-hooks"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Thay đổi 2026",
+     "md": "- Bản mới của Databricks SQL alerts GA ngày 14/05/2026; SQL alert task trong Lakeflow Jobs GA ngày 29/06/2026\n- Trạng thái chỉ còn `OK`, `TRIGGERED`, `ERROR`; bỏ `UNKNOWN` của legacy alerts\n- Alert không nhận query có parameter và không dùng lại saved query\n- `system.alert.alerts` và `system.alert.alert_evaluation_history` ghi config và từng lần evaluate, giữ 365 ngày\n- Exam guide gọi là Databricks Lakehouse alerts; docs dùng tên Databricks SQL alerts (suy luận: cùng một feature)",
+     "src": [
+      {
+       "label": "Databricks release notes, May 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/may"
+      },
+      {
+       "label": "Databricks release notes, June 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/june"
+      },
+      {
+       "label": "Databricks SQL alerts",
+       "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
+      },
+      {
+       "label": "Create an alert",
+       "url": "https://docs.databricks.com/aws/en/sql/user/alerts/create"
+      },
+      {
+       "label": "System tables reference",
+       "url": "https://docs.databricks.com/aws/en/admin/system-tables/"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "jobs-monitor",
+   "title": "Monitor Lakeflow Jobs trên UI",
+   "icon": "dbx-lakeflow-jobs",
+   "task": "4.5",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Status của job run tính theo leaf task",
+     "columns": [
+      "Status",
+      "Điều kiện"
+     ],
+     "rows": [
+      [
+       "Succeeded",
+       "Mọi task thành công"
+      ],
+      [
+       "Succeeded with failures",
+       "Có task fail nhưng mọi leaf task thành công"
+      ],
+      [
+       "Failed",
+       "Ít nhất một leaf task fail"
+      ],
+      [
+       "Skipped",
+       "Vượt max concurrent runs của job hoặc workspace"
+      ],
+      [
+       "Timed Out",
+       "Run vượt timeout"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Monitor Lakeflow Jobs",
+       "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Runs list chung cho job và pipeline",
+     "img": "https://docs.databricks.com/aws/en/assets/images/runs-list-unified-4936fbdcf5e61b3d11a0055a02d765e6.png",
+     "alt": "Jobs & Pipelines Runs tab with filters for Run as, time range, Run status and Error code, a chart of failed, skipped and succeeded runs, top 5 error codes and the list of runs",
+     "caption": "Tab Runs lọc theo Run as, Run status, Error code và khoảng thời gian; chart tách Failed, Skipped, Succeeded; Top 5 error codes gồm `RunExecutionError`, `MaxConcurrentRunsExceeded`.",
+     "credit": {
+      "label": "Databricks docs: Monitor Lakeflow Jobs",
+      "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+     }
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Notification và health rule",
+     "md": "- **Succeeded with failures** tính là success: muốn nhận thông báo phải chọn Success\n- **Duration warning** cần health rule `RUN_DURATION_SECONDS`; streaming backlog dùng `STREAMING_BACKLOG_BYTES`, `_RECORDS`, `_SECONDS`\n- **Streaming backlog** lấy trung bình 10 phút, không áp cho pipeline task, cần bỏ `awaitTermination()` trong job\n- **Mute notifications until the last retry** chỉ có ở task notification; mute skipped hay canceled ở job không chặn notification cấp task\n- **Run breakdown**: Queued là do concurrency; Waiting for resources trên serverless standard mode là 4 tới 6 phút khởi động",
+     "src": [
+      {
+       "label": "Add notifications on a job",
+       "url": "https://docs.databricks.com/aws/en/jobs/notifications"
+      },
+      {
+       "label": "Diagnose job performance",
+       "url": "https://docs.databricks.com/aws/en/jobs/diagnose-job-performance"
+      },
+      {
+       "label": "Monitor Lakeflow Jobs",
+       "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "diagnose",
+   "title": "Tìm thông tin chẩn đoán lỗi",
+   "icon": "bug",
+   "task": "8.1",
+   "blocks": [
+    {
+     "type": "decision",
+     "title": "Triệu chứng và nơi cần xem",
+     "rows": [
+      {
+       "says": "stack trace of an exception or print output of a failed notebook",
+       "pick": "Driver logs (stdout, stderr, log4j)",
+       "why": "Print và log của notebook, job, library ghi vào driver log trên tab Driver logs của compute.",
+       "src": {
+        "label": "Manage classic compute",
+        "url": "https://docs.databricks.com/aws/en/compute/clusters-manage"
+       }
+      },
+      {
+       "says": "a few tasks are much slower than others in one stage",
+       "pick": "Spark UI, Stages tab, task metrics",
+       "why": "So sánh duration, shuffle read, spill giữa các task để thấy skew hoặc spill.",
+       "src": {
+        "label": "Diagnose cost and performance issues using the Spark UI",
+        "url": "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/"
+       }
+      },
+      {
+       "says": "job hangs with no progress",
+       "pick": "Thread dump trên Executors tab",
+       "why": "Thread dump của driver hoặc executor cho thấy thread đang chờ ở đâu.",
+       "src": {
+        "label": "Debugging with the Spark UI",
+        "url": "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui"
+       }
+      },
+      {
+       "says": "cluster failed to start or was terminated unexpectedly",
+       "pick": "Compute event log",
+       "why": "Ghi lifecycle event như create, resize, terminate; giữ 60 ngày, xem JSON từng event.",
+       "src": {
+        "label": "Manage classic compute",
+        "url": "https://docs.databricks.com/aws/en/compute/clusters-manage"
+       }
+      },
+      {
+       "says": "keep logs after the job cluster terminates",
+       "pick": "Compute log delivery tới volume",
+       "why": "Driver, worker và event log được gửi mỗi 5 phút; volume là đích khuyên dùng.",
+       "src": {
+        "label": "Compute configuration reference",
+        "url": "https://docs.databricks.com/aws/en/compute/configure"
+       }
+      },
+      {
+       "says": "slow or failed query on serverless compute",
+       "pick": "Query profile, `system.query.history`",
+       "why": "Serverless không có Spark UI và Spark log; dùng query profile và query history.",
+       "src": {
+        "label": "Serverless compute limitations",
+        "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+       }
+      },
+      {
+       "says": "which runs failed across all workspaces this week",
+       "pick": "`system.lakeflow.job_run_timeline`",
+       "why": "`result_state` và `termination_code` cho mọi run trong region, giữ 365 ngày.",
+       "src": {
+        "label": "Jobs system table reference",
+        "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
+       }
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Spark UI và log trên trang compute",
+     "img": "https://docs.databricks.com/aws/en/assets/images/spark-ui-1effb898029c011d46288302118e96ce.png",
+     "alt": "Classic compute page with tabs Configuration, Libraries, Event log, Spark UI, Driver logs, Metrics; the Spark UI shows Jobs, Stages, Storage, Environment, Executors, SQL / DataFrame and Structured Streaming",
+     "caption": "Trang classic compute có tab Event log, Spark UI, Driver logs, Metrics; Spark UI chia Jobs, Stages, Executors, SQL / DataFrame, Structured Streaming. Serverless không có các tab này.",
+     "credit": {
+      "label": "Databricks docs: Debugging with the Spark UI",
+      "url": "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui"
+     }
+    },
+    {
+     "type": "table",
+     "title": "Ai đọc được log",
+     "columns": [
+      "Log",
+      "Standard access mode",
+      "Dedicated access mode"
+     ],
+     "rows": [
+      [
+       "Driver logs",
+       "Chỉ workspace admin",
+       "User hoặc group dedicated và admin"
+      ],
+      [
+       "Executor logs",
+       "Không có",
+       "User hoặc group dedicated và admin"
+      ]
+     ],
+     "src": [
+      {
+       "label": "Debugging with the Spark UI",
+       "url": "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Serverless khác classic",
+     "md": "- Serverless không có Spark UI, Spark log, compute event log\n- Log ứng dụng của serverless job gửi tới Unity Catalog volume theo task run\n- Query profile cho tối ưu hiệu năng nằm ở topic optimize; ở đây dùng để tìm operator lỗi",
+     "src": [
+      {
+       "label": "Serverless compute limitations",
+       "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "repair",
+   "title": "Repair run và parameter override",
+   "icon": "dbx-lakeflow-jobs",
+   "task": "8.2",
+   "blocks": [
+    {
+     "type": "steps",
+     "title": "Quy trình xử lý run fail",
+     "items": [
+      {
+       "title": "1. Tìm task fail",
+       "md": "- Matrix view cho thấy task đỏ; task run details có error message và output"
+      },
+      {
+       "title": "2. Sửa nguyên nhân",
+       "md": "- Sửa code, config task, compute, hoặc chờ source bên ngoài phục hồi"
+      },
+      {
+       "title": "3. Repair run",
+       "md": "- Chạy lại task không thành công và task phụ thuộc\n- Task đã thành công không chạy lại"
+      },
+      {
+       "title": "4. Override parameter nếu cần",
+       "md": "- Giá trị nhập trong dialog Repair job run ghi đè giá trị cũ"
+      }
+     ],
+     "src": [
+      {
+       "label": "Troubleshoot and repair job failures",
+       "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+      },
+      {
+       "label": "Databricks blog, How observability in Lakeflow helps you build reliable data pipelines (09/2025)",
+       "url": "https://www.databricks.com/blog/how-observability-lakeflow-helps-you-build-reliable-data-pipelines"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "screenshot",
+     "title": "Matrix view để tìm task fail",
+     "img": "https://docs.databricks.com/aws/en/assets/images/job-runs-matrix-view-fb53c2f01557bdf89c878600608554b0.png",
+     "alt": "Runs matrix view of a job: one column per run with duration bars, one row per task, failed tasks in red",
+     "caption": "Matrix view xếp run theo cột, task theo hàng; ô đỏ là task fail cần sửa trước khi repair run.",
+     "credit": {
+      "label": "Databricks docs: Troubleshoot and repair job failures",
+      "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Repair bằng CLI và chạy một phần job",
+     "lang": "bash",
+     "code": "# First repair: rerun failed tasks with a new parameter value\ndatabricks jobs repair-run --json '{\n  \"run_id\": 987654,\n  \"rerun_all_failed_tasks\": true,\n  \"job_parameters\": {\"run_date\": \"2026-11-03\"}\n}'\n\n# Second repair of the same run: pass the latest repair_id\ndatabricks jobs repair-run --json '{\n  \"run_id\": 987654,\n  \"latest_repair_id\": 734650698524280,\n  \"rerun_tasks\": [\"load_silver\"],\n  \"rerun_dependent_tasks\": true\n}'\n\n# New run of a subset: load_silver plus everything downstream\ndatabricks bundle run --only load_silver+ orders_job",
+     "notes": [
+      {
+       "line": 3,
+       "md": "Khi dùng `--json`, `run_id` nằm trong JSON; CLI từ chối RUN_ID positional"
+      },
+      {
+       "line": 4,
+       "md": "`rerun_all_failed_tasks` và `rerun_tasks` không dùng cùng lúc"
+      },
+      {
+       "line": 5,
+       "md": "`job_parameters` ghi đè job parameter cho lần repair"
+      },
+      {
+       "line": 11,
+       "md": "Lần repair thứ hai trở đi bắt buộc `latest_repair_id` từ `repair_id` trả về"
+      },
+      {
+       "line": 13,
+       "md": "`rerun_dependent_tasks` chạy lại cả task downstream đã thành công"
+      },
+      {
+       "line": 17,
+       "md": "`--only` với `+` là run mới, không phải repair"
+      }
+     ],
+     "src": [
+      {
+       "label": "Jobs API 2.2, Repair a job run",
+       "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+      },
+      {
+       "label": "jobs command group (Databricks CLI)",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+      },
+      {
+       "label": "bundle command group",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Hành vi repair dễ nhầm",
+     "md": "- Task chạy lại với **setting hiện tại** của job, không phải setting lúc run fail\n- Repair chỉ cho job có từ 2 task; job 1 task dùng Run now\n- Task chạy lại từ đầu: task append dữ liệu có thể ghi trùng, nên dùng overwrite hoặc MERGE\n- Job cluster dùng chung được tạo mới với hậu tố `_v1`; duration của run cộng cả các lần repair\n- Task bị disabled không tự chạy lại khi repair; thêm vào `rerun_tasks` để ép chạy",
+     "src": [
+      {
+       "label": "Troubleshoot and repair job failures",
+       "url": "https://docs.databricks.com/aws/en/jobs/repair-job-failures"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bundle-deploy",
+   "title": "Deploy bằng Declarative Automation Bundles",
+   "icon": "dbx-asset-bundles",
+   "task": "8.3",
+   "blocks": [
+    {
+     "type": "table",
+     "title": "Lệnh bundle theo thứ tự dùng",
+     "columns": [
+      "Lệnh",
+      "Làm gì",
+      "Điểm thi"
+     ],
+     "rows": [
+      [
+       "`databricks bundle validate -t <target>`",
+       "Kiểm tra cú pháp config, in identity của bundle",
+       "In warning khi property không có trong schema"
+      ],
+      [
+       "`databricks bundle plan`",
+       "Liệt kê resource sẽ create, update, delete",
+       "Không thay đổi workspace"
+      ],
+      [
+       "`databricks bundle deploy -t <target>`",
+       "Build artifact, upload file, tạo hoặc cập nhật resource",
+       "Resource xoá khỏi config bị xoá khỏi workspace"
+      ],
+      [
+       "`databricks bundle run -t <target> <key>`",
+       "Chạy job, pipeline, app",
+       "`--params k=v` cho job parameter; `--only` chạy task chọn"
+      ],
+      [
+       "`databricks bundle generate job --existing-job-id`",
+       "Sinh YAML từ job có sẵn",
+       "Phải `--bind` hoặc `deployment bind`, nếu không deploy tạo job mới"
+      ],
+      [
+       "`databricks bundle destroy`",
+       "Xoá resource và artifact đã deploy",
+       "Không đảo ngược được"
+      ]
+     ],
+     "src": [
+      {
+       "label": "bundle command group",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+      }
+     ]
+    },
+    {
+     "type": "figure",
+     "kind": "diagram",
+     "title": "Vòng đời bundle từ local tới production",
+     "img": "https://docs.databricks.com/aws/en/assets/images/bundles-cicd-53be5f4860e8ebcedc2702f870290cda.png",
+     "alt": "Declarative Automation Bundles overview: a project bundle in the local dev environment is deployed manually to the development workspace and committed to version control, which triggers CI/CD to deploy to staging and production workspaces",
+     "caption": "Dev deploy bundle thủ công vào development workspace; commit vào repository kích hoạt CI/CD; CI/CD dùng service principal deploy lên staging để test rồi lên production sau review.",
+     "credit": {
+      "label": "Databricks docs: What are Declarative Automation Bundles?",
+      "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/"
+     }
+    },
+    {
+     "type": "code",
+     "title": "Cấu hình target dev, staging, prod",
+     "lang": "yaml",
+     "code": "bundle:\n  name: orders_etl\n\ntargets:\n  dev:\n    mode: development\n    default: true\n    workspace:\n      host: https://dev.cloud.databricks.com\n  staging:\n    workspace:\n      host: https://staging.cloud.databricks.com\n  prod:\n    mode: production\n    git:\n      branch: main\n    workspace:\n      host: https://prod.cloud.databricks.com\n    run_as:\n      service_principal_name: 9f2c1a3e-0000-4b1d-8c3a-5e6f7a8b9c0d",
+     "notes": [
+      {
+       "line": 6,
+       "md": "`mode: development` thêm prefix `[dev <user>]`, pause schedule, bỏ deployment lock"
+      },
+      {
+       "line": 9,
+       "md": "Mỗi target trỏ tới workspace riêng"
+      },
+      {
+       "line": 14,
+       "md": "`mode: production` kiểm tra pipeline có `development: false`"
+      },
+      {
+       "line": 15,
+       "md": "Deploy từ branch khác `main` bị chặn, trừ khi `--force`"
+      },
+      {
+       "line": 19,
+       "md": "Production nên `run_as` service principal"
+      }
+     ],
+     "src": [
+      {
+       "label": "Declarative Automation Bundles deployment modes",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes"
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "trap",
+     "title": "Identity và job deploy bằng bundle",
+     "md": "- Bundle theo dõi resource bằng ID trong state, không bằng tên; đổi `bundle.name`, target hoặc workspace thì mất liên kết\n- Job deploy bằng bundle là read-only trên Jobs UI; muốn sửa thì sửa YAML rồi deploy lại\n- **Disconnect from source** cho phép sửa tạm trên UI; deploy lại sẽ nối lại và ghi đè",
+     "src": [
+      {
+       "label": "bundle command group",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands"
+      },
+      {
+       "label": "Monitor Lakeflow Jobs",
+       "url": "https://docs.databricks.com/aws/en/jobs/monitor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "git-cicd",
+   "title": "Git folders và CI/CD với GitHub Actions",
+   "icon": "dbx-git-folders",
+   "task": "8.4",
+   "blocks": [
+    {
+     "type": "diagram",
+     "title": "Từ Git folder tới prod bằng bundle",
+     "caption": "Developer làm trong Git folder; GitHub Actions deploy staging khi mở PR, prod khi merge vào main.",
+     "dir": "RIGHT",
+     "groups": [
+      {
+       "id": "dev",
+       "label": "Dev workspace",
+       "kind": "workspace"
+      },
+      {
+       "id": "gh",
+       "label": "GitHub",
+       "kind": "external"
+      },
+      {
+       "id": "stg",
+       "label": "Staging workspace",
+       "kind": "workspace"
+      },
+      {
+       "id": "prod",
+       "label": "Prod workspace",
+       "kind": "workspace"
+      }
+     ],
+     "nodes": [
+      {
+       "id": "gf",
+       "icon": "dbx-git-folders",
+       "label": "Git folder",
+       "sub": "bundle deploy -t dev",
+       "group": "dev",
+       "info": "- Mỗi developer clone repo vào Git folder riêng, làm trên branch riêng\n- Tự chạy `databricks bundle deploy -t dev`: resource có prefix `[dev <user>]`, schedule bị pause"
+      },
+      {
+       "id": "repo",
+       "icon": "git-branch",
+       "label": "Git repo",
+       "sub": "feature branch, main",
+       "group": "gh",
+       "info": "- Push feature branch rồi mở pull request vào `main`\n- `main` là deployment branch"
+      },
+      {
+       "id": "ci1",
+       "icon": "brand-github",
+       "label": "PR workflow",
+       "sub": "validate, deploy, run",
+       "group": "gh",
+       "info": "- Chạy khi mở hoặc cập nhật PR\n- `databricks/setup-cli`, rồi `bundle validate`, `deploy -t staging`, `run` job test"
+      },
+      {
+       "id": "ci2",
+       "icon": "brand-github",
+       "label": "main workflow",
+       "sub": "OIDC + SP",
+       "group": "gh",
+       "info": "- Chạy khi merge vào `main`\n- `DATABRICKS_AUTH_TYPE: github-oidc` thay personal access token\n- GitHub Environment `prod` có required reviewer"
+      },
+      {
+       "id": "stgt",
+       "icon": "dbx-workspace",
+       "label": "target staging",
+       "sub": "integration test",
+       "group": "stg",
+       "info": "- Job test chạy trên dữ liệu giống prod"
+      },
+      {
+       "id": "prodt",
+       "icon": "dbx-workspace",
+       "label": "target prod",
+       "sub": "mode: production",
+       "group": "prod",
+       "info": "- `git.branch: main` chặn deploy từ branch khác\n- `run_as` service principal"
+      }
+     ],
+     "edges": [
+      {
+       "id": "e1",
+       "from": "gf",
+       "to": "repo",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e2",
+       "from": "repo",
+       "to": "ci1",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e3",
+       "from": "repo",
+       "to": "ci2",
+       "style": "solid",
+       "tone": "data"
+      },
+      {
+       "id": "e4",
+       "from": "ci1",
+       "to": "stgt",
+       "style": "solid",
+       "tone": "primary"
+      },
+      {
+       "id": "e5",
+       "from": "ci2",
+       "to": "prodt",
+       "style": "solid",
+       "tone": "primary"
+      }
+     ],
+     "legend": [
+      {
+       "style": "solid",
+       "tone": "data",
+       "label": "Push, pull request, merge"
+      },
+      {
+       "style": "solid",
+       "tone": "primary",
+       "label": "databricks bundle deploy -t <target>"
+      }
+     ],
+     "steps": [
+      {
+       "title": "1. Phát triển",
+       "md": "- Developer sửa code trong Git folder, deploy thử lên target dev",
+       "hl": [
+        "gf"
+       ]
+      },
+      {
+       "title": "2. Pull request",
+       "md": "- Push branch, mở PR vào `main`\n- PR workflow deploy bundle lên staging và chạy test",
+       "hl": [
+        "e1",
+        "repo",
+        "e2",
+        "ci1",
+        "e4",
+        "stgt"
+       ]
+      },
+      {
+       "title": "3. Production",
+       "md": "- Merge vào `main`; main workflow dùng OIDC deploy target prod bằng service principal",
+       "hl": [
+        "e3",
+        "ci2",
+        "e5",
+        "prodt"
+       ]
+      }
+     ],
+     "src": [
+      {
+       "label": "CI/CD on Databricks",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/ci-cd"
+      },
+      {
+       "label": "GitHub Actions",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/ci-cd/github"
+      },
+      {
+       "label": "CI/CD with Databricks Git folders",
+       "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+      },
+      {
+       "label": "Databricks Community, CI/CD on Databricks with Asset Bundles and GitHub Actions (03/2026)",
+       "url": "https://community.databricks.com/t5/community-articles/ci-cd-on-databricks-with-asset-bundles-dabs-and-github-actions/m-p/149565"
+      }
+     ]
+    },
+    {
+     "type": "code",
+     "title": "Workflow production với OIDC",
+     "lang": "yaml",
+     "code": "name: Production deployment\nconcurrency: 1\non:\n  push:\n    branches: [main]\npermissions:\n  id-token: write\n  contents: read\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    environment: prod\n    env:\n      DATABRICKS_AUTH_TYPE: github-oidc\n      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}\n      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}\n    steps:\n      - uses: actions/checkout@v3\n      - uses: databricks/setup-cli@main\n      - run: databricks bundle validate -t prod\n      - run: databricks bundle deploy -t prod\n      - run: databricks bundle run -t prod orders_job",
+     "notes": [
+      {
+       "line": 7,
+       "md": "`id-token: write` bắt buộc cho workload identity federation"
+      },
+      {
+       "line": 12,
+       "md": "GitHub Environment `prod` khớp subject của federation policy"
+      },
+      {
+       "line": 14,
+       "md": "Không cần lưu token trong secret"
+      },
+      {
+       "line": 16,
+       "md": "`DATABRICKS_CLIENT_ID` là UUID của service principal"
+      },
+      {
+       "line": 19,
+       "md": "`databricks/setup-cli` cài Databricks CLI"
+      }
+     ],
+     "src": [
+      {
+       "label": "GitHub Actions",
+       "url": "https://docs.databricks.com/aws/en/dev-tools/ci-cd/github"
+      },
+      {
+       "label": "Data & AI Espresso (YouTube), Automate Databricks Deployments with Asset Bundles (DAB) and GitHub Actions",
+       "url": "https://www.youtube.com/watch?v=kStRXqCznHA"
+      }
+     ]
+    },
+    {
+     "type": "decision",
+     "title": "Chọn cách đưa code lên production",
+     "rows": [
+      {
+       "says": "deploy jobs, pipelines and code together across environments",
+       "pick": "Declarative Automation Bundles trong CI/CD",
+       "why": "Databricks khuyên dùng bundle cho CI/CD; resource và code cùng version trong Git.",
+       "src": {
+        "label": "CI/CD with Databricks Git folders",
+        "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+       }
+      },
+      {
+       "says": "keep only code in a workspace folder in sync with a branch",
+       "pick": "Production Git folder cập nhật bằng Repos API",
+       "why": "Admin tạo folder ngoài /Workspace/Users; automation chạy `databricks repos update --branch` khi PR merge.",
+       "src": {
+        "label": "CI/CD with Databricks Git folders",
+        "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+       }
+      },
+      {
+       "says": "job must always run the latest commit of a branch without a sync step",
+       "pick": "Job task với remote Git source",
+       "why": "Job snapshot branch, tag hoặc commit khi run bắt đầu; Databricks khuyên dùng cho staging và prod thay vì path Git folder.",
+       "src": {
+        "label": "Use Git with Lakeflow Jobs",
+        "url": "https://docs.databricks.com/aws/en/jobs/git"
+       }
+      }
+     ]
+    },
+    {
+     "type": "callout",
+     "tone": "new",
+     "title": "Repos đổi tên thành Git folders",
+     "md": "- **Databricks Git folders** là tên mới của Repos; chức năng giữ nguyên\n- Git folder tạo ở mọi độ sâu dưới `/Workspace/Users/<email>/`; path `/Repos` cũ vẫn chạy\n- Production Git folder: user thường chỉ có Can Run, chỉ admin và service principal được sửa",
+     "src": [
+      {
+       "label": "What happened to Databricks Repos?",
+       "url": "https://docs.databricks.com/aws/en/repos/what-happened-repos"
+      },
+      {
+       "label": "CI/CD with Databricks Git folders",
+       "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

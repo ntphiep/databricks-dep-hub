@@ -1,0 +1,209 @@
+[
+ {
+  "id": "ing-c01",
+  "front": "Valid values of `cloudFiles.format`",
+  "back": "avro, binaryFile, csv, json, orc, parquet, text, xml. Delta và Iceberg không phải file format của Auto Loader.",
+  "ref": {
+   "label": "Auto Loader options",
+   "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+  }
+ },
+ {
+  "id": "ing-c03",
+  "front": "Kinesis or Pub/Sub ingestion on Databricks",
+  "back": "Structured Streaming or a Lakeflow pipeline (`format(\"kinesis\")`, `read_pubsub`). Lakeflow Connect chưa có managed connector cho hai nguồn này.",
+  "ref": {
+   "label": "Lakeflow Connect streaming connectors",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview"
+  }
+ },
+ {
+  "id": "ing-c04",
+  "front": "Components of a Lakeflow Connect database connector",
+  "back": "UC connection, ingestion gateway (classic, continuous), staging volume, ingestion pipeline (serverless), streaming tables. Gateway và pipeline tách nhau nhờ staging volume.",
+  "ref": {
+   "label": "Managed database connectors",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+  }
+ },
+ {
+  "id": "ing-c05",
+  "front": "SQL Server change tracking vs CDC",
+  "back": "Change tracking: needs primary key, lighter, SCD Type 1 only. CDC: no primary key needed, full history, needed for SCD Type 2.",
+  "ref": {
+   "label": "Configure SQL Server for ingestion",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup"
+  }
+ },
+ {
+  "id": "ing-c06",
+  "front": "Gateway stopped longer than log retention",
+  "back": "Changes are lost; full refresh affected tables. Gateway phải chạy liên tục.",
+  "ref": {
+   "label": "Ingest data from SQL Server",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+  }
+ },
+ {
+  "id": "ing-c07",
+  "front": "MySQL connector source prerequisites",
+  "back": "Binary logging on, `binlog_format = ROW`, `binlog_row_image = FULL`, replication user. Connector đang Public Preview.",
+  "ref": {
+   "label": "Configure MySQL for ingestion",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/mysql-source-setup"
+  }
+ },
+ {
+  "id": "ing-c08",
+  "front": "PostgreSQL connector source prerequisites",
+  "back": "PostgreSQL 13+, `wal_level = logical` (RDS: `rds.logical_replication = 1`), publication then replication slot, REPLICA IDENTITY. Connector đang Public Preview.",
+  "ref": {
+   "label": "Configure PostgreSQL for ingestion",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup"
+  }
+ },
+ {
+  "id": "ing-c09",
+  "front": "Database has no CDC, only an `updated_at` column",
+  "back": "Lakeflow Connect query-based connector: cursor column, no gateway, no staging, scheduled. Không bắt mọi trạng thái trung gian giữa hai lần chạy.",
+  "ref": {
+   "label": "Query-based connectors",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/query-based-overview"
+  }
+ },
+ {
+  "id": "ing-c10",
+  "front": "Make a pipeline streaming table readable by Iceberg clients",
+  "back": "`pipelines.externalMetadata.enabled` plus UniForm Iceberg V3 properties; reader needs `EXTERNAL USE SCHEMA` and `SELECT`. Không cần copy data.",
+  "ref": {
+   "label": "Enable external data access to streaming tables and materialized views",
+   "url": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines"
+  }
+ },
+ {
+  "id": "ing-c11",
+  "front": "OpenSharing former name",
+  "back": "Delta Sharing; renamed OpenSharing in June 2026, hosted by the Linux Foundation. Docs mới chỉ dùng tên OpenSharing.",
+  "ref": {
+   "label": "Databricks blog, Introducing OpenSharing (06/2026)",
+   "url": "https://www.databricks.com/blog/announcing-new-opensharing-and-marketplace-capabilities-ai-era"
+  }
+ },
+ {
+  "id": "ing-c12",
+  "front": "Databricks-to-Databricks vs Databricks-to-Open",
+  "back": "D2D: recipient on Unity Catalog, sharing identifier, no token, volumes, models, notebooks. Open: any client, bearer token or OIDC, tabular data only.",
+  "ref": {
+   "label": "What is OpenSharing?",
+   "url": "https://docs.databricks.com/aws/en/opensharing/"
+  }
+ },
+ {
+  "id": "ing-c13",
+  "front": "`ALTER SHARE ... ADD TABLE ... WITH HISTORY`",
+  "back": "Enables time travel, streaming reads and transactions for recipients; default on Databricks Runtime 16.2+. CDF qua `table_changes()` cần bật CDF trước khi share.",
+  "ref": {
+   "label": "Create shares for OpenSharing",
+   "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
+  }
+ },
+ {
+  "id": "ing-c14",
+  "front": "Clean Rooms trust model",
+  "back": "No-trust: all collaborators equal, every notebook needs approval from the other party, max 10 collaborators. Packaged clean rooms là ngoại lệ provider-consumer.",
+  "ref": {
+   "label": "What is Databricks Clean Rooms?",
+   "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+  }
+ },
+ {
+  "id": "ing-c15",
+  "front": "Query federation vs catalog federation",
+  "back": "Query federation pushes SQL to the database over JDBC; catalog federation reads foreign tables directly from object storage on Databricks compute. Catalog federation rẻ và nhanh hơn.",
+  "ref": {
+   "label": "Connect to external databases and catalogs",
+   "url": "https://docs.databricks.com/aws/en/query-federation/"
+  }
+ },
+ {
+  "id": "ing-c16",
+  "front": "Privileges to create a foreign catalog",
+  "back": "`CREATE CATALOG` on the metastore plus ownership of the connection or `CREATE FOREIGN CATALOG` on it. Tạo connection cần `CREATE CONNECTION` trên metastore.",
+  "ref": {
+   "label": "What is query federation?",
+   "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+  }
+ },
+ {
+  "id": "ing-c17",
+  "front": "Filter on a window function result in SQL",
+  "back": "`QUALIFY`, e.g. `QUALIFY row_number() OVER (...) = 1`. Cần ít nhất một window function, không chứa aggregate.",
+  "ref": {
+   "label": "QUALIFY clause",
+   "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify"
+  }
+ },
+ {
+  "id": "ing-c18",
+  "front": "What a VARIANT column cannot be used for",
+  "back": "Partition, clustering or Z-order key, GROUP BY, ORDER BY, DISTINCT, set operators; no min/max stats. Tách field hay lọc thành cột thường.",
+  "ref": {
+   "label": "Variant type support for Iceberg and Delta Lake",
+   "url": "https://docs.databricks.com/aws/en/tables/features/variant"
+  }
+ },
+ {
+  "id": "ing-c19",
+  "front": "`try_parse_json` and `try_variant_get`",
+  "back": "Return NULL instead of failing on malformed JSON or failed casts. `parse_json` và `variant_get` báo lỗi.",
+  "ref": {
+   "label": "How is variant different than JSON strings?",
+   "url": "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff"
+  }
+ },
+ {
+  "id": "ing-c20",
+  "front": "Expectation actions",
+  "back": "warn (default) keeps rows, drop removes them with metrics, fail rolls back the update without metrics. Quarantine dùng warn cộng cột cờ.",
+  "ref": {
+   "label": "Manage data quality with pipeline expectations",
+   "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+  }
+ },
+ {
+  "id": "ing-c21",
+  "front": "SQL Server integrated CDC pipeline vs gateway-based",
+  "back": "One pipeline with `connection_name` and `connector_type: CDC`, extraction in each update; gateway-based uses a continuous gateway plus an ingestion pipeline. Integrated CDC tự tạo staging volume nếu không khai báo.",
+  "ref": {
+   "label": "Microsoft SQL Server ingestion connector",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview"
+  }
+ },
+ {
+  "id": "ing-c22",
+  "front": "AG failover with SQL Server change tracking",
+  "back": "Requires a full refresh of all tables in the pipeline. CDC qua AG listener thì resume được nhờ LSN checkpoint.",
+  "ref": {
+   "label": "SQL Server connector limitations",
+   "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-limits"
+  }
+ },
+ {
+  "id": "ing-c23",
+  "front": "Automatic change data feed requirements",
+  "back": "Databricks Runtime 19+, Unity Catalog table with row tracking (Delta) or Iceberg v3; no per-table property. Đọc bằng `readChangeFeed` hoặc `table_changes()` như CDF cũ.",
+  "ref": {
+   "label": "Change data feed",
+   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+  }
+ },
+ {
+  "id": "ing-c24",
+  "front": "Join hint priority when both sides have different hints",
+  "back": "BROADCAST, then MERGE, then SHUFFLE_HASH, then SHUFFLE_REPLICATE_NL. Hint BROADCAST bỏ qua `autoBroadcastJoinThreshold`.",
+  "ref": {
+   "label": "Hints",
+   "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints"
+  }
+ }
+]

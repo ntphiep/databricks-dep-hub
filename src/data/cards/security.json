@@ -1,0 +1,200 @@
+[
+ {
+  "id": "sec-c01",
+  "front": "Privileges needed to read a Unity Catalog table",
+  "back": "`USE CATALOG` on the catalog, `USE SCHEMA` on the schema, `SELECT` on the table. Thiếu một trong ba thì query vẫn lỗi.",
+  "ref": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c02",
+  "front": "Do privileges granted on the metastore inherit to catalogs?",
+  "back": "No. Metastore grants cover metastore operations such as `CREATE CATALOG`; `READ METADATA` is the exception. Grant data access ở catalog hoặc schema.",
+  "ref": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c03",
+  "front": "Does ownership inherit to child objects?",
+  "back": "No, but the owner of a catalog or schema can manage every child object. Giao ownership object production cho group.",
+  "ref": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c04",
+  "front": "MANAGE vs owner",
+  "back": "`MANAGE` grants, revokes, transfers ownership and drops, but does not include `SELECT` or `MODIFY`; many principals can hold it. Owner chỉ có một principal.",
+  "ref": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c05",
+  "front": "Let all users discover tables and request access without reading data",
+  "back": "`GRANT BROWSE ON CATALOG ... TO account users`. BROWSE cho thấy tên, comment, tag mà không cần usage privilege.",
+  "ref": {
+   "label": "Unity Catalog permissions model concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c06",
+  "front": "Job permission: run now, cancel, view logs, no edits",
+  "back": "CAN MANAGE RUN. Run now chạy bằng quyền của job owner.",
+  "ref": {
+   "label": "Access control lists",
+   "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+  }
+ },
+ {
+  "id": "sec-c07",
+  "front": "SQL warehouse permission to run queries but not stop or edit",
+  "back": "CAN USE. Stop, edit, delete cần IS OWNER hoặc CAN MANAGE.",
+  "ref": {
+   "label": "Access control lists",
+   "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+  }
+ },
+ {
+  "id": "sec-c08",
+  "front": "Where can an ABAC policy be attached?",
+  "back": "`METASTORE` (Beta), `CATALOG`, `SCHEMA` or `TABLE`; it applies to descendants. Docs khuyên gắn ở level cao nhất áp dụng được.",
+  "ref": {
+   "label": "Core concepts for ABAC",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+  }
+ },
+ {
+  "id": "sec-c09",
+  "front": "`has_tag()` in `MATCH COLUMNS` vs in `WHEN`",
+  "back": "`MATCH COLUMNS` checks column tags only; `WHEN` checks table tags including tags inherited from catalog and schema. Tag không lan từ table xuống cột.",
+  "ref": {
+   "label": "Core concepts for ABAC",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts"
+  }
+ },
+ {
+  "id": "sec-c10",
+  "front": "ABAC policy and materialized view refresh",
+  "back": "The refresh runs as the pipeline owner or run-as identity; add it to `EXCEPT` or the stored data stays masked. Áp cho cả streaming table.",
+  "ref": {
+   "label": "ABAC requirements, quotas, and limitations",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+  }
+ },
+ {
+  "id": "sec-c11",
+  "front": "Two different row filters resolve for one user on one table",
+  "back": "The query fails with an error; only one distinct row filter per table and one mask per column can resolve. Cùng UDF và cùng argument thì được.",
+  "ref": {
+   "label": "ABAC requirements, quotas, and limitations",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+  }
+ },
+ {
+  "id": "sec-c12",
+  "front": "Table-level row filter syntax",
+  "back": "`ALTER TABLE t SET ROW FILTER fn ON (col)`; mask: `ALTER TABLE t ALTER COLUMN c SET MASK fn`. Drop row filter trước khi drop function.",
+  "ref": {
+   "label": "Manually apply row filters and column masks",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/manually-apply"
+  }
+ },
+ {
+  "id": "sec-c13",
+  "front": "Deterministic pseudonymization in a mask UDF",
+  "back": "`sha2(concat(val, CAST(version AS STRING)), 256)` marked `DETERMINISTIC`; bump `version` to rotate. Cùng input cho cùng hash ở mọi table.",
+  "ref": {
+   "label": "Common patterns for row filtering and column masking",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns"
+  }
+ },
+ {
+  "id": "sec-c14",
+  "front": "Are hashed identifiers anonymous under GDPR?",
+  "back": "No. Data that can be re-attributed with additional information is pseudonymized personal data. Chỉ anonymous data mới ngoài phạm vi GDPR.",
+  "ref": {
+   "label": "GDPR Recital 26, anonymous data",
+   "url": "https://gdpr-info.eu/recitals/no-26/"
+  }
+ },
+ {
+  "id": "sec-c15",
+  "front": "Erase rows from a table with deletion vectors",
+  "back": "`DELETE`, then `REORG TABLE ... APPLY (PURGE)`, then `VACUUM` after the retention window. Deletion vector chỉ soft-delete.",
+  "ref": {
+   "label": "Deletion vectors in Databricks",
+   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+  }
+ },
+ {
+  "id": "sec-c16",
+  "front": "Stream from a Delta table that receives GDPR deletes",
+  "back": "Delete downstream rows with DML and read the source with `skipChangeCommits`. Materialized view tự xử lý delete.",
+  "ref": {
+   "label": "GDPR and CCPA compliance with Delta Lake",
+   "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+  }
+ },
+ {
+  "id": "sec-c17",
+  "front": "What does Data Classification produce?",
+  "back": "System tags such as `class.email_address` on detected columns and results in `system.data_classification.results`. Dùng tag đó trong ABAC policy.",
+  "ref": {
+   "label": "Data Classification",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification"
+  }
+ },
+ {
+  "id": "sec-c18",
+  "front": "SQL warehouse: CAN USE vs CAN MONITOR",
+  "back": "CAN USE starts the warehouse and runs queries; CAN MONITOR adds viewing all warehouse queries and the monitoring tab. Stop, edit cần IS OWNER hoặc CAN MANAGE.",
+  "ref": {
+   "label": "Access control lists",
+   "url": "https://docs.databricks.com/aws/en/security/auth/access-control/"
+  }
+ },
+ {
+  "id": "sec-c19",
+  "front": "Usage privileges needed to exercise MANAGE",
+  "back": "MANAGE on a catalog: none. On a schema: `USE CATALOG` on the parent. On a table: `USE CATALOG` and `USE SCHEMA`. Đọc data vẫn cần đủ usage privilege và SELECT.",
+  "ref": {
+   "label": "Unity Catalog permissions concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c20",
+  "front": "Stop even object owners from managing grants",
+  "back": "ABAC DENY policy (Beta) on `MANAGE ACCESS CONTROL`; it overrides any grant, including ownership. Privilege này chỉ deny được, không grant được.",
+  "ref": {
+   "label": "Unity Catalog permissions concepts",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts"
+  }
+ },
+ {
+  "id": "sec-c21",
+  "front": "ABAC policies on views",
+  "back": "Beta, DBR 19+, workspace preview; not on metric views; at most 20 layered policies per query. `CREATE OR REPLACE VIEW` xoá tag và policy gắn trực tiếp.",
+  "ref": {
+   "label": "ABAC requirements and limitations",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements"
+  }
+ },
+ {
+  "id": "sec-c22",
+  "front": "Underlying files of a materialized view and PII",
+  "back": "They can hold upstream columns outside the MV definition to support incremental refresh. Không share storage path của MV cho consumer không tin cậy.",
+  "ref": {
+   "label": "Use Unity Catalog with pipelines",
+   "url": "https://docs.databricks.com/aws/en/ldp/unity-catalog"
+  }
+ }
+]

@@ -1,0 +1,1290 @@
+[
+ {
+  "id": "opt-01",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A data platform team maintains 400 Delta tables registered in Unity Catalog as external tables. Every night a classic cluster runs OPTIMIZE, VACUUM and ANALYZE on each table, and the team spends hours each week tuning schedules and retrying failed maintenance runs. Management asks for the approach with the LEAST operational overhead that still keeps file sizes, statistics and storage cleanup healthy.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable predictive optimization on the catalog for the external tables and keep only the nightly VACUUM job."
+   },
+   {
+    "k": "B",
+    "t": "Set `spark.databricks.delta.autoCompact.enabled` to true on every writing cluster and remove the nightly OPTIMIZE step."
+   },
+   {
+    "k": "C",
+    "t": "Convert the tables to UC managed tables, rely on predictive optimization, and drop the nightly jobs."
+   },
+   {
+    "k": "D",
+    "t": "Move the nightly maintenance job to serverless compute and add `ZORDER BY` on the most filtered columns."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: LEAST operational overhead cho OPTIMIZE, VACUUM, ANALYZE.\n- Predictive Optimization tự chạy cả ba operation nhưng chỉ cho UC managed table.\n- Docs khuyên tắt job OPTIMIZE theo lịch khi đã có Predictive Optimization.",
+  "wrong": {
+   "A": "Predictive Optimization không chạy trên external table dù bật ở catalog.",
+   "D": "Vẫn phải tự quản lý job; ZORDER là kỹ thuật cũ và Predictive Optimization không chạy ZORDER.",
+   "B": "Auto compaction chỉ gộp file nhỏ, không thay VACUUM hay ANALYZE."
+  },
+  "refs": [
+   {
+    "label": "Predictive optimization for Unity Catalog managed tables",
+    "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+   },
+   {
+    "label": "Unity Catalog managed tables",
+    "url": "https://docs.databricks.com/aws/en/tables/managed"
+   }
+  ]
+ },
+ {
+  "id": "opt-02",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A platform lead is reviewing predictive optimization before relying on it for all Unity Catalog managed tables in the `prod` catalog. Finance wants to know how it is billed, and the compliance team wants to know how it handles file retention because some tables set `delta.deletedFileRetentionDuration` to 1 day.\nWhich TWO statements about predictive optimization are correct?",
+  "options": [
+   {
+    "k": "A",
+    "t": "It runs OPTIMIZE, VACUUM and ANALYZE on Unity Catalog managed tables when it determines they will benefit."
+   },
+   {
+    "k": "B",
+    "t": "It runs `OPTIMIZE ... ZORDER BY` on tables that were previously Z-ordered so their existing layout is preserved."
+   },
+   {
+    "k": "C",
+    "t": "It is billed on the serverless jobs SKU because it runs on serverless compute for jobs."
+   },
+   {
+    "k": "D",
+    "t": "It deletes files older than 1 day on tables whose retention property is set to 1 day."
+   },
+   {
+    "k": "E",
+    "t": "It also maintains external tables once it is enabled at the catalog level."
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Docs liệt kê OPTIMIZE, VACUUM, ANALYZE, REFRESH INDEX cho managed table.\n- Compute là serverless jobs, billing theo serverless jobs SKU.",
+  "wrong": {
+   "B": "OPTIMIZE của Predictive Optimization không chạy ZORDER và bỏ qua file đã Z-order.",
+   "D": "Retention đặt dưới 7 ngày thì Predictive Optimization vẫn giữ file tối thiểu 7 ngày.",
+   "E": "External table nằm trong danh sách limitation."
+  },
+  "refs": [
+   {
+    "label": "Predictive optimization for Unity Catalog managed tables",
+    "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+   }
+  ]
+ },
+ {
+  "id": "opt-03",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.1",
+  "source": "original",
+  "select": 1,
+  "stem": "Predictive optimization is enabled on the catalog `analytics`. The schema `analytics.scratch` holds short-lived managed tables that are dropped every few hours, and the team does not want any maintenance compute spent on them. Every other schema in the catalog must keep the catalog setting, and new tables created in `scratch` must also be excluded automatically.\nWhich command meets the requirement with the least effort?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`ALTER SCHEMA analytics.scratch INHERIT PREDICTIVE OPTIMIZATION`"
+   },
+   {
+    "k": "B",
+    "t": "`ALTER SCHEMA analytics.scratch DISABLE PREDICTIVE OPTIMIZATION`"
+   },
+   {
+    "k": "C",
+    "t": "Disable predictive optimization in the account console and enable it again on every other schema."
+   },
+   {
+    "k": "D",
+    "t": "`ALTER TABLE ... SET TBLPROPERTIES ('delta.autoOptimize.autoCompact' = 'false')` on each table in `scratch`"
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Predictive Optimization dùng mô hình kế thừa catalog, schema, table.\n- `DISABLE` ở schema ghi đè catalog và table mới trong schema kế thừa giá trị đó.",
+  "wrong": {
+   "A": "`INHERIT` lấy lại giá trị của catalog, tức vẫn bật.",
+   "C": "Ảnh hưởng mọi catalog và tốn nhiều bước; tắt ở account không tắt object đã bật riêng.",
+   "D": "Auto compaction là feature khác; Predictive Optimization vẫn chạy và table mới không bị loại."
+  },
+  "refs": [
+   {
+    "label": "Predictive optimization for Unity Catalog managed tables",
+    "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+   }
+  ]
+ },
+ {
+  "id": "opt-04",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A 6 TB Delta table receives a CDC feed every 10 minutes. Each batch runs a MERGE that updates or deletes a few thousand rows spread across thousands of 1 GB Parquet files. The query profile of the MERGE shows that most time is spent rewriting entire files to change a handful of rows. Read queries on the table are already fast.\nWhich change most directly reduces the MERGE cost?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run `OPTIMIZE ... ZORDER BY (id)` after every MERGE."
+   },
+   {
+    "k": "B",
+    "t": "Enable deletion vectors on the table."
+   },
+   {
+    "k": "C",
+    "t": "Partition the table by `hash(id) % 100`."
+   },
+   {
+    "k": "D",
+    "t": "Set `delta.targetFileSize` to 2 GB."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: write chậm vì rewrite cả file cho vài row.\n- Deletion vectors đánh dấu row thay đổi trong metadata, không rewrite Parquet file; read áp deletion vector lúc query.",
+  "wrong": {
+   "A": "ZORDER cải thiện data skipping cho read và còn rewrite thêm data.",
+   "C": "Partition theo hash tạo nhiều partition nhỏ và vẫn rewrite cả file.",
+   "D": "File lớn hơn làm mỗi lần rewrite còn tốn hơn."
+  },
+  "refs": [
+   {
+    "label": "Deletion vectors in Databricks",
+    "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+   }
+  ]
+ },
+ {
+  "id": "opt-05",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A new Unity Catalog managed table will serve a self-service analytics team. Analysts filter on different columns each quarter, and nobody can predict the dominant filter today. Predictive optimization is enabled on the account. The data engineering team wants good data skipping with the least ongoing tuning effort.\nHow should the table be created?",
+  "options": [
+   {
+    "k": "A",
+    "t": "With `CLUSTER BY AUTO`."
+   },
+   {
+    "k": "B",
+    "t": "With `CLUSTER BY` on the four columns analysts used most last quarter."
+   },
+   {
+    "k": "C",
+    "t": "With `PARTITIONED BY (event_date)` and a weekly `OPTIMIZE ZORDER BY` job."
+   },
+   {
+    "k": "D",
+    "t": "Without any layout clause, and enable deletion vectors."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: query pattern thay đổi, least tuning, managed table, có Predictive Optimization.\n- Automatic liquid clustering chọn và đổi key theo query history, chỉ khi lợi hơn cost.",
+  "wrong": {
+   "B": "Key thủ công phải tự đổi mỗi khi pattern đổi.",
+   "C": "Partition và ZORDER cứng nhắc, cần job riêng.",
+   "D": "Deletion vectors tăng tốc write, không cải thiện data skipping."
+  },
+  "refs": [
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   }
+  ]
+ },
+ {
+  "id": "opt-06",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A 5 TB unpartitioned Delta table is registered in Unity Catalog as an external table because another team writes to the same S3 path. Almost every query filters on `customer_id` (high cardinality) and `event_date`, and this pattern has been stable for two years. The team wants better data skipping without changing the table type.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`ALTER TABLE events CLUSTER BY AUTO` so predictive optimization selects keys from the query history."
+   },
+   {
+    "k": "B",
+    "t": "Rewrite the table with `PARTITIONED BY (customer_id)` and keep `event_date` as a ZORDER column."
+   },
+   {
+    "k": "C",
+    "t": "Enable deletion vectors and row tracking so that readers can skip files with unchanged rows."
+   },
+   {
+    "k": "D",
+    "t": "Set `CLUSTER BY (customer_id, event_date)`, run `OPTIMIZE events FULL`, then schedule OPTIMIZE."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: external table, filter ổn định trên cột high cardinality.\n- Liquid clustering với key thủ công chạy được trên external table; `FULL` recluster data cũ.\n- Không có Predictive Optimization nên cần OPTIMIZE theo lịch.",
+  "wrong": {
+   "A": "Automatic liquid clustering chỉ cho UC managed table và cần Predictive Optimization.",
+   "B": "Partition theo cột high cardinality tạo quá nhiều partition và file nhỏ.",
+   "C": "Hai feature này hỗ trợ write và concurrency, không sắp xếp data để skip."
+  },
+  "refs": [
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   },
+   {
+    "label": "When to partition tables",
+    "url": "https://docs.databricks.com/aws/en/tables/partitions"
+   }
+  ]
+ },
+ {
+  "id": "opt-07",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.3",
+  "source": "original",
+  "select": 1,
+  "stem": "Analysts on a shared classic all-purpose cluster run the same dashboards against a set of Delta tables many times per hour. The tables are updated by MERGE every 15 minutes. An engineer proposes adding `df.cache()` to every notebook. The lead wants faster repeated reads without code changes and without serving stale data after each MERGE.\nWhat should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `CACHE SELECT * FROM <table>` at the start of every notebook."
+   },
+   {
+    "k": "B",
+    "t": "Use `df.persist(StorageLevel.MEMORY_AND_DISK)` and call `unpersist()` after each MERGE."
+   },
+   {
+    "k": "C",
+    "t": "Use a worker instance type with local SSDs so the disk cache is enabled automatically."
+   },
+   {
+    "k": "D",
+    "t": "Increase `spark.sql.shuffle.partitions` so more data stays in executor memory."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: repeated reads, no code changes, không stale sau MERGE.\n- Disk cache tự cache Parquet file trên SSD local ở lần read đầu và tự loại entry khi file đổi.",
+  "wrong": {
+   "A": "`CACHE SELECT` bị bỏ qua từ DBR 14.2 và trên SQL warehouse; vẫn là sửa code.",
+   "B": "Spark cache cần sửa code và tự quản lý invalidation.",
+   "D": "Shuffle partition không liên quan tới cache khi đọc table."
+  },
+  "refs": [
+   {
+    "label": "Optimize performance with caching on Databricks",
+    "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+   }
+  ]
+ },
+ {
+  "id": "opt-08",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.3",
+  "source": "original",
+  "select": 1,
+  "stem": "During a performance review, a team discusses how the Databricks disk cache (formerly Delta cache) behaves on their production cluster, which uses SSD-backed worker nodes. Tables are frequently overwritten and compacted by OPTIMIZE.\nWhich statement about the disk cache is correct?",
+  "options": [
+   {
+    "k": "A",
+    "t": "It stores deserialized in-memory blocks on the driver and must be refreshed with `REFRESH TABLE` after every write."
+   },
+   {
+    "k": "B",
+    "t": "It automatically detects created, modified or deleted data files and evicts stale entries."
+   },
+   {
+    "k": "C",
+    "t": "It caches any source format, including the raw CSV and JSON files read by Auto Loader."
+   },
+   {
+    "k": "D",
+    "t": "It is part of the open Delta Lake protocol, so external Delta readers also use it."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Docs: disk cache tự nhận biết file được tạo, xoá, sửa, overwrite và loại entry cũ.\n- Không cần invalidate thủ công.",
+  "wrong": {
+   "A": "Disk cache là file local trên worker, không phải memory của driver.",
+   "C": "Disk cache áp cho Parquet data file, gồm Delta table.",
+   "D": "Đây là feature riêng của Databricks; đổi tên từ Delta cache để tránh nhầm với Delta Lake protocol."
+  },
+  "refs": [
+   {
+    "label": "Optimize performance with caching on Databricks",
+    "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+   }
+  ]
+ },
+ {
+  "id": "opt-09",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.4",
+  "source": "original",
+  "select": 1,
+  "stem": "The Delta table `silver.orders` is updated hourly by MERGE statements that insert, update and delete rows. A downstream job must propagate only the changed rows, including deletes, to `gold.order_events`, processing each change exactly once. All jobs run on Databricks Runtime 17.3 LTS.\nWhich approach should the data engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Stream from `silver.orders` with `spark.readStream.table()` and set the option `skipChangeCommits` to true."
+   },
+   {
+    "k": "B",
+    "t": "Compare the current and previous versions with time travel and `EXCEPT` in a nightly batch job."
+   },
+   {
+    "k": "C",
+    "t": "Parse `DESCRIBE HISTORY silver.orders` each run and reprocess the data files listed in `operationMetrics`."
+   },
+   {
+    "k": "D",
+    "t": "Set `delta.enableChangeDataFeed = true` on the table and stream it with `readChangeFeed` enabled."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: changed rows gồm delete, exactly once, DBR 17.3 nên chưa có automatic CDF (cần DBR 19).\n- Legacy CDF bật bằng table property; streaming với checkpoint tự theo dõi version.",
+  "wrong": {
+   "A": "`skipChangeCommits` bỏ qua commit sửa hoặc xoá, nên mất update và delete.",
+   "B": "So sánh hai version phải scan toàn bộ table và không cho biết loại change.",
+   "C": "Không phải API hỗ trợ; docs khuyên không đọc trực tiếp file change data."
+  },
+  "refs": [
+   {
+    "label": "Use change data feed on Databricks",
+    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   }
+  ]
+ },
+ {
+  "id": "opt-10",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.4",
+  "source": "original",
+  "select": 2,
+  "stem": "Change data feed is enabled on `silver.customers`. An analyst runs `UPDATE silver.customers SET tier = 'gold' WHERE id = 42` and then queries `table_changes('silver.customers', <version of the update>)`. They want to build an SCD Type 2 history from the output and need to know which rows the UPDATE produced.\nWhich TWO `_change_type` values does the UPDATE produce for customer 42?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`insert`"
+   },
+   {
+    "k": "B",
+    "t": "`update_preimage`"
+   },
+   {
+    "k": "C",
+    "t": "`update_postimage`"
+   },
+   {
+    "k": "D",
+    "t": "`delete`"
+   },
+   {
+    "k": "E",
+    "t": "`upsert`"
+   }
+  ],
+  "answer": [
+   "B",
+   "C"
+  ],
+  "explain": "- UPDATE sinh 2 row: `update_preimage` là giá trị trước khi sửa, `update_postimage` là giá trị sau.\n- Cùng `_commit_version` và `_commit_timestamp`.",
+  "wrong": {
+   "A": "`insert` chỉ có khi thêm row mới.",
+   "D": "`delete` chỉ có khi row bị xoá.",
+   "E": "Không có giá trị `upsert` trong change data feed."
+  },
+  "refs": [
+   {
+    "label": "table_changes table-valued function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/table_changes"
+   }
+  ]
+ },
+ {
+  "id": "opt-11",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.4",
+  "source": "original",
+  "select": 1,
+  "stem": "An auditor asks for every row-level change made to `silver.orders` from version 120 through version 135, including both endpoints. Change data feed has been enabled on the table since version 10, and the versions are still within the retention period. The data engineer must answer with a single SQL query.\nWhich query returns the required changes?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`SELECT * FROM table_changes('silver.orders', 121, 134)`"
+   },
+   {
+    "k": "B",
+    "t": "`SELECT * FROM silver.orders VERSION AS OF 135 EXCEPT SELECT * FROM silver.orders VERSION AS OF 120`"
+   },
+   {
+    "k": "C",
+    "t": "`SELECT * FROM table_changes('silver.orders', 120, 135)`"
+   },
+   {
+    "k": "D",
+    "t": "`SELECT * FROM table_changes('silver.orders')`"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Start và end của `table_changes` đều inclusive.\n- Kết quả có `_change_type`, `_commit_version`, `_commit_timestamp` cho audit.",
+  "wrong": {
+   "A": "Bỏ sót version 120 và 135 vì cả hai đầu đã inclusive.",
+   "B": "EXCEPT không trả row bị xoá hay preimage, và không cho loại change.",
+   "D": "Tham số start là bắt buộc."
+  },
+  "refs": [
+   {
+    "label": "table_changes table-valued function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/table_changes"
+   },
+   {
+    "label": "Use change data feed on Databricks",
+    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   }
+  ]
+ },
+ {
+  "id": "opt-12",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A dashboard query filters a 2 TB Unity Catalog managed table on `order_date` for the last 7 days. The query profile shows the scan reading 97% of files, and the performance insights panel reports `COVERAGE_FILTER_KEYS_CLUSTERING`. The table uses liquid clustering with `customer_id` as its only key. Most queries on this table filter by date.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run `OPTIMIZE orders ZORDER BY (order_date)` after each nightly load."
+   },
+   {
+    "k": "B",
+    "t": "Increase the SQL warehouse size from Medium to Large to scan files in parallel."
+   },
+   {
+    "k": "C",
+    "t": "Add `order_date` to the clustering keys, then run `OPTIMIZE orders FULL`."
+   },
+   {
+    "k": "D",
+    "t": "Run `CACHE TABLE orders` before the dashboard refresh to keep files in memory."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Insight nghĩa là clustering key không được dùng trong filter.\n- Đổi key theo filter chính rồi `OPTIMIZE FULL` để recluster data cũ.",
+  "wrong": {
+   "A": "ZORDER không dùng được trên table liquid clustering.",
+   "B": "Warehouse lớn hơn vẫn đọc 97% file.",
+   "D": "Cache không giảm số file phải scan lần đầu, và không sửa layout."
+  },
+  "refs": [
+   {
+    "label": "Query performance insights",
+    "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+   },
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   }
+  ]
+ },
+ {
+  "id": "opt-13",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A report joins `orders` (50 million rows) with `shipments` (60 million rows). The query profile shows the join operator outputting 4 billion rows, and the insight `EXPLODING_JOIN` is reported. The final result after aggregation has 50 million rows. The team suspects a modeling mistake rather than a capacity problem.\nWhat should the data engineer check first?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Whether a BROADCAST hint on `shipments` would avoid shuffling the larger `orders` table."
+   },
+   {
+    "k": "B",
+    "t": "Whether the join condition covers the full key, since a partial key multiplies matches."
+   },
+   {
+    "k": "C",
+    "t": "Whether `spark.sql.shuffle.partitions` is high enough to process 4 billion rows in parallel."
+   },
+   {
+    "k": "D",
+    "t": "Whether the SQL warehouse has enough clusters to avoid queueing during the report refresh."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- `EXPLODING_JOIN`: join sinh nhiều row hơn đọc vào.\n- Docs khuyên xem lại join condition hoặc giảm input; thường do thiếu cột trong key.",
+  "wrong": {
+   "A": "Broadcast một bảng 60 triệu row có thể gây lỗi memory và không giảm số row output.",
+   "C": "Thêm partition không sửa số row sai.",
+   "D": "Queue time là insight khác, không liên quan join."
+  },
+  "refs": [
+   {
+    "label": "Query performance insights",
+    "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+   }
+  ]
+ },
+ {
+  "id": "opt-14",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.5",
+  "source": "original",
+  "select": 2,
+  "stem": "A nightly aggregation on a Small SQL warehouse slows down as data grows. The query profile shows the hash aggregate operator with a large spill to disk and the insight `DATA_SPILL`. The query uses `SELECT *` on a wide table with several large string and array columns, although only six columns are needed downstream.\nWhich TWO actions directly address the bottleneck?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Project only the six required columns instead of `SELECT *`."
+   },
+   {
+    "k": "B",
+    "t": "Increase the SQL warehouse size to add memory."
+   },
+   {
+    "k": "C",
+    "t": "Run VACUUM on the source table."
+   },
+   {
+    "k": "D",
+    "t": "Enable change data feed on the source table."
+   },
+   {
+    "k": "E",
+    "t": "Add a BROADCAST hint on the largest table so the aggregation avoids a shuffle stage."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- `DATA_SPILL`: data không vừa memory nên ghi ra disk.\n- Docs khuyên tăng warehouse size và giảm row, cột, cột lớn như string hay array.",
+  "wrong": {
+   "C": "VACUUM xoá file cũ, không đổi lượng data query đọc.",
+   "D": "CDF không ảnh hưởng memory của aggregate.",
+   "E": "Broadcast bảng lớn làm áp lực memory tăng."
+  },
+  "refs": [
+   {
+    "label": "Query performance insights",
+    "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+   }
+  ]
+ },
+ {
+  "id": "opt-15",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.5",
+  "source": "original",
+  "select": 1,
+  "stem": "A job joins a 5 TB fact table with a 20 MB dimension table on classic compute with adaptive query execution enabled. The Spark UI shows that both sides are shuffled in a sort merge join before AQE switches the plan, and the shuffle of the fact table dominates the runtime. The dimension size is stable and well known.\nWhat should the data engineer change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add the hint `/*+ BROADCAST(d) */` on the dimension table."
+   },
+   {
+    "k": "B",
+    "t": "Add the hint `/*+ MERGE(f, d) */` to force a sort merge join."
+   },
+   {
+    "k": "C",
+    "t": "Lower `spark.databricks.adaptive.autoBroadcastJoinThreshold` to 10MB."
+   },
+   {
+    "k": "D",
+    "t": "Add a skew join hint on the fact table."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Docs AQE: broadcast được lập từ đầu thường nhanh hơn broadcast do AQE đổi lúc chạy, vì AQE có thể chỉ đổi sau khi đã shuffle cả hai bên.\n- BROADCAST hint bỏ qua threshold.",
+  "wrong": {
+   "B": "Giữ nguyên sort merge join, vẫn shuffle fact table.",
+   "C": "Hạ threshold xuống dưới 20 MB làm AQE không đổi sang broadcast nữa.",
+   "D": "Không có skew; docs khuyên dùng AQE skew handling thay skew hint."
+  },
+  "refs": [
+   {
+    "label": "Adaptive query execution",
+    "url": "https://docs.databricks.com/aws/en/optimizations/aqe"
+   },
+   {
+    "label": "Spark SQL hints",
+    "url": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-hints.html"
+   }
+  ]
+ },
+ {
+  "id": "opt-16",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A 300 GB Delta table is partitioned by `event_date`. Each daily partition holds hundreds of small files, and queries filter on `event_date` together with `customer_id`. Writes run on Databricks Runtime 18.1. The team wants better query performance and fewer small files without downtime for readers.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `customer_id` as a second partition column so queries prune on both filters."
+   },
+   {
+    "k": "B",
+    "t": "Run `OPTIMIZE ... ZORDER BY (customer_id)` on each date partition every night."
+   },
+   {
+    "k": "C",
+    "t": "Keep the date partitioning and set `delta.targetFileSize` to 16 MB for faster file pruning."
+   },
+   {
+    "k": "D",
+    "t": "Convert in place to liquid clustering on `(event_date, customer_id)` and run OPTIMIZE."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Table dưới 1 TB: docs khuyên không partition.\n- DBR 18.1+ chuyển partitioned table sang liquid tại chỗ, read không downtime; cần OPTIMIZE để hưởng key mới.",
+  "wrong": {
+   "A": "Partition theo cột high cardinality tạo thêm rất nhiều file nhỏ.",
+   "B": "ZORDER chỉ trong từng partition, không gộp file qua partition và phải rewrite lặp lại.",
+   "C": "File nhỏ hơn làm vấn đề small file nặng hơn."
+  },
+  "refs": [
+   {
+    "label": "When to partition tables",
+    "url": "https://docs.databricks.com/aws/en/tables/partitions"
+   },
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   }
+  ]
+ },
+ {
+  "id": "opt-17",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A team is designing a new Delta table that will reach about 150 TB within a year. A senior engineer insists that any table over 100 TB must be partitioned by date. The team wants to follow current Databricks guidance for table layout and keep the option to change the layout later.\nWhat does Databricks recommend?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Partition by date at creation, because partitioning is required for tables above 100 TB."
+   },
+   {
+    "k": "B",
+    "t": "Partition by date and Z-order each partition by the date column for extra data skipping."
+   },
+   {
+    "k": "C",
+    "t": "Start with liquid clustering; partition only if tests show a real improvement."
+   },
+   {
+    "k": "D",
+    "t": "Partition by date so that each partition holds at least 100 MB of compressed data."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Docs: từ 100 TB partition có thể giúp, nhưng khuyên dùng liquid clustering trước và kiểm chứng.\n- Liquid đổi key không rewrite data cũ, partition sai phải rewrite toàn bộ.",
+  "wrong": {
+   "A": "Docs không bắt buộc partition; liquid được khuyên trước.",
+   "B": "Không ZORDER được trên cột partition.",
+   "D": "Mức tối thiểu docs nêu là 1 GB mỗi partition."
+  },
+  "refs": [
+   {
+    "label": "When to partition tables",
+    "url": "https://docs.databricks.com/aws/en/tables/partitions"
+   }
+  ]
+ },
+ {
+  "id": "opt-18",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.6",
+  "source": "original",
+  "select": 1,
+  "stem": "A Delta table uses liquid clustering on `(region, device_id)`. A data engineer copies an old maintenance notebook that runs `OPTIMIZE telemetry ZORDER BY (device_id)` every night, and the command fails. The goal is to keep the clustering up to date for newly written data with minimal rewrite cost.\nWhat should the nightly job run instead?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`OPTIMIZE telemetry`"
+   },
+   {
+    "k": "B",
+    "t": "`OPTIMIZE telemetry FULL` every night"
+   },
+   {
+    "k": "C",
+    "t": "`ALTER TABLE telemetry CLUSTER BY NONE` followed by `OPTIMIZE telemetry ZORDER BY (device_id)`"
+   },
+   {
+    "k": "D",
+    "t": "`REORG TABLE telemetry APPLY (PURGE)`"
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- ZORDER không dùng được trên table liquid clustering.\n- OPTIMIZE cluster incremental, chỉ rewrite data chưa cluster.",
+  "wrong": {
+   "B": "`FULL` dùng khi mới bật hoặc đổi key; key không đổi thì chạy như OPTIMIZE thường nên không thêm lợi ích.",
+   "C": "Bỏ liquid để quay về ZORDER là kỹ thuật cũ, rewrite nhiều hơn.",
+   "D": "REORG PURGE dùng để áp soft-delete, không cluster data."
+  },
+  "refs": [
+   {
+    "label": "OPTIMIZE",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-optimize"
+   },
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   }
+  ]
+ },
+ {
+  "id": "opt-19",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.1",
+  "source": "original",
+  "select": 1,
+  "stem": "An external Apache Spark job creates a Unity Catalog managed Apache Iceberg table through the Iceberg REST Catalog with `PARTITIONED BY (bucket(c1, 10))`. Later, a Databricks engineer inspects the table layout to plan maintenance and expects to see 10 bucket partitions.\nHow does Unity Catalog store the layout of this table?",
+  "options": [
+   {
+    "k": "A",
+    "t": "As 10 Hive-style bucket partitions on `c1`."
+   },
+   {
+    "k": "B",
+    "t": "It rejects the statement because managed Iceberg tables cannot be partitioned."
+   },
+   {
+    "k": "C",
+    "t": "As an unclustered table, ignoring the partition clause."
+   },
+   {
+    "k": "D",
+    "t": "It drops the bucket expression and uses `c1` as a liquid clustering key."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Managed Iceberg chỉ hỗ trợ liquid clustering; partition column được hiểu là clustering key.\n- Bucket transform bị bỏ, cột `c1` thành key.",
+  "wrong": {
+   "A": "Unity Catalog không giữ partition cho managed Iceberg table.",
+   "B": "Statement hợp lệ; partition được chuyển thành clustering.",
+   "C": "Partition clause không bị bỏ qua mà thành clustering key."
+  },
+  "refs": [
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   },
+   {
+    "label": "When to partition tables",
+    "url": "https://docs.databricks.com/aws/en/tables/partitions"
+   }
+  ]
+ },
+ {
+  "id": "opt-20",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A team designs a 40 TB Unity Catalog managed fact table at event grain for IoT telemetry. Queries filter on `event_date` and `device_id`, there are about 2 million devices, and predictive optimization is enabled. The team wants a scalable layout with balanced file sizes and minimal manual tuning.\nWhich TWO design choices fit Databricks guidance?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Use liquid clustering with `CLUSTER BY (event_date, device_id)`."
+   },
+   {
+    "k": "B",
+    "t": "Rely on automatic file size tuning and predictive optimization for compaction."
+   },
+   {
+    "k": "C",
+    "t": "Partition by `device_id` so each device's data is isolated in its own directory."
+   },
+   {
+    "k": "D",
+    "t": "Set `delta.targetFileSize` to 16 MB so files stay small for selective reads."
+   },
+   {
+    "k": "E",
+    "t": "Partition by `event_hour` to keep partitions small."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Table 1 TB đến 100 TB: dùng liquid clustering thay partitioning.\n- Managed table tự chỉnh file size theo table size; Predictive Optimization chạy OPTIMIZE.",
+  "wrong": {
+   "C": "2 triệu giá trị là high cardinality, tạo quá nhiều partition nhỏ.",
+   "D": "File 16 MB gây small file problem; autotune cho table này là khoảng 1 GB.",
+   "E": "Partition theo giờ cho ra partition nhỏ hơn mức 1 GB docs khuyên."
+  },
+  "refs": [
+   {
+    "label": "When to partition tables",
+    "url": "https://docs.databricks.com/aws/en/tables/partitions"
+   },
+   {
+    "label": "Control data file size",
+    "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+   }
+  ]
+ },
+ {
+  "id": "opt-21",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A Unity Catalog managed table grew from 2 TB to 7 TB this year. New files written by OPTIMIZE are around 700 MB, but thousands of older 256 MB files remain and OPTIMIZE does not rewrite them. The team wants all files consolidated to about 1 GB.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Set `delta.targetFileSize` to 1 GB on the table and run OPTIMIZE."
+   },
+   {
+    "k": "B",
+    "t": "Run VACUUM with a retention of 0 hours."
+   },
+   {
+    "k": "C",
+    "t": "Enable optimized writes at the session level."
+   },
+   {
+    "k": "D",
+    "t": "Raise `spark.sql.files.maxRecordsPerFile` so each data file can hold more rows."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Autotune tăng target khi table lớn lên nhưng không gộp lại file đã đạt target cũ.\n- Docs: muốn gộp thì đặt cố định `targetFileSize`; với managed table chỉ OPTIMIZE tôn trọng giá trị này.",
+  "wrong": {
+   "B": "VACUUM xoá file không còn được tham chiếu, không gộp file; retention 0 còn nguy hiểm.",
+   "C": "Optimized writes áp cho data mới ghi, không rewrite file cũ.",
+   "D": "Giới hạn số row mỗi file, không gộp file."
+  },
+  "refs": [
+   {
+    "label": "Control data file size",
+    "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+   }
+  ]
+ },
+ {
+  "id": "opt-22",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.2",
+  "source": "original",
+  "select": 1,
+  "stem": "Finance defines net revenue per active customer differently in three dashboards, a Genie space and a Tableau workbook. The CFO wants one governed definition in Unity Catalog that every tool reuses, and analysts must still be able to group and filter by any customer, product or date attribute at query time.\nWhat should the data engineer build?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A materialized view that aggregates net revenue by month, region and product."
+   },
+   {
+    "k": "B",
+    "t": "A standard view that contains the revenue formula with a fixed GROUP BY on common attributes."
+   },
+   {
+    "k": "C",
+    "t": "A SQL UDF registered in Unity Catalog that returns net revenue for a given customer."
+   },
+   {
+    "k": "D",
+    "t": "A Unity Catalog metric view over the sales fact table and its dimension tables."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: one governed definition, reuse across tools, group by any dimension lúc query.\n- Metric view tách measure khỏi field; engine tính đúng ratio ở mọi mức group by.",
+  "wrong": {
+   "A": "Materialized view khoá sẵn mức aggregate.",
+   "B": "Standard view khoá aggregation và grouping lúc tạo.",
+   "C": "UDF tính theo row, không phải metric dùng chung cho BI."
+  },
+  "refs": [
+   {
+    "label": "Unity Catalog metric views",
+    "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/"
+   }
+  ]
+ },
+ {
+  "id": "opt-23",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.2",
+  "source": "original",
+  "select": 2,
+  "stem": "An analyst queries the metric view `gold.orders_metrics`, which defines the fields `Segment` and `Order Month` and the measures `Revenue` and `Order Count`. They also need the customer's account manager from `crm.accounts`, which is not part of the metric view definition.\nWhich TWO statements about querying this metric view are correct?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Each measure must be wrapped in `MEASURE()`, for example `MEASURE(Revenue)`."
+   },
+   {
+    "k": "B",
+    "t": "`SELECT * FROM gold.orders_metrics` returns all fields and evaluated measures."
+   },
+   {
+    "k": "C",
+    "t": "The metric view can be joined directly to `crm.accounts` in the same FROM clause."
+   },
+   {
+    "k": "D",
+    "t": "To add `crm.accounts`, query the metric view in a CTE and join the CTE result."
+   },
+   {
+    "k": "E",
+    "t": "Measures are re-aggregated with `SUM()` like normal columns."
+   }
+  ],
+  "answer": [
+   "A",
+   "D"
+  ],
+  "explain": "- Mọi measure phải dùng `MEASURE()`.\n- Metric view không join trực tiếp lúc query; docs bọc query trong CTE rồi join.",
+  "wrong": {
+   "B": "Không dùng `SELECT *`; phải liệt kê field và bọc measure.",
+   "C": "Docs nêu metric view không join trực tiếp với table khác.",
+   "E": "Measure không phải cột thường; dùng `MEASURE()`."
+  },
+  "refs": [
+   {
+    "label": "Query metric views",
+    "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/query"
+   }
+  ]
+ },
+ {
+  "id": "opt-24",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.2",
+  "source": "original",
+  "select": 1,
+  "stem": "Dashboards that query a metric view over a 10-billion-row fact table now take more than a minute. The source tables have no row filters, column masks or ABAC policies, and serverless compute is enabled. The team wants pre-computed aggregations refreshed every 6 hours without changing any dashboard query.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add a `materialization` block with a 6-hour schedule to the metric view YAML."
+   },
+   {
+    "k": "B",
+    "t": "Create a separate materialized view with the same aggregation and repoint every dashboard to it."
+   },
+   {
+    "k": "C",
+    "t": "Enable the disk cache on the SQL warehouse so repeated scans of the fact table are faster."
+   },
+   {
+    "k": "D",
+    "t": "Convert the metric view into a standard view with GROUP BY on all dashboard columns."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Materialization tạo managed Lakeflow pipeline giữ materialized view.\n- Optimizer tự rewrite query sang materialization phù hợp, nên dashboard không đổi.",
+  "wrong": {
+   "B": "Phải sửa mọi dashboard và mất định nghĩa measure dùng chung.",
+   "C": "Cache không pre-compute aggregate; vẫn scan và aggregate lại.",
+   "D": "Mất tính linh hoạt group by và không pre-compute."
+  },
+  "refs": [
+   {
+    "label": "Materialization for metric views",
+    "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization"
+   }
+  ]
+ },
+ {
+  "id": "opt-25",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A compliance team sets `delta.deletedFileRetentionDuration = '2 days'` on several Unity Catalog managed tables so that removed customer data leaves storage quickly. Predictive optimization is enabled and no manual VACUUM jobs exist. Two weeks later, an auditor still finds unreferenced data files that were removed 5 days earlier.\nWhich statement explains the observation?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Predictive optimization retains data files for at least 7 days when it runs VACUUM, even if the retention property is lower."
+   },
+   {
+    "k": "B",
+    "t": "Predictive optimization runs only OPTIMIZE and ANALYZE, so unreferenced files stay until a scheduled VACUUM job removes them."
+   },
+   {
+    "k": "C",
+    "t": "The retention property is honored only on external tables; managed tables always keep removed files for 30 days."
+   },
+   {
+    "k": "D",
+    "t": "VACUUM skips every file that is still listed in the 30-day transaction log, so files stay until the log entries expire."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: managed table, Predictive Optimization, retention đặt 2 ngày nhưng file 5 ngày vẫn còn.\n- Docs: retention dưới 7 ngày thì Predictive Optimization vẫn giữ file tối thiểu 7 ngày để tránh mất data.",
+  "wrong": {
+   "B": "Predictive Optimization có chạy VACUUM trên managed table.",
+   "C": "Property áp cho mọi Delta table; 30 ngày là log retention, không phải file retention.",
+   "D": "VACUUM xoá file không còn được tham chiếu theo file retention, không chờ log retention."
+  },
+  "refs": [
+   {
+    "label": "Predictive optimization",
+    "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+   }
+  ]
+ },
+ {
+  "id": "opt-26",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.2",
+  "source": "original",
+  "select": 1,
+  "stem": "The managed table `sales.events` was switched to `CLUSTER BY AUTO` six months ago, and predictive optimization selected `customer_id` and `event_ts` as keys. A new nightly job rebuilds the table with `CREATE OR REPLACE TABLE sales.events AS SELECT ...` and no clustering clause. A week later, dashboards that filter on `customer_id` read far more files than before.\nWhat is the cause and the fix?",
+  "options": [
+   {
+    "k": "A",
+    "t": "The replace turned off automatic liquid clustering and dropped the selected keys; add `CLUSTER BY AUTO` to the statement."
+   },
+   {
+    "k": "B",
+    "t": "Predictive optimization needs 30 days of new query history after every replace before it reselects keys; keep the job as it is."
+   },
+   {
+    "k": "C",
+    "t": "CTAS statements cannot create clustered tables; switch the job to `INSERT OVERWRITE` followed by `OPTIMIZE ... ZORDER BY (customer_id)`."
+   },
+   {
+    "k": "D",
+    "t": "The replace removed deletion vectors; set `delta.enableDeletionVectors` again so that file skipping works."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: `CREATE OR REPLACE` không có `CLUSTER BY AUTO`, sau đó data skipping kém đi.\n- Docs: replace không kèm `CLUSTER BY AUTO` tắt automatic clustering và không giữ clustering column.",
+  "wrong": {
+   "B": "Không có cơ chế chờ 30 ngày; table đã bị tắt automatic clustering.",
+   "C": "CTAS nhận `CLUSTER BY`; ZORDER không dùng được trên liquid table.",
+   "D": "Deletion vectors tăng tốc write, không quyết định data skipping theo key."
+  },
+  "refs": [
+   {
+    "label": "Use liquid clustering for tables",
+    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   }
+  ]
+ },
+ {
+  "id": "opt-27",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A data engineer moves a notebook from a classic all-purpose cluster to serverless compute. The notebook starts with `CACHE TABLE silver.customers`, ends with `spark.catalog.clearCache()`, and reuses an expensive intermediate DataFrame three times. On serverless, the first cell fails with an exception. The engineer wants to keep the reuse benefit with minimal code changes.\nWhat should the engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Remove `CACHE TABLE` and `clearCache()`, and call `df.cache()` on the intermediate DataFrame."
+   },
+   {
+    "k": "B",
+    "t": "Set `spark.databricks.io.cache.enabled` to true in the serverless environment so that `CACHE TABLE` uses the disk cache."
+   },
+   {
+    "k": "C",
+    "t": "Replace `CACHE TABLE` with `CACHE SELECT * FROM silver.customers`, which preloads the disk cache on serverless."
+   },
+   {
+    "k": "D",
+    "t": "Replace the cache calls with `df.checkpoint()` so the intermediate result is materialized for reuse."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: serverless, `CACHE TABLE` lỗi, vẫn cần reuse DataFrame.\n- Serverless hỗ trợ `df.cache()`, `persist()`, `unpersist()`; `CACHE TABLE`, `clearCache()`, `checkpoint()` báo exception.",
+  "wrong": {
+   "B": "Serverless không nhận phần lớn Spark config, và `CACHE TABLE` vẫn báo exception.",
+   "C": "`CACHE SELECT` bị bỏ qua trên SQL warehouse và DBR 14.2+, không giữ được kết quả transform.",
+   "D": "`df.checkpoint()` nằm trong danh sách API không hỗ trợ trên serverless."
+  },
+  "refs": [
+   {
+    "label": "Serverless compute limitations",
+    "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+   },
+   {
+    "label": "Optimize performance with caching",
+    "url": "https://docs.databricks.com/aws/en/optimizations/disk-cache"
+   }
+  ]
+ },
+ {
+  "id": "opt-28",
+  "topic": "optimize",
+  "domain": "S5",
+  "task": "5.5",
+  "source": "original",
+  "select": 1,
+  "stem": "At 9:00 every weekday, about 200 analysts open dashboards served by a Medium SQL warehouse with a minimum of 1 and a maximum of 2 clusters. Each query finishes in about 3 seconds once it starts, but users wait around 40 seconds. The query profiles show no spill, and the performance insights panel reports `EXCESSIVE_QUEUE_TIME`.\nWhich change targets this bottleneck?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Increase the warehouse size from Medium to Large so each query gets more memory and cores."
+   },
+   {
+    "k": "B",
+    "t": "Increase the maximum number of clusters on the warehouse."
+   },
+   {
+    "k": "C",
+    "t": "Enable predictive optimization on the dashboard tables to compact small files."
+   },
+   {
+    "k": "D",
+    "t": "Change the dashboard tables to `CLUSTER BY AUTO` to reduce bytes read per query."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: query chạy nhanh khi bắt đầu, thời gian mất ở queue, insight `EXCESSIVE_QUEUE_TIME`.\n- Docs khuyên tăng max clusters để giảm queue time; đây là scale out cho concurrency.",
+  "wrong": {
+   "A": "Tăng size là scale up cho query nặng hoặc `DATA_SPILL`, không giải quyết concurrency.",
+   "C": "File nhỏ làm scan chậm, nhưng query đã nhanh; bottleneck nằm ở queue.",
+   "D": "Giảm bytes read không rút ngắn thời gian chờ trong queue."
+  },
+  "refs": [
+   {
+    "label": "Query performance insights",
+    "url": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights"
+   }
+  ]
+ },
+ {
+  "id": "opt-29",
+  "topic": "optimize",
+  "domain": "S9",
+  "task": "9.2",
+  "source": "original",
+  "select": 2,
+  "stem": "A metric view over `gold.fact_orders` defines the measures `Revenue` (`SUM(amount)`) and `Unique Buyers` (`COUNT(DISTINCT customer_id)`) and the fields `Region`, `Country` and `Order Month`. The team adds one aggregated materialization at the grain (`Region`, `Country`, `Order Month`) with `schedule: every 6 hours`. The fact table has no row filters, column masks or ABAC policies.\nWhich TWO statements about queries on this metric view are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "`MEASURE(Revenue)` grouped by `Region` can be served from the materialization through a rollup match."
+   },
+   {
+    "k": "B",
+    "t": "The `Unique Buyers` measure grouped by `Region` can be served by rolling up the materialization."
+   },
+   {
+    "k": "C",
+    "t": "The `Unique Buyers` measure grouped by `Region`, `Country` and `Order Month` can be served through an exact match."
+   },
+   {
+    "k": "D",
+    "t": "A query that groups by a field outside the materialization fails until a refresh adds that field."
+   },
+   {
+    "k": "E",
+    "t": "Every query returns data at most 6 hours old, because all queries are rewritten to the materialization."
+   }
+  ],
+  "answer": [
+   "A",
+   "C"
+  ],
+  "explain": "- Tín hiệu: một measure additive và một measure non-additive, một materialization theo grain cố định.\n- SUM roll up được từ grain chi tiết hơn; `COUNT(DISTINCT)` chỉ dùng materialization khi exact match.\n- Query không khớp đọc thẳng source nên freshness khác nhau giữa các query.",
+  "wrong": {
+   "B": "`COUNT(DISTINCT)` là non-additive, không roll up được từ kết quả từng phần.",
+   "D": "Query không khớp không lỗi mà fall back đọc source.",
+   "E": "Chỉ query khớp mới dùng lần refresh cuối; query khác trả data live."
+  },
+  "refs": [
+   {
+    "label": "Metric view materialization",
+    "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization"
+   }
+  ]
+ }
+]

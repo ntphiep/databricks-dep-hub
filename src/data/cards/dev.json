@@ -1,0 +1,200 @@
+[
+ {
+  "id": "dev-c01",
+  "front": "Declarative Automation Bundles: former name",
+  "back": "Databricks Asset Bundles (DABs). Bundle mô tả job, pipeline và source code bằng YAML hoặc Python để deploy qua CLI.",
+  "ref": {
+   "label": "What are Declarative Automation Bundles?",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/"
+  }
+ },
+ {
+  "id": "dev-c02",
+  "front": "How many `databricks.yml` files per bundle?",
+  "back": "Exactly one, at the bundle root; other config files are loaded with `include`. File resource thường nằm ở `resources/*.yml`.",
+  "ref": {
+   "label": "Bundle configuration",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/settings"
+  }
+ },
+ {
+  "id": "dev-c03",
+  "front": "Bundle mapping that builds a wheel at deploy time",
+  "back": "`artifacts` with `type: whl` and `build: uv build --wheel`. Wheel được build khi chạy `bundle deploy`.",
+  "ref": {
+   "label": "Build a Python wheel file using bundles",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/python-wheel"
+  }
+ },
+ {
+  "id": "dev-c04",
+  "front": "Python wheel task on serverless: where do libraries go?",
+  "back": "In a job `environments` spec (`dependencies`), referenced by `environment_key`. Python script và wheel task bắt buộc có environment.",
+  "ref": {
+   "label": "Configure the serverless environment",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+  }
+ },
+ {
+  "id": "dev-c05",
+  "front": "Serverless job ignores the new code in a rebuilt wheel",
+  "back": "Bump the package version; serverless caches the environment. Đổi code package thì phải đổi version number.",
+  "ref": {
+   "label": "Configure the serverless environment",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+  }
+ },
+ {
+  "id": "dev-c06",
+  "front": "Native wheel fails on some serverless runs",
+  "back": "Ship `py3-none-any` or both aarch64 and x86_64 wheels with `platform_machine` markers. Serverless không cố định kiến trúc CPU.",
+  "ref": {
+   "label": "Configure the serverless environment",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"
+  }
+ },
+ {
+  "id": "dev-c07",
+  "front": "Pipeline Python dependencies: recommended patterns",
+  "back": "Pipeline Environment settings, or import modules from workspace files. Pipeline không có `restartPython()` và không có JVM library.",
+  "ref": {
+   "label": "Manage Python dependencies for pipelines",
+   "url": "https://docs.databricks.com/aws/en/ldp/developer/external-dependencies"
+  }
+ },
+ {
+  "id": "dev-c08",
+  "front": "Databricks Connect and `pyspark` in one virtualenv",
+  "back": "Not allowed: they are mutually exclusive. Gỡ `pyspark` trước khi chạy pytest với Databricks Connect.",
+  "ref": {
+   "label": "Testing for Databricks Connect for Python",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/testing"
+  }
+ },
+ {
+  "id": "dev-c10",
+  "front": "Load a model once for many batches in a pandas UDF",
+  "back": "Iterator of Series to Iterator of Series `@pandas_udf`. Phần khởi tạo trước vòng `for` chạy một lần.",
+  "ref": {
+   "label": "pandas user-defined functions",
+   "url": "https://docs.databricks.com/aws/en/udf/pandas"
+  }
+ },
+ {
+  "id": "dev-c11",
+  "front": "Governed UDF callable from SQL warehouses and notebooks",
+  "back": "Unity Catalog function: `CREATE FUNCTION cat.schema.fn ... LANGUAGE PYTHON` plus `GRANT EXECUTE`. Session UDF không có governance.",
+  "ref": {
+   "label": "UDFs in Unity Catalog",
+   "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+  }
+ },
+ {
+  "id": "dev-c12",
+  "front": "UC Python UDF callers need only EXECUTE for volume dependencies when",
+  "back": "The UDF sets `environment_version` to 6 or above. Version thấp hơn thì người gọi cần thêm READ VOLUME.",
+  "ref": {
+   "label": "UDFs in Unity Catalog",
+   "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+  }
+ },
+ {
+  "id": "dev-c13",
+  "front": "`STRICT ISOLATION` on a UC Python UDF",
+  "back": "Use when the UDF runs `exec()`, writes local files, or changes globals or env vars. UDF thông thường dùng shared isolation nhanh hơn.",
+  "ref": {
+   "label": "UDFs in Unity Catalog",
+   "url": "https://docs.databricks.com/aws/en/udf/unity-catalog"
+  }
+ },
+ {
+  "id": "dev-c14",
+  "front": "`databricks jobs submit` vs `run-now`",
+  "back": "`submit` is a one-time run, not saved, no retries, no serverless auto-optimization; `run-now` triggers a saved job. Đề cần run history thì chọn `run-now`.",
+  "ref": {
+   "label": "jobs command group (Databricks CLI)",
+   "url": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands"
+  }
+ },
+ {
+  "id": "dev-c15",
+  "front": "Jobs API 2.2 default for queueing",
+  "back": "Queueing is on by default for jobs created with 2.2; off by default for 2.0 and 2.1. Run vượt concurrency được queue thay vì skip.",
+  "ref": {
+   "label": "Updating from Jobs API 2.1 to 2.2",
+   "url": "https://docs.databricks.com/aws/en/reference/jobs-api-2-2-updates"
+  }
+ },
+ {
+  "id": "dev-c16",
+  "front": "If/else operators `==` vs `>`",
+  "back": "`==` and `!=` compare strings (`12.0 == 12` is false); `>`, `>=`, `<`, `<=` compare numbers. Chọn toán tử theo kiểu so sánh.",
+  "ref": {
+   "label": "Add branching logic with the If/else task",
+   "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+  }
+ },
+ {
+  "id": "dev-c17",
+  "front": "For each task: input reference and limits",
+  "back": "`{{input}}` or `{{input.<key>}}`; UI inputs up to 5,000 characters, task value input up to 48 KB, no nested For each. Concurrency trong UI mặc định 1.",
+  "ref": {
+   "label": "Use a For each task to run another task in a loop",
+   "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+  }
+ },
+ {
+  "id": "dev-c18",
+  "front": "Serverless standard performance mode",
+  "back": "Performance optimized disabled: 4 to 6 minute startup, fewer DBUs, same SKU. Hợp batch job không gấp.",
+  "ref": {
+   "label": "Run Lakeflow Jobs with serverless compute",
+   "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+  }
+ },
+ {
+  "id": "dev-c19",
+  "front": "Disallow automatic retries on serverless",
+  "back": "Clear Enable serverless auto-optimization in the task Retry Policy. Dùng cho task không idempotent.",
+  "ref": {
+   "label": "Run Lakeflow Jobs with serverless compute",
+   "url": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs"
+  }
+ },
+ {
+  "id": "dev-c20",
+  "front": "`assertDataFrameEqual` defaults",
+  "back": "`checkRowOrder=False`, `rtol=1e-5`, `atol=1e-8`, `ignoreNullable=True`. Mặc định không xét thứ tự row.",
+  "ref": {
+   "label": "PySpark API, assertDataFrameEqual",
+   "url": "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html"
+  }
+ },
+ {
+  "id": "dev-c21",
+  "front": "Serverless SQL behavior that breaks code migrated from classic",
+  "back": "ANSI mode is on by default (invalid casts and overflow raise errors) and the session time zone is UTC. Dùng `try_cast` cho cast có thể lỗi.",
+  "ref": {
+   "label": "Serverless compute limitations",
+   "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+  }
+ },
+ {
+  "id": "dev-c22",
+  "front": "Import precedence above `%pip` libraries",
+  "back": "Current working directory and root of a Git folder come before notebook-scoped libraries. Folder trùng tên trong repo che bản cài bằng `%pip`.",
+  "ref": {
+   "label": "Install libraries",
+   "url": "https://docs.databricks.com/aws/en/libraries/"
+  }
+ },
+ {
+  "id": "dev-c23",
+  "front": "Serverless streaming triggers",
+  "back": "Only `Trigger.AvailableNow` (recommended) and `Trigger.Once`; no `processingTime`. Cần chạy liên tục thì dùng serverless pipeline ở continuous mode.",
+  "ref": {
+   "label": "Configure Structured Streaming trigger intervals",
+   "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"
+  }
+ }
+]

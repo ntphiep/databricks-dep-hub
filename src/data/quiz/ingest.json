@@ -1,0 +1,1208 @@
+[
+ {
+  "id": "ing-01",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A retail company publishes clickstream events to an Amazon Kinesis data stream. The data engineering team wants the events in a Unity Catalog streaming table, refreshed continuously, and prefers a declarative pipeline over managing checkpoints themselves.\nWhich approach should the team use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Create a Lakeflow Connect managed Kinesis connector from Catalog Explorer and point it at the stream."
+   },
+   {
+    "k": "B",
+    "t": "Configure Auto Loader with `cloudFiles.format` set to `kinesis`, use the stream ARN as the load path, and let the pipeline manage the checkpoint."
+   },
+   {
+    "k": "C",
+    "t": "Define a streaming table in a Lakeflow pipeline that reads with `spark.readStream.format(\"kinesis\")`."
+   },
+   {
+    "k": "D",
+    "t": "Create a Lakehouse Federation connection to Kinesis and query the stream through a foreign catalog."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: Kinesis, declarative pipeline, không tự quản lý checkpoint.\n- Lakeflow Connect chưa có managed connector cho Kinesis; docs hướng dẫn dùng Structured Streaming hoặc Lakeflow pipeline.\n- Trong Lakeflow pipeline, checkpoint do pipeline quản lý.",
+  "wrong": {
+   "A": "Managed streaming connector hiện chỉ có Kafka (Beta) và RabbitMQ.",
+   "B": "`cloudFiles.format` chỉ nhận file format như json, csv, parquet; Kinesis không phải file.",
+   "D": "Lakehouse Federation dành cho database và catalog bên ngoài, không đọc message bus."
+  },
+  "refs": [
+   {
+    "label": "Lakeflow Connect streaming connectors",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview"
+   },
+   {
+    "label": "Connect to Amazon Kinesis",
+    "url": "https://docs.databricks.com/aws/en/connect/streaming/kinesis"
+   }
+  ]
+ },
+ {
+  "id": "ing-02",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A streaming table reads a Kafka topic with `read_kafka`. Producers write JSON payloads. Analysts report that the `value` column shows unreadable bytes and every attempt to query `value:order_id` fails.\nWhat should the engineer change in the streaming table definition?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add the option `startingOffsets => 'earliest'` so the reader decodes messages from the beginning of the topic."
+   },
+   {
+    "k": "B",
+    "t": "Select `parse_json(CAST(value AS STRING))` so the binary payload becomes a VARIANT column."
+   },
+   {
+    "k": "C",
+    "t": "Read the topic with `read_files` and `format => 'json'` instead of `read_kafka`."
+   },
+   {
+    "k": "D",
+    "t": "Set `cloudFiles.schemaHints` to `value STRING` so the payload is inferred as text."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: `value` hiện bytes khó đọc.\n- Kafka reader trả `key` và `value` kiểu binary; phải cast sang STRING rồi parse.\n- `parse_json` đưa payload vào VARIANT để query bằng `:`.",
+  "wrong": {
+   "A": "`startingOffsets` chỉ đổi vị trí đọc, không đổi kiểu dữ liệu.",
+   "C": "`read_files` đọc file trong storage, không đọc Kafka topic.",
+   "D": "`cloudFiles.schemaHints` là option của Auto Loader, không áp dụng cho `read_kafka`."
+  },
+  "refs": [
+   {
+    "label": "Connect to Apache Kafka",
+    "url": "https://docs.databricks.com/aws/en/connect/streaming/kafka"
+   },
+   {
+    "label": "Ingest data as semi-structured variant type",
+    "url": "https://docs.databricks.com/aws/en/ingestion/variant"
+   }
+  ]
+ },
+ {
+  "id": "ing-03",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.1",
+  "source": "original",
+  "select": 2,
+  "stem": "Scanned contracts (PDF) and product photos (JPG) arrive every hour in a Unity Catalog volume. A downstream job will run `ai_parse_document` on the raw bytes. The team needs each new file loaded exactly once, with its path and size, into a Delta table.\nWhich two approaches meet these requirements? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Auto Loader with `cloudFiles.format` set to `binaryFile`, writing to a streaming table."
+   },
+   {
+    "k": "B",
+    "t": "A streaming table defined as `SELECT * FROM STREAM read_files('/Volumes/...', format => 'binaryFile')`."
+   },
+   {
+    "k": "C",
+    "t": "Auto Loader with `cloudFiles.format` set to `pdf` and a second stream with `cloudFiles.format` set to `jpg`."
+   },
+   {
+    "k": "D",
+    "t": "`COPY INTO` with `FILEFORMAT = DELTA` pointing at the volume path."
+   },
+   {
+    "k": "E",
+    "t": "A Lakehouse Federation foreign catalog that exposes the volume folder as a table."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: PDF và ảnh, mỗi file đúng một lần, cần path và size.\n- `binaryFile` trả `path`, `modificationTime`, `length`, `content` cho mỗi file.\n- Auto Loader và `STREAM read_files` đều ingest incremental vào streaming table.",
+  "wrong": {
+   "C": "Không có format `pdf` hay `jpg`; file nhị phân dùng `binaryFile`.",
+   "D": "`FILEFORMAT` của `COPY INTO` chỉ nhận CSV, JSON, AVRO, ORC, PARQUET, TEXT, BINARYFILE; không có DELTA.",
+   "E": "Federation đọc database và catalog ngoài, không đọc folder file."
+  },
+  "refs": [
+   {
+    "label": "Read binary files",
+    "url": "https://docs.databricks.com/aws/en/query/formats/binary"
+   },
+   {
+    "label": "Auto Loader options",
+    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+   },
+   {
+    "label": "read_files table-valued function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files"
+   },
+   {
+    "label": "COPY INTO",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into"
+   }
+  ]
+ },
+ {
+  "id": "ing-04",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow pipeline maintains `customers` as a streaming table populated by an AUTO CDC flow. A partner team queries data from Snowflake using an Iceberg REST catalog client that supports Iceberg v3. They must read `customers` through Unity Catalog without a second copy of the data.\nWhat should the data engineer do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable change data feed on `customers` so the Snowflake client can read row-level changes."
+   },
+   {
+    "k": "B",
+    "t": "Replace the AUTO CDC flow with a materialized view `USING ICEBERG` that selects the latest row per key from the bronze change feed table."
+   },
+   {
+    "k": "C",
+    "t": "Add a nightly job that runs `CREATE TABLE customers_ice USING ICEBERG AS SELECT * FROM customers`."
+   },
+   {
+    "k": "D",
+    "t": "Enable external metadata and the UniForm Iceberg V3 properties on `customers`, then grant `EXTERNAL USE SCHEMA` and `SELECT`."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: Iceberg v3 client, đọc qua Unity Catalog, không tạo copy.\n- External metadata cộng UniForm Iceberg V3 properties cho phép Iceberg client đọc streaming table mà không copy data.\n- Reader cần `EXTERNAL USE SCHEMA` trên schema và `SELECT` trên table.",
+  "wrong": {
+   "A": "CDF không sinh Iceberg metadata cho client bên ngoài.",
+   "B": "Bỏ AUTO CDC làm mất xử lý sequence và delete; viết lại logic thủ công.",
+   "C": "Tạo copy thứ hai và data cũ tới một ngày, vi phạm yêu cầu."
+  },
+  "refs": [
+   {
+    "label": "Enable external data access to streaming tables and materialized views",
+    "url": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines"
+   }
+  ]
+ },
+ {
+  "id": "ing-05",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A supplier drops a full extract of its product catalog as Parquet files into cloud storage once per day. The source system has no change feed, and products removed from the catalog simply disappear from the next extract. The team must keep SCD Type 2 history in a Lakeflow pipeline with minimal custom code.\nWhich approach should the team use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A Lakeflow Connect query-based connector with the file date as cursor column."
+   },
+   {
+    "k": "B",
+    "t": "AUTO CDC reading the extracts with `SEQUENCE BY` the file date and `APPLY AS DELETE WHEN` a missing flag."
+   },
+   {
+    "k": "C",
+    "t": "A `foreachBatch` sink that runs `MERGE INTO` against the history table for each daily file."
+   },
+   {
+    "k": "D",
+    "t": "AUTO CDC FROM SNAPSHOT reading each daily extract as a snapshot version."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: chỉ có snapshot, không có change feed, row bị xoá chỉ biến mất.\n- AUTO CDC FROM SNAPSHOT so sánh snapshot liên tiếp để suy ra insert, update, delete và lưu SCD Type 2.",
+  "wrong": {
+   "A": "Query-based connector đọc database qua connection, không đọc file trong storage.",
+   "B": "Snapshot không có cột operation; AUTO CDC không tự nhận ra key biến mất.",
+   "C": "Chạy được nhưng phải tự viết logic SCD Type 2, trái yêu cầu minimal code."
+  },
+  "refs": [
+   {
+    "label": "The AUTO CDC APIs",
+    "url": "https://docs.databricks.com/aws/en/ldp/cdc"
+   }
+  ]
+ },
+ {
+  "id": "ing-06",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A team ingests SQL Server tables with a Lakeflow Connect database connector. To cut cost, an engineer stopped the ingestion gateway every Friday night and restarted it on Monday. After a long weekend, several tables report errors and some updates made on Saturday never appear in the destination.\nWhat is the cause, and what should the team do?",
+  "options": [
+   {
+    "k": "A",
+    "t": "The staging volume purged the weekend data; increase the volume retention and rerun the ingestion pipeline."
+   },
+   {
+    "k": "B",
+    "t": "Source change logs were truncated while the gateway was stopped; full refresh the affected tables and keep the gateway running continuously."
+   },
+   {
+    "k": "C",
+    "t": "The ingestion pipeline was in triggered mode; switch it to continuous mode so it captures changes while the gateway is down."
+   },
+   {
+    "k": "D",
+    "t": "The gateway ran on classic compute; move it to serverless compute so it can stop on Friday night and resume from its last saved log position on Monday morning."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: gateway bị dừng, mất change, lỗi table.\n- Gateway phải chạy liên tục để đọc change trước khi nguồn truncate log.\n- Change đã mất thì cần full refresh table bị ảnh hưởng.",
+  "wrong": {
+   "A": "Staging giữ data 30 ngày; vấn đề là change chưa từng được gateway đọc.",
+   "C": "Ingestion pipeline không hỗ trợ continuous mode, và nó chỉ đọc staging do gateway ghi.",
+   "D": "Gateway chạy trên classic compute; serverless không phải lựa chọn cho gateway."
+  },
+  "refs": [
+   {
+    "label": "Ingest data from SQL Server",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+   },
+   {
+    "label": "Managed database connectors",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview"
+   }
+  ]
+ },
+ {
+  "id": "ing-07",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.3",
+  "source": "original",
+  "select": 2,
+  "stem": "A finance team will ingest 40 SQL Server tables with Lakeflow Connect. Auditors require full change history (SCD Type 2) for all tables. Twelve tables have no primary key. The DBA wants the lowest possible load on the production primary instance.\nWhich two actions should the data engineer take? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable change data capture (CDC) on the source tables."
+   },
+   {
+    "k": "B",
+    "t": "Set `scd_type: SCD_TYPE_2` in the ingestion pipeline `table_configuration`."
+   },
+   {
+    "k": "C",
+    "t": "Enable only change tracking on all 40 tables because it is lighter than CDC."
+   },
+   {
+    "k": "D",
+    "t": "Point the ingestion gateway at a read-only secondary replica to offload the primary."
+   },
+   {
+    "k": "E",
+    "t": "Set `continuous: true` on the ingestion pipeline so history is captured between runs."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: SCD Type 2 cho mọi table, có table không primary key.\n- Change tracking cần primary key và không hỗ trợ SCD Type 2; CDC không cần primary key.\n- `scd_type: SCD_TYPE_2` tạo `__START_AT`, `__END_AT` ở destination.",
+  "wrong": {
+   "C": "Change tracking cần primary key và chỉ cho SCD Type 1.",
+   "D": "Change tracking và CDC không hỗ trợ trên read replica hay secondary instance.",
+   "E": "Ingestion pipeline không hỗ trợ continuous mode; history đến từ CDC."
+  },
+  "refs": [
+   {
+    "label": "Configure SQL Server for ingestion",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup"
+   },
+   {
+    "label": "Ingest data from SQL Server",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline"
+   }
+  ]
+ },
+ {
+  "id": "ing-08",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A team plans to ingest an Amazon RDS for PostgreSQL 15 database with the Lakeflow Connect PostgreSQL connector. The DBA asks which settings must be prepared on the source before the gateway is created.\nWhich configuration is required?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Enable binary logging with `binlog_format = ROW` and `binlog_row_image = FULL`."
+   },
+   {
+    "k": "B",
+    "t": "Enable change tracking on the database and on each table with a primary key."
+   },
+   {
+    "k": "C",
+    "t": "Set `rds.logical_replication = 1`, create a publication and a replication slot, and set `REPLICA IDENTITY` on each table."
+   },
+   {
+    "k": "D",
+    "t": "Deploy Debezium on Kafka Connect to publish row changes to a Kafka topic, then point the Lakeflow Connect connector at that topic and its schema registry."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: PostgreSQL trên RDS.\n- Connector dùng logical replication: `wal_level = logical` (RDS dùng `rds.logical_replication = 1`), publication trước rồi replication slot, đặt replica identity.",
+  "wrong": {
+   "A": "Binlog là yêu cầu của MySQL connector.",
+   "B": "Change tracking là cơ chế của SQL Server.",
+   "D": "Managed connector đọc thẳng WAL qua gateway, không cần Debezium hay Kafka."
+  },
+  "refs": [
+   {
+    "label": "Configure PostgreSQL for ingestion",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup"
+   }
+  ]
+ },
+ {
+  "id": "ing-09",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A data provider on Databricks (AWS) must share an `orders` table with a partner whose Unity Catalog workspace runs on Azure in another Databricks account. The partner wants to consume new rows incrementally with Structured Streaming. The provider does not want to issue or rotate tokens.\nWhich setup meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Create a token-based recipient, add `orders` WITHOUT HISTORY, and email the activation link."
+   },
+   {
+    "k": "B",
+    "t": "Create a Lakehouse Federation connection of type Databricks from the partner workspace to the provider workspace."
+   },
+   {
+    "k": "C",
+    "t": "Schedule a job that exports `orders` as Parquet files to a cross-account S3 bucket that the partner reads incrementally with Auto Loader from its Azure workspace."
+   },
+   {
+    "k": "D",
+    "t": "Create a recipient `USING ID` with the partner's sharing identifier, add `orders` WITH HISTORY, and grant `SELECT` on the share."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: partner có Unity Catalog, khác cloud, cần streaming, không quản lý token.\n- Databricks-to-Databricks dùng sharing identifier, chạy cross-cloud, không có token.\n- WITH HISTORY cho phép recipient dùng table làm streaming source.",
+  "wrong": {
+   "A": "Token-based là Databricks-to-Open, phải quản lý token; WITHOUT HISTORY không stream được.",
+   "B": "Federation cần credential của workspace provider và chỉ query; không phải cơ chế share giữa hai tổ chức.",
+   "C": "Tạo copy và tự quản lý bucket, credential, egress cross-cloud; không dùng governance của share."
+  },
+  "refs": [
+   {
+    "label": "What is OpenSharing?",
+    "url": "https://docs.databricks.com/aws/en/opensharing/"
+   },
+   {
+    "label": "Create data recipients (Databricks-to-Databricks)",
+    "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient"
+   },
+   {
+    "label": "Create shares for OpenSharing",
+    "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
+   }
+  ]
+ },
+ {
+  "id": "ing-10",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A retailer and a consumer goods brand want to measure audience overlap between their customer lists. Neither company may see the other's customer rows, and any analysis code must be reviewed and approved by both companies before it runs. Both use Unity Catalog with serverless compute.\nWhich Databricks capability fits these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Databricks Clean Rooms with notebooks approved by both collaborators."
+   },
+   {
+    "k": "B",
+    "t": "Databricks-to-Databricks OpenSharing of a dynamic view that hides personal columns."
+   },
+   {
+    "k": "C",
+    "t": "Lakehouse Federation from each workspace to the other workspace's catalog."
+   },
+   {
+    "k": "D",
+    "t": "A Marketplace private exchange that lists both customer tables."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Tín hiệu: không bên nào thấy row của bên kia, code phải được cả hai approve.\n- Clean Rooms chạy code trong central clean room; collaborator chỉ thấy metadata và output.",
+  "wrong": {
+   "B": "Recipient vẫn đọc trực tiếp row của view; không có bước approve code.",
+   "C": "Federation cho phép query trực tiếp data của bên kia, trái yêu cầu privacy.",
+   "D": "Marketplace phân phối data product; recipient đọc được row."
+  },
+  "refs": [
+   {
+    "label": "What is Databricks Clean Rooms?",
+    "url": "https://docs.databricks.com/aws/en/clean-rooms/"
+   }
+  ]
+ },
+ {
+  "id": "ing-11",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.4",
+  "source": "original",
+  "select": 2,
+  "stem": "A provider must share a curated sales table with an external analyst team that uses pandas and Power BI and has no Databricks workspace. The provider uses a Unity Catalog metastore with OpenSharing enabled.\nWhich two statements about this setup are correct? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "The provider creates the recipient without `USING ID`, and Databricks generates a bearer token in a credential file."
+   },
+   {
+    "k": "B",
+    "t": "The recipient can download the credential file from the activation link only one time."
+   },
+   {
+    "k": "C",
+    "t": "The provider can also add Unity Catalog volumes, AI models and notebook files to the same share so the analysts can open them in their own tools."
+   },
+   {
+    "k": "D",
+    "t": "The analyst team must first send the provider its metastore sharing identifier."
+   },
+   {
+    "k": "E",
+    "t": "Granting `MODIFY` on the share lets the analysts write corrections back to the table."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: không có Databricks workspace nên dùng Databricks-to-Open.\n- Recipient token-based nhận credential file chứa bearer token, tải được một lần.",
+  "wrong": {
+   "C": "Volume, model, notebook chỉ share qua Databricks-to-Databricks.",
+   "D": "Sharing identifier chỉ dùng cho recipient có Unity Catalog (D2D).",
+   "E": "`SELECT` là privilege duy nhất cấp cho recipient; share luôn chỉ đọc."
+  },
+  "refs": [
+   {
+    "label": "Create recipients with bearer tokens (Databricks-to-Open)",
+    "url": "https://docs.databricks.com/aws/en/opensharing/create-recipient-token"
+   },
+   {
+    "label": "What is OpenSharing?",
+    "url": "https://docs.databricks.com/aws/en/opensharing/"
+   },
+   {
+    "label": "Manage access to OpenSharing shares",
+    "url": "https://docs.databricks.com/aws/en/opensharing/grant-access"
+   }
+  ]
+ },
+ {
+  "id": "ing-12",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.5",
+  "source": "original",
+  "select": 1,
+  "stem": "Analysts need ad hoc SQL access to an operational PostgreSQL database for a two-week proof of concept. Data must not be copied into the lakehouse, database credentials must not be visible to analysts, and access must be granted per table through Unity Catalog.\nWhat should the platform team set up?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A shared notebook that reads PostgreSQL over JDBC with credentials from a secret scope and registers temporary views that the analysts query during the proof of concept."
+   },
+   {
+    "k": "B",
+    "t": "A Unity Catalog connection that stores the credentials as secrets, a foreign catalog on it, and `SELECT` grants to the analysts."
+   },
+   {
+    "k": "C",
+    "t": "A Lakeflow Connect PostgreSQL ingestion pipeline that writes the tables into streaming tables."
+   },
+   {
+    "k": "D",
+    "t": "An OpenSharing recipient for the PostgreSQL database so analysts mount it as a shared catalog."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: ad hoc, proof of concept, không copy, quản lý quyền theo table qua Unity Catalog.\n- Query federation: connection giữ credential, foreign catalog mirror database, GRANT như table thường.",
+  "wrong": {
+   "A": "Không có governance theo table trong Unity Catalog; mỗi notebook tự đọc JDBC.",
+   "C": "Lakeflow Connect copy data vào lakehouse, trái yêu cầu.",
+   "D": "OpenSharing share asset trong Unity Catalog, không share database PostgreSQL."
+  },
+  "refs": [
+   {
+    "label": "What is query federation?",
+    "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+   },
+   {
+    "label": "Connect to external databases and catalogs",
+    "url": "https://docs.databricks.com/aws/en/query-federation/"
+   }
+  ]
+ },
+ {
+  "id": "ing-13",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.5",
+  "source": "original",
+  "select": 1,
+  "stem": "The platform team owns a Unity Catalog connection `sf_conn` to Snowflake. A data engineer, who is not a metastore admin and does not own the connection, must create a foreign catalog `sales_sf` from it.\nWhich privileges does the engineer need?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`USE CONNECTION` on `sf_conn` only."
+   },
+   {
+    "k": "B",
+    "t": "`CREATE CONNECTION` on the metastore, plus `USE CONNECTION` and `READ METADATA` on `sf_conn`."
+   },
+   {
+    "k": "C",
+    "t": "`CREATE CATALOG` on the metastore and `CREATE FOREIGN CATALOG` on `sf_conn`."
+   },
+   {
+    "k": "D",
+    "t": "`SELECT` on `sf_conn` and `USE CATALOG` on the metastore."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: tạo foreign catalog, không phải owner connection.\n- Docs: cần `CREATE CATALOG` trên metastore và là owner connection hoặc có `CREATE FOREIGN CATALOG` trên connection.",
+  "wrong": {
+   "A": "`USE CONNECTION` chỉ cho xem connection và dùng `remote_query`.",
+   "B": "`CREATE CONNECTION` để tạo connection mới, không tạo catalog.",
+   "D": "Connection không có privilege `SELECT`; `USE CATALOG` cấp trên catalog, không trên metastore."
+  },
+  "refs": [
+   {
+    "label": "What is query federation?",
+    "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
+   },
+   {
+    "label": "Unity Catalog privileges and securable objects",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+   }
+  ]
+ },
+ {
+  "id": "ing-14",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A bronze table `orders_cdc` receives several versions of each order. The silver job must keep exactly one row per `order_id`: the version with the latest `updated_at`, with all columns. Two versions of the same order can share the same `updated_at`, and any one of them is acceptable.\nWhich query meets the requirement?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`SELECT * FROM orders_cdc QUALIFY rank() OVER (PARTITION BY order_id ORDER BY updated_at DESC) = 1`"
+   },
+   {
+    "k": "B",
+    "t": "`SELECT order_id, max(updated_at) FROM orders_cdc GROUP BY order_id`"
+   },
+   {
+    "k": "C",
+    "t": "`SELECT * FROM orders_cdc QUALIFY row_number() OVER (PARTITION BY order_id ORDER BY updated_at DESC) = 1`"
+   },
+   {
+    "k": "D",
+    "t": "`df.orderBy(F.col(\"updated_at\").desc()).dropDuplicates([\"order_id\"])` on the bronze DataFrame before writing silver"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: đúng một row mỗi key, mọi cột, có thể hoà `updated_at`.\n- `row_number()` đánh số duy nhất trong partition; `QUALIFY` lọc theo kết quả window.",
+  "wrong": {
+   "A": "`rank()` cho cùng hạng khi hoà, nên một key có thể còn hai row.",
+   "B": "Chỉ trả hai cột, mất các cột còn lại.",
+   "D": "`dropDuplicates` sau `orderBy` không đảm bảo giữ row đầu theo thứ tự sort."
+  },
+  "refs": [
+   {
+    "label": "QUALIFY clause",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify"
+   },
+   {
+    "label": "Window functions",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions"
+   }
+  ]
+ },
+ {
+  "id": "ing-15",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.1",
+  "source": "original",
+  "select": 1,
+  "stem": "A query computes a running balance with `SUM(amount) OVER (PARTITION BY account_id ORDER BY txn_ts)`. When two transactions of the same account share the same `txn_ts`, both rows show the same balance that already includes both amounts. The business wants the balance to grow row by row.\nWhat should the engineer change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Add `txn_ts` to the `PARTITION BY` clause."
+   },
+   {
+    "k": "B",
+    "t": "Add `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` to the window specification."
+   },
+   {
+    "k": "C",
+    "t": "Replace the window with `GROUP BY ROLLUP (account_id, txn_ts)`."
+   },
+   {
+    "k": "D",
+    "t": "Add `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` to the window specification."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: row có cùng giá trị ORDER BY nhận cùng tổng.\n- Có ORDER BY mà không ghi frame thì mặc định là RANGE, gộp row ngang hàng.\n- ROWS frame cộng từng row một.",
+  "wrong": {
+   "A": "Mỗi timestamp thành partition riêng, running balance reset liên tục.",
+   "C": "ROLLUP trả subtotal theo nhóm, không phải running total từng row.",
+   "D": "Đây chính là frame mặc định, kết quả không đổi."
+  },
+  "refs": [
+   {
+    "label": "PySpark Window (Apache Spark docs)",
+    "url": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html"
+   },
+   {
+    "label": "Window functions",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions"
+   }
+  ]
+ },
+ {
+  "id": "ing-17",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A table stores device telemetry in a VARIANT column `payload`. A sample record is `{\"device\": {\"os\": \"android\", \"ver\": 14}}`. The query `SELECT payload:device.OS::STRING FROM telemetry` returns NULL for every row.\nWhat is the reason?",
+  "options": [
+   {
+    "k": "A",
+    "t": "The colon syntax only works on JSON strings; VARIANT columns require `variant_get`."
+   },
+   {
+    "k": "B",
+    "t": "Nested fields in VARIANT must be flattened with `variant_explode` before they can be read."
+   },
+   {
+    "k": "C",
+    "t": "VARIANT path elements are case-sensitive, so `OS` does not match the stored field `os`."
+   },
+   {
+    "k": "D",
+    "t": "The column must be cast to `STRUCT` before a nested field can be selected."
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: path viết hoa khác dữ liệu, kết quả NULL.\n- Path trong VARIANT so khớp phân biệt hoa thường; path không tồn tại trả NULL.",
+  "wrong": {
+   "A": "Cú pháp `:` áp dụng cho VARIANT, là shorthand của `variant_get`.",
+   "B": "`variant_explode` để tách array hoặc object thành row, không cần cho đọc field.",
+   "D": "Dot notation đọc nested field trực tiếp, không cần cast STRUCT."
+  },
+  "refs": [
+   {
+    "label": "How is variant different than JSON strings?",
+    "url": "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff"
+   },
+   {
+    "label": "Query variant data",
+    "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+   }
+  ]
+ },
+ {
+  "id": "ing-18",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.2",
+  "source": "original",
+  "select": 2,
+  "stem": "A Kafka topic carries JSON events whose fields change every few weeks. The team wants the bronze table to absorb new fields without pipeline changes, while dashboards filter heavily on `event_date` and need data skipping on it.\nWhich two design choices should the team make? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Store the payload as VARIANT with `parse_json(CAST(value AS STRING))`."
+   },
+   {
+    "k": "B",
+    "t": "Extract `event_date` into its own typed column and use it as the clustering key."
+   },
+   {
+    "k": "C",
+    "t": "Use the VARIANT payload column as the liquid clustering key so that new event fields are clustered automatically."
+   },
+   {
+    "k": "D",
+    "t": "Store the payload as a JSON string and filter with `get_json_object`."
+   },
+   {
+    "k": "E",
+    "t": "Use `GROUP BY payload` to deduplicate identical events."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: schema đổi thường xuyên, cần data skipping trên `event_date`.\n- VARIANT linh hoạt với schema mới, đọc nhanh hơn JSON string.\n- Docs khuyên tách field hay query thành cột thường; VARIANT không có min/max statistics.",
+  "wrong": {
+   "C": "VARIANT không làm clustering key được.",
+   "D": "JSON string chậm nhất, parse lại cả string mỗi query.",
+   "E": "VARIANT không dùng trong GROUP BY."
+  },
+  "refs": [
+   {
+    "label": "Ingest data as semi-structured variant type",
+    "url": "https://docs.databricks.com/aws/en/ingestion/variant"
+   },
+   {
+    "label": "Variant type support for Iceberg and Delta Lake",
+    "url": "https://docs.databricks.com/aws/en/tables/features/variant"
+   },
+   {
+    "label": "Model semi-structured data",
+    "url": "https://docs.databricks.com/aws/en/semi-structured/"
+   }
+  ]
+ },
+ {
+  "id": "ing-19",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.2",
+  "source": "original",
+  "select": 1,
+  "stem": "A VARIANT column `payload` contains a field `qty`. Most records hold integers, but some upstream systems send values such as `\"n/a\"`. A nightly report must return the quantity as INT, show NULL for invalid values, and must not fail.\nWhich expression should the engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`variant_get(payload, '$.qty', 'int')`"
+   },
+   {
+    "k": "B",
+    "t": "`payload:qty::INT`"
+   },
+   {
+    "k": "C",
+    "t": "`try_variant_get(payload, '$.qty', 'int')`"
+   },
+   {
+    "k": "D",
+    "t": "`schema_of_variant(payload:qty)`, then a second query that casts only the rows whose schema is INT"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: cast có thể lỗi, cần NULL thay vì fail.\n- `try_variant_get` trả NULL khi cast lỗi.",
+  "wrong": {
+   "A": "`variant_get` báo lỗi `INVALID_VARIANT_CAST` khi cast thất bại.",
+   "B": "Cast `::INT` cũng lỗi với giá trị không phải số.",
+   "D": "Hai query, phức tạp hơn; `try_variant_get` làm được trong một expression."
+  },
+  "refs": [
+   {
+    "label": "Query variant data",
+    "url": "https://docs.databricks.com/aws/en/semi-structured/variant"
+   },
+   {
+    "label": "variant_get function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/variant_get"
+   }
+  ]
+ },
+ {
+  "id": "ing-20",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A support team stores customer reviews in a Delta table. They need a positive, negative, neutral or mixed label for every review inside an existing SQL pipeline. They have no data science staff and do not want to deploy or manage a model endpoint or write prompts.\nWhich approach should the data engineer use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Use `ai_forecast` on the review table grouped by product."
+   },
+   {
+    "k": "B",
+    "t": "Fine-tune an open model, serve it on Model Serving, and call it with `ai_query`."
+   },
+   {
+    "k": "C",
+    "t": "Write a pandas UDF that calls a third-party sentiment REST API for each batch."
+   },
+   {
+    "k": "D",
+    "t": "Call `ai_analyze_sentiment(review_text)` in the SQL transformation."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: minimal effort, không quản lý model, không viết prompt.\n- Task-specific AI Function chạy model do Databricks quản lý.",
+  "wrong": {
+   "A": "`ai_forecast` dự báo time series, không phân tích sentiment.",
+   "B": "Tốn công train và quản lý endpoint, trái yêu cầu.",
+   "C": "Tự viết code gọi API ngoài, phải lo retry và secret."
+  },
+  "refs": [
+   {
+    "label": "Transform unstructured data using AI Functions",
+    "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+   }
+  ]
+ },
+ {
+  "id": "ing-21",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A nightly Lakeflow pipeline enriches 5 million support tickets with `ai_query` against a Databricks-hosted foundation model. Occasionally a handful of rows hit model endpoint errors, and the whole refresh fails. The business accepts missing enrichment for those rows if they can be identified later.\nWhat should the engineer change?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Run the query on a Classic SQL warehouse so failed requests are retried automatically."
+   },
+   {
+    "k": "B",
+    "t": "Pass `failOnError => false` and store the returned `errorMessage` to filter failed rows downstream."
+   },
+   {
+    "k": "C",
+    "t": "Split the input into batches of 1,000 rows and loop over them in a notebook, retrying each failed batch up to three times."
+   },
+   {
+    "k": "D",
+    "t": "Switch the endpoint to provisioned throughput so endpoint errors cannot occur."
+   }
+  ],
+  "answer": [
+   "B"
+  ],
+  "explain": "- Tín hiệu: vài row lỗi làm fail cả job, chấp nhận thiếu nếu nhận diện được.\n- `failOnError => false` trả STRUCT gồm response và `errorMessage`; row lỗi có response NULL.",
+  "wrong": {
+   "A": "AI Functions không chạy trên Classic SQL warehouse.",
+   "C": "Docs khuyên gửi cả dataset trong một query; AI Functions tự song song và retry.",
+   "D": "Docs khuyên foundation model do Databricks host cho batch; provisioned throughput không loại bỏ lỗi."
+  },
+  "refs": [
+   {
+    "label": "ai_query function",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query"
+   },
+   {
+    "label": "Transform unstructured data using AI Functions",
+    "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
+   }
+  ]
+ },
+ {
+  "id": "ing-22",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A silver streaming table in a Lakeflow pipeline must never contain rows with a NULL `customer_id`. The pipeline must keep running when such rows arrive, and the team wants to see how many rows were rejected in each update.\nWhich definition should the team use?",
+  "options": [
+   {
+    "k": "A",
+    "t": "`@dp.expect(\"valid_customer\", \"customer_id IS NOT NULL\")`"
+   },
+   {
+    "k": "B",
+    "t": "`@dp.expect_or_fail(\"valid_customer\", \"customer_id IS NOT NULL\")`"
+   },
+   {
+    "k": "C",
+    "t": "`@dp.expect_or_drop(\"valid_customer\", \"customer_id IS NOT NULL\")`"
+   },
+   {
+    "k": "D",
+    "t": "A `.filter(\"customer_id IS NOT NULL\")` call inside the dataset function, with no expectation defined"
+   }
+  ],
+  "answer": [
+   "C"
+  ],
+  "explain": "- Tín hiệu: không cho row lỗi vào target, pipeline vẫn chạy, cần số row bị loại.\n- `expect_or_drop` bỏ row lỗi và ghi số row drop vào metric.",
+  "wrong": {
+   "A": "Warn giữ row lỗi trong target.",
+   "B": "Fail làm update dừng, trái yêu cầu tiếp tục chạy.",
+   "D": "Lọc được nhưng không có metric data quality trong event log."
+  },
+  "refs": [
+   {
+    "label": "Manage data quality with pipeline expectations",
+    "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+   }
+  ]
+ },
+ {
+  "id": "ing-23",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.4",
+  "source": "original",
+  "select": 2,
+  "stem": "Data stewards want invalid taxi trips (missing pickup or dropoff ZIP) kept in a separate dataset for review, while valid trips continue to the silver table. The pipeline must not fail, and expectation metrics must still be recorded per rule.\nWhich two steps implement this pattern? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "Apply `@dp.expect_all(rules)` to an intermediate table that adds a boolean `is_quarantined` column computed as `NOT(<all rules>)`."
+   },
+   {
+    "k": "B",
+    "t": "Define downstream datasets that read the intermediate table and filter on `is_quarantined = false` and `is_quarantined = true`."
+   },
+   {
+    "k": "C",
+    "t": "Apply `@dp.expect_all_or_fail(rules)` so violations stop the update and can be reviewed."
+   },
+   {
+    "k": "D",
+    "t": "Apply `@dp.expect_all_or_drop(rules)` to the silver table and read the dropped rows back from the pipeline event log so that the data stewards can review them later."
+   },
+   {
+    "k": "E",
+    "t": "Write a constraint that uses a subquery against a reference table of valid ZIP codes."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Tín hiệu: giữ row lỗi ở dataset riêng, không fail, vẫn có metric.\n- Quarantine pattern: expectations ở mức warn cộng cột cờ, rồi tách hai nhánh.",
+  "wrong": {
+   "C": "Fail dừng update, trái yêu cầu.",
+   "D": "Event log chỉ ghi số lượng, không lưu row bị drop.",
+   "E": "Constraint không được chứa subquery tới table khác."
+  },
+  "refs": [
+   {
+    "label": "Expectation recommendations and advanced patterns",
+    "url": "https://docs.databricks.com/aws/en/ldp/expectation-patterns"
+   },
+   {
+    "label": "Manage data quality with pipeline expectations",
+    "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+   }
+  ]
+ },
+ {
+  "id": "ing-24",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.4",
+  "source": "original",
+  "select": 1,
+  "stem": "A triggered Lakeflow pipeline has two independent flows. Flow `orders_silver` uses `expect_or_fail` on `amount >= 0`. During an update, one record with a negative amount arrives in `orders_silver`.\nWhich statement describes the result?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Valid rows of `orders_silver` are committed and only the negative row is rejected."
+   },
+   {
+    "k": "B",
+    "t": "The data quality tab shows the violation count for `orders_silver` for that update."
+   },
+   {
+    "k": "C",
+    "t": "Both flows fail, because an expectation failure in any flow stops every other flow of a triggered pipeline."
+   },
+   {
+    "k": "D",
+    "t": "The `orders_silver` update fails and is rolled back; the issue must be fixed before reprocessing."
+   }
+  ],
+  "answer": [
+   "D"
+  ],
+  "explain": "- Tín hiệu: `expect_or_fail`, triggered pipeline, flow độc lập.\n- Fail rollback update atomically; metric không được ghi; flow song song trong triggered pipeline không bị ảnh hưởng.",
+  "wrong": {
+   "A": "Đó là hành vi của drop, không phải fail.",
+   "B": "Fail không ghi metric vì update dừng.",
+   "C": "Trong triggered pipeline, một flow fail không làm fail flow song song."
+  },
+  "refs": [
+   {
+    "label": "Manage data quality with pipeline expectations",
+    "url": "https://docs.databricks.com/aws/en/ldp/expectations"
+   }
+  ]
+ },
+ {
+  "id": "ing-25",
+  "topic": "ingest",
+  "domain": "S3",
+  "task": "3.1",
+  "source": "original",
+  "select": 2,
+  "stem": "A query joins a large fact table `orders o` with a 300 MB `customers c` table. An engineer writes `SELECT /*+ MERGE(o), BROADCAST(c) */ ... FROM orders o JOIN customers c ON o.customer_id = c.id`. The session keeps the default `spark.sql.autoBroadcastJoinThreshold`, which is far below 300 MB.\nWhich two statements describe how Databricks SQL plans this join? (Select two.)",
+  "options": [
+   {
+    "k": "A",
+    "t": "`customers` is broadcast even though it is larger than `autoBroadcastJoinThreshold`."
+   },
+   {
+    "k": "B",
+    "t": "When different strategy hints are given on the two sides, BROADCAST takes priority over MERGE."
+   },
+   {
+    "k": "C",
+    "t": "The MERGE hint wins because it appears first in the hint list."
+   },
+   {
+    "k": "D",
+    "t": "Both hints are ignored because `customers` exceeds `autoBroadcastJoinThreshold`."
+   },
+   {
+    "k": "E",
+    "t": "Both tables are broadcast to every executor."
+   }
+  ],
+  "answer": [
+   "A",
+   "B"
+  ],
+  "explain": "- Docs: bên có BROADCAST hint được broadcast bất kể `autoBroadcastJoinThreshold`.\n- Hint khác nhau ở hai bên thì thứ tự ưu tiên là BROADCAST, MERGE, SHUFFLE_HASH, SHUFFLE_REPLICATE_NL.",
+  "wrong": {
+   "C": "Ưu tiên theo loại hint, không theo vị trí trong comment.",
+   "D": "Ngưỡng chỉ áp cho broadcast tự động; hint bỏ qua ngưỡng.",
+   "E": "Chỉ bên có BROADCAST hint được broadcast."
+  },
+  "refs": [
+   {
+    "label": "Hints",
+    "url": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints"
+   }
+  ]
+ },
+ {
+  "id": "ing-26",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.3",
+  "source": "original",
+  "select": 1,
+  "stem": "A Lakeflow Connect SQL Server pipeline ingests 120 tables from an Always On availability group through the AG listener. The DBA enabled change tracking, not CDC, because every table has a primary key and the team needs only SCD Type 1. An unplanned AG failover promotes a secondary replica to primary overnight.\nWhat must the team expect for the ingestion pipeline?",
+  "options": [
+   {
+    "k": "A",
+    "t": "A full refresh of all tables in the pipeline, because change tracking data is not replicated to secondary nodes."
+   },
+   {
+    "k": "B",
+    "t": "No action, because LSN checkpoints are portable across replicas when the gateway connects through the AG listener."
+   },
+   {
+    "k": "C",
+    "t": "A full refresh of only the tables that changed during the failover window."
+   },
+   {
+    "k": "D",
+    "t": "Reconfiguring the gateway to read from the new secondary replica, because the connector supports change tracking on read replicas."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Change tracking data không được replicate sang secondary; đổi source node, kể cả AG failover, cần full refresh mọi table.\n- Resume sau failover nhờ LSN checkpoint qua AG listener là hành vi của CDC, không phải change tracking.",
+  "wrong": {
+   "B": "Đúng với CDC qua AG listener; với change tracking thì phải full refresh.",
+   "C": "Docs yêu cầu full refresh mọi table trong pipeline, không chỉ table có thay đổi.",
+   "D": "Change tracking và CDC không hỗ trợ trên read replica hay secondary instance."
+  },
+  "refs": [
+   {
+    "label": "SQL Server connector limitations",
+    "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-limits"
+   }
+  ]
+ },
+ {
+  "id": "ing-27",
+  "topic": "ingest",
+  "domain": "S2",
+  "task": "2.2",
+  "source": "original",
+  "select": 1,
+  "stem": "Downstream jobs must process row-level inserts, updates and deletes from 300 Unity Catalog managed Delta tables that receive frequent `MERGE` operations. The platform team does not want to set a property on each table one by one, and wants to avoid extra write cost on every `MERGE`. Compute runs Databricks Runtime 19, and row tracking is already enabled on the tables.\nWhich approach meets these requirements?",
+  "options": [
+   {
+    "k": "A",
+    "t": "Read changes with `readChangeFeed` or `table_changes()` and rely on automatic change data feed, which computes changes at read time from row tracking."
+   },
+   {
+    "k": "B",
+    "t": "Set `delta.enableChangeDataFeed = true` on all 300 tables so that every `MERGE` writes change files for downstream readers."
+   },
+   {
+    "k": "C",
+    "t": "Stream each table with `skipChangeCommits` so downstream jobs receive updates and deletes as new rows."
+   },
+   {
+    "k": "D",
+    "t": "Enable deletion vectors on each table and read the deletion vector files to reconstruct deleted rows."
+   }
+  ],
+  "answer": [
+   "A"
+  ],
+  "explain": "- Automatic change data feed tính change lúc đọc từ row tracking, không cần cấu hình từng table và không tính change ở mỗi `MERGE`.\n- Yêu cầu: Databricks Runtime 19 trở lên, table trong Unity Catalog có row tracking; dùng cùng API `readChangeFeed`, `table_changes()`.",
+  "wrong": {
+   "B": "Legacy change data feed cần bật từng table và ghi change lúc write, trái với cả hai yêu cầu.",
+   "C": "`skipChangeCommits` bỏ qua commit có update và delete, không trả về chúng.",
+   "D": "Deletion vectors không phải API đọc change cho downstream."
+  },
+  "refs": [
+   {
+    "label": "Change data feed",
+    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   }
+  ]
+ }
+]

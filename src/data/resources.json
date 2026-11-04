@@ -1,0 +1,245 @@
+[
+ {
+  "group": "Chính thức",
+  "md": "Exam guide 09/10/2026 là nguồn chuẩn cho outline và weight của từng section.",
+  "items": [
+   {
+    "label": "Exam guide, Data Engineer Professional (9 Oct 2026)",
+    "url": "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf",
+    "kind": "official",
+    "note": "Outline mới gồm 9 section và 60 câu, kèm 10 câu mẫu và danh sách khoá học gợi ý.",
+    "date": "2026-10"
+   },
+   {
+    "label": "Trang certification Data Engineer Professional",
+    "url": "https://www.databricks.com/learn/certification/data-engineer-professional",
+    "kind": "official",
+    "note": "Đăng ký thi; trang vẫn hiện outline cũ 10 section, 59 câu, nên lấy weight theo exam guide."
+   },
+   {
+    "label": "AI Prep Guide cho mọi bài thi Databricks",
+    "url": "https://www.databricks.com/sites/default/files/2026-06/ai-prep-guide-any-databricks-certification.pdf",
+    "kind": "official",
+    "note": "Hướng dẫn của Databricks về cách ôn thi certification cùng trợ lý AI.",
+    "date": "2026-06"
+   },
+   {
+    "label": "Databricks documentation (AWS)",
+    "url": "https://docs.databricks.com/aws/en/",
+    "kind": "docs",
+    "note": "Tra hành vi chính xác của từng tính năng nhắc trong exam guide."
+   },
+   {
+    "label": "Databricks release notes",
+    "url": "https://docs.databricks.com/aws/en/release-notes/product/",
+    "kind": "docs",
+    "note": "Theo dõi tính năng mới GA, ví dụ ABAC và Data Classification GA tháng 04/2026.",
+    "date": "2026-10"
+   },
+   {
+    "label": "Databricks Free Edition",
+    "url": "https://www.databricks.com/learn/free-edition",
+    "kind": "official",
+    "note": "Workspace miễn phí để chạy thử SQL, pipeline và Unity Catalog trong hub."
+   }
+  ]
+ },
+ {
+  "group": "Khoá học và đề luyện",
+  "md": "Bốn khoá self-paced và một khoá instructor-led dưới đây là khoá exam guide gợi ý.",
+  "items": [
+   {
+    "label": "Advanced Data Engineering with Databricks",
+    "url": "https://www.databricks.com/training/catalog/advanced-data-engineering-with-databricks-971",
+    "kind": "course",
+    "note": "Khoá instructor-led gồm 4 module, mỗi module 4 giờ; khoá có tên trong exam guide 10/2026."
+   },
+   {
+    "label": "Advanced Techniques with Apache Spark Declarative Pipelines",
+    "url": "https://www.databricks.com/training/catalog/advanced-techniques-with-apache-spark-declarative-pipelines-2973",
+    "kind": "course",
+    "note": "Self-paced 3 giờ về Lakeflow pipeline; khoá có tên trong exam guide 10/2026."
+   },
+   {
+    "label": "Databricks Data Privacy",
+    "url": "https://www.databricks.com/training/catalog/databricks-data-privacy-3767",
+    "kind": "course",
+    "note": "Self-paced 2 giờ về PII, masking và xoá data; khớp section S6 của outline mới."
+   },
+   {
+    "label": "Databricks Performance Optimization",
+    "url": "https://www.databricks.com/training/catalog/databricks-performance-optimization-1809",
+    "kind": "course",
+    "note": "Self-paced về tối ưu Spark và Delta; khoá có tên trong exam guide 10/2026."
+   },
+   {
+    "label": "Automated Deployment with Declarative Automation Bundles",
+    "url": "https://www.databricks.com/training/catalog/automated-deployment-with-declarative-automation-bundles-3489",
+    "kind": "course",
+    "note": "Self-paced 2 giờ về bundles và CI/CD; khoá có tên trong exam guide 10/2026."
+   },
+   {
+    "label": "CertLake, Data Engineer Professional practice exams",
+    "url": "https://www.certlake.com/exam/data-engineer-professional",
+    "kind": "practice",
+    "note": "181 câu luyện theo exam guide 10/2026, có 15 câu chẩn đoán miễn phí; tác giả là chủ blog alexcole.net."
+   }
+  ]
+ },
+ {
+  "group": "Video",
+  "md": "Video có ghi chú outline cũ thì dùng để học kiến thức, không dùng để ước lượng weight.",
+  "items": [
+   {
+    "label": "Unity Catalog Access Control: Permissions, ABAC, and RBAC Explained",
+    "url": "https://www.youtube.com/watch?v=-MdRv8WzbVM",
+    "kind": "video",
+    "note": "Kênh Databricks Events; privilege, ABAC và RBAC trong Unity Catalog, khớp S6 và S7.",
+    "date": "2026-09-09"
+   },
+   {
+    "label": "Lakeflow Spark Declarative Pipelines: Deep Dive and Best Practices",
+    "url": "https://www.youtube.com/watch?v=26cCZvJjSsw",
+    "kind": "video",
+    "note": "Kênh Databricks Events, trình bày bởi Michael Armbrust; khớp phần pipeline của outline mới.",
+    "date": "2026-09-13"
+   },
+   {
+    "label": "Data + AI Summit Keynote 2026, Day 1",
+    "url": "https://www.youtube.com/watch?v=Qux8E-L1mk8",
+    "kind": "video",
+    "note": "Kênh Databricks; tổng quan các tính năng công bố trước khi outline mới ra đời.",
+    "date": "2026-06-16"
+   },
+   {
+    "label": "Databricks Product Announcements in 5 Minutes, Data + AI Summit 2026",
+    "url": "https://www.youtube.com/watch?v=hDFNI7i6J60",
+    "kind": "video",
+    "note": "Kênh Databricks; bản tóm tắt ngắn các công bố của DAIS 2026.",
+    "date": "2026-07-01"
+   },
+   {
+    "label": "Does Unity Catalog Support Row-Level Security and Column Masking? ABAC Explained",
+    "url": "https://www.youtube.com/watch?v=EH208ljANzo",
+    "kind": "video",
+    "note": "Kênh Databricks; row filter và column mask qua ABAC, khớp objective 6.2.",
+    "date": "2026-04-03"
+   },
+   {
+    "label": "Deploying Databricks Asset Bundles (DABs) at Scale",
+    "url": "https://www.youtube.com/watch?v=mMwprgB-sIU",
+    "kind": "video",
+    "note": "Kênh Databricks, session DAIS 2025 về bundles; tên cũ của Declarative Automation Bundles.",
+    "date": "2025-07-07"
+   },
+   {
+    "label": "Orchestration With Lakeflow Jobs",
+    "url": "https://www.youtube.com/watch?v=36PKwX60yLQ",
+    "kind": "video",
+    "note": "Kênh Databricks, session DAIS 2025 về điều phối workflow bằng Lakeflow Jobs.",
+    "date": "2025-07-07"
+   },
+   {
+    "label": "Simplifying Data Pipelines With Lakeflow Declarative Pipelines: A Beginner's Guide",
+    "url": "https://www.youtube.com/watch?v=8_V1FbM8fJI",
+    "kind": "video",
+    "note": "Kênh Databricks, session DAIS 2025 nhập môn pipeline.",
+    "date": "2025-07-07"
+   },
+   {
+    "label": "Databricks Certified Data Engineer Professional Full Course [9+ Hours]",
+    "url": "https://www.youtube.com/watch?v=4Q5YCIl2Zko",
+    "kind": "video",
+    "note": "Kênh sthithapragna, 9 giờ; dạy theo outline cũ 10 domain.",
+    "date": "2026-09-12"
+   },
+   {
+    "label": "I Passed Databricks Professional Exam - My Experience",
+    "url": "https://www.youtube.com/watch?v=Um9UPt3RRbA",
+    "kind": "video",
+    "note": "Kênh Melody Egwuchukwu; kinh nghiệm thi theo outline cũ.",
+    "date": "2026-08-30"
+   },
+   {
+    "label": "Everything you need to Pass the Databricks Data Engineer Certifications (Associate & Professional)",
+    "url": "https://www.youtube.com/watch?v=4mG__Lh2aCM",
+    "kind": "video",
+    "note": "Kênh Pathfinder Analytics; hướng dẫn ôn theo outline cũ.",
+    "date": "2026-03-08"
+   }
+  ]
+ },
+ {
+  "group": "Blog và kinh nghiệm thi",
+  "items": [
+   {
+    "label": "Databricks DE Pro Oct 2026 Syllabus: What Changed",
+    "url": "https://www.alexcole.net/databricks-data-engineer-professional-oct-2026-syllabus-changes/",
+    "kind": "blog",
+    "note": "So sánh outline 10/2026 với bản 11/2025, nêu section nào tăng hay giảm weight.",
+    "date": "2026-10-07"
+   },
+   {
+    "label": "Data Engineer Professional Comprehensive Resource Guide",
+    "url": "https://www.alexcole.net/databricks-certified-data-engineer-professional-comprehensive-resource-guide/",
+    "kind": "blog",
+    "note": "Map demo, docs và khoá học vào từng objective của outline mới.",
+    "date": "2026-10-09"
+   },
+   {
+    "label": "ABAC, governed tags and Data Classification are GA",
+    "url": "https://www.databricks.com/blog/abac-row-filtering-and-column-masking-policies-governed-tags-and-data-classification-are-now",
+    "kind": "blog",
+    "note": "Blog Databricks về các tính năng governance GA, nền của section S6.",
+    "date": "2026-05-13"
+   },
+   {
+    "label": "Databricks Data Engineer Professional (Data Engineer Wiki)",
+    "url": "https://dataengineerwiki.substack.com/p/databricks-data-engineer-professional",
+    "kind": "blog",
+    "note": "Kinh nghiệm thi và tài liệu ôn theo outline cũ.",
+    "date": "2026-02"
+   }
+  ]
+ },
+ {
+  "group": "Cộng đồng",
+  "md": "Thread Reddit r/databricks chưa được liệt kê vì Reddit chặn truy cập tự động.",
+  "items": [
+   {
+    "label": "Databricks Community, Certifications board",
+    "url": "https://community.databricks.com/t5/certifications/ct-p/databricks-certifications",
+    "kind": "community",
+    "note": "Hỏi đáp chính thức về lịch thi, voucher và thay đổi outline."
+   },
+   {
+    "label": "Data Engineer Professional exam May 2026 update",
+    "url": "https://community.databricks.com/t5/certifications/data-engineer-professional-exam-may-2026-update/m-p/157554",
+    "kind": "community",
+    "note": "Thread về phiên bản đề trước outline mới, thuộc outline cũ.",
+    "date": "2026-05"
+   },
+   {
+    "label": "Regarding Data Engineer Professional recent exam",
+    "url": "https://community.databricks.com/t5/data-engineering/regarding-databricks-certified-data-engineer-professional-recent/m-p/158433",
+    "kind": "community",
+    "note": "Thảo luận về đề gần đây, thuộc outline cũ.",
+    "date": "2026-05"
+   },
+   {
+    "label": "PII: redact at ingestion vs dynamic masking",
+    "url": "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190",
+    "kind": "community",
+    "note": "Thảo luận kiến trúc PII trong pipeline, khớp objective 6.3 và 6.4.",
+    "date": "2026-09"
+   },
+   {
+    "label": "ExamTopics, Certified Data Engineer Professional",
+    "url": "https://www.examtopics.com/exams/databricks/certified-data-engineer-professional/",
+    "kind": "community",
+    "note": "Bộ câu do cộng đồng gom, trộn nhiều outline và có đáp án chưa kiểm chứng; chỉ dùng tham khảo.",
+    "date": "2026-10-06"
+   }
+  ]
+ }
+]
