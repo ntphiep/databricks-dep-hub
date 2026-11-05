@@ -1,0 +1,1855 @@
+{
+ "checked": "2026-11-05",
+ "exam": {
+  "https://www.databricks.com/learn/certification/data-engineer-professional": {
+   "date": null,
+   "hash": null,
+   "pdfs": [
+    "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf"
+   ],
+   "status": 200
+  },
+  "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf": {
+   "date": null,
+   "hash": null,
+   "pdfs": [],
+   "status": 200
+  }
+ },
+ "feeds": {
+  "https://docs.databricks.com/aws/en/feed.xml": "2026-11-04"
+ },
+ "urls": {
+  "https://community.databricks.com/t5/certifications/ct-p/databricks-certifications": {
+   "date": null,
+   "final": "https://community.databricks.com/t5/certifications/ct-p/databricks-certifications",
+   "hash": null,
+   "status": 200
+  },
+  "https://community.databricks.com/t5/certifications/data-engineer-professional-exam-may-2026-update/m-p/157554": {
+   "date": null,
+   "final": "https://community.databricks.com/t5/certifications/data-engineer-professional-exam-may-2026-update/m-p/157554",
+   "hash": null,
+   "status": 200
+  },
+  "https://community.databricks.com/t5/community-articles/ci-cd-on-databricks-with-asset-bundles-dabs-and-github-actions/m-p/149565": {
+   "date": null,
+   "final": "https://community.databricks.com/t5/community-articles/ci-cd-on-databricks-with-asset-bundles-dabs-and-github-actions/m-p/149565",
+   "hash": null,
+   "status": 200
+  },
+  "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190": {
+   "date": null,
+   "final": "https://community.databricks.com/t5/data-engineering/architectural-pattern-for-pii-quot-redact-at-ingestion-quot-vs/td-p/169190",
+   "hash": null,
+   "status": 200
+  },
+  "https://community.databricks.com/t5/data-engineering/regarding-databricks-certified-data-engineer-professional-recent/m-p/158433": {
+   "date": null,
+   "final": "https://community.databricks.com/t5/data-engineering/regarding-databricks-certified-data-engineer-professional-recent/m-p/158433",
+   "hash": null,
+   "status": 200
+  },
+  "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/jobs/jobs.html": {
+   "date": null,
+   "final": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/jobs/jobs.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/pipelines/pipelines.html": {
+   "date": null,
+   "final": "https://databricks-sdk-py.readthedocs.io/en/latest/workspace/pipelines/pipelines.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://dataengineerwiki.substack.com/p/databricks-data-engineer-professional": {
+   "date": null,
+   "fails": 1,
+   "final": "https://dataengineerwiki.substack.com/p/databricks-data-engineer-professional",
+   "hash": null,
+   "status": 403
+  },
+  "https://docs.databricks.com/api/workspace/jobs/getrun": {
+   "date": null,
+   "final": "https://docs.databricks.com/api/jobs/v2/get-run",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/api/workspace/jobs/repairrun": {
+   "date": null,
+   "final": "https://docs.databricks.com/api/jobs/v2/repair",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/api/workspace/pipelines/listpipelineevents": {
+   "date": null,
+   "final": "https://docs.databricks.com/api/pipelines/v2/events",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/account-settings/audit-logs": {
+   "date": "2026-10-28",
+   "final": "https://docs.databricks.com/aws/en/admin/account-settings/audit-logs",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/governed-tags/": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/admin/governed-tags/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/audit-logs",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/billing": {
+   "date": "2026-10-18",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/billing",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/compute": {
+   "date": "2026-10-16",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/compute",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/jobs": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/jobs",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/jobs-cost": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/jobs-cost",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/pricing": {
+   "date": "2025-02-04",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/pricing",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/query-history": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/query-history",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/system-tables/warehouse-events": {
+   "date": "2026-10-16",
+   "final": "https://docs.databricks.com/aws/en/admin/system-tables/warehouse-events",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/admin/usage/system-tables": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/admin/usage/system-tables",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/ai-function-decision-tree-bf7fdb678c63687921a43d6d73d59725.svg": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/ai-function-decision-tree-bf7fdb678c63687921a43d6d73d59725.svg",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/assign-governed-tags-26c797aeffc17392f5fd1cf05172d39e.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/assign-governed-tags-26c797aeffc17392f5fd1cf05172d39e.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/bundles-cicd-53be5f4860e8ebcedc2702f870290cda.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/bundles-cicd-53be5f4860e8ebcedc2702f870290cda.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/catalog-federation-diagram-c0bf5290cdce3262a74c6fe9d9b08985.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/catalog-federation-diagram-c0bf5290cdce3262a74c6fe9d9b08985.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/clean-rooms-flow-output-e68cf079658e82c4fee80501d998a4ce.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/clean-rooms-flow-output-e68cf079658e82c4fee80501d998a4ce.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/data-classification-results-page-0553128af82e4ff2305748dedf1e58a2.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/data-classification-results-page-0553128af82e4ff2305748dedf1e58a2.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/database-connector-orchestration-d6d9fba6b1a6b61da413e0d800334d40.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/database-connector-orchestration-d6d9fba6b1a6b61da413e0d800334d40.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/dlt-core-concepts-6bc9894d3682035cadac19f3980875ae.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/dlt-core-concepts-6bc9894d3682035cadac19f3980875ae.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/dlt-multi-file-editor-dag-e426c4c8909a4f900ec1134a0f76ecd9.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/dlt-multi-file-editor-dag-e426c4c8909a4f900ec1134a0f76ecd9.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/example-job-overview-3afc40004602e65c871bd67edfa87f9b.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/example-job-overview-3afc40004602e65c871bd67edfa87f9b.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/file-events-vs-classic-file-events-761dedde768661a357b53a42602e862c.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/file-events-vs-classic-file-events-761dedde768661a357b53a42602e862c.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/for-each-dag-view-foreach-task-f1c9765d7d4306e01762661531f8c870.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/for-each-dag-view-foreach-task-f1c9765d7d4306e01762661531f8c870.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/governed-tags-hierarchy-2740348868f29ddf0611089d4684adec.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/governed-tags-hierarchy-2740348868f29ddf0611089d4684adec.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/job-runs-matrix-view-fb53c2f01557bdf89c878600608554b0.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/job-runs-matrix-view-fb53c2f01557bdf89c878600608554b0.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/jobs-configure-environment-base-env-d58305d336c641237406b8275a088bf2.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/jobs-configure-environment-base-env-d58305d336c641237406b8275a088bf2.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/materialization-pipeline_updated-e8055eea078a52b1bb7384356a8ec95c.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/materialization-pipeline_updated-e8055eea078a52b1bb7384356a8ec95c.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/multiple-expectations-e760f5dee94c9619be11e355f3b3dc17.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/multiple-expectations-e760f5dee94c9619be11e355f3b3dc17.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/object-hierarchy-5ba1e04cccbedd84cddd2e051aa54021.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/object-hierarchy-5ba1e04cccbedd84cddd2e051aa54021.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/pipeline-events-monitoring-tables-health-a8e7c891b91bf8ff1b289407aa4ef45a.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/pipeline-events-monitoring-tables-health-a8e7c891b91bf8ff1b289407aa4ef45a.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/po-skip-reasons-catalog-explorer-23718dc2b98d310b2e0bc12f210ef318.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/po-skip-reasons-catalog-explorer-23718dc2b98d310b2e0bc12f210ef318.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/query-profile-details-432767aba97d9a4a5fb7d5d7c8a396f4.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/query-profile-details-432767aba97d9a4a5fb7d5d7c8a396f4.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/runs-list-unified-4936fbdcf5e61b3d11a0055a02d765e6.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/runs-list-unified-4936fbdcf5e61b3d11a0055a02d765e6.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/serverless-notebook-environment-514e8603770a5f8ccff486c45acfb274.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/serverless-notebook-environment-514e8603770a5f8ccff486c45acfb274.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/skew-join-plan-aba2daad3908b0d694b0b6577307ab9b.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/skew-join-plan-aba2daad3908b0d694b0b6577307ab9b.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/spark-ui-1effb898029c011d46288302118e96ce.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/spark-ui-1effb898029c011d46288302118e96ce.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/st-timeline-66e27f41aa9ecd88f7bfca561f7367eb.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/st-timeline-66e27f41aa9ecd88f7bfca561f7367eb.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/streaming-table-ingestion-36268f5d53fcfb68928d79d094eb2826.png": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/streaming-table-ingestion-36268f5d53fcfb68928d79d094eb2826.png",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/assets/images/system-tables-erd-690b80220d077015a023f90d59ff7560.svg": {
+   "date": null,
+   "final": "https://docs.databricks.com/aws/en/assets/images/system-tables-erd-690b80220d077015a023f90d59ff7560.svg",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/clean-rooms/": {
+   "date": "2026-10-08",
+   "final": "https://docs.databricks.com/aws/en/clean-rooms/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/comments/": {
+   "date": "2026-10-06",
+   "final": "https://docs.databricks.com/aws/en/comments/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/clusters-manage": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/compute/clusters-manage",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/configure": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/compute/configure",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/serverless/best-practices": {
+   "date": "2026-10-06",
+   "final": "https://docs.databricks.com/aws/en/compute/serverless/best-practices",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/serverless/dependencies": {
+   "date": "2026-10-22",
+   "final": "https://docs.databricks.com/aws/en/compute/serverless/dependencies",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/serverless/limitations": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/compute/serverless/limitations",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/compute/troubleshooting/debugging-spark-ui",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/connect/streaming/kafka": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/connect/streaming/kafka",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/connect/streaming/kinesis": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/connect/streaming/kinesis",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/connect/streaming/pub-sub": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/connect/streaming/pub-sub",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-engineering/procedural-vs-declarative": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/data-engineering/procedural-vs-declarative",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm": {
+   "date": "2026-09-24",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/abac-vs-rls-cm",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns": {
+   "date": "2026-10-23",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/common-patterns",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/core-concepts",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/policies": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/policies",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/abac/requirements",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/permissions-concepts",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices": {
+   "date": "2026-10-30",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/best-practices",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/manually-apply": {
+   "date": "2026-10-08",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/filters-and-masks/manually-apply",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/database-objects/tags": {
+   "date": "2026-10-26",
+   "final": "https://docs.databricks.com/aws/en/database-objects/tags",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/clustering": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/tables/clustering",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/data-skipping": {
+   "date": "2026-10-20",
+   "final": "https://docs.databricks.com/aws/en/tables/data-skipping",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/deletion-vectors": {
+   "date": "2026-10-30",
+   "final": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/delta-change-data-feed": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/tables/features/change-data-feed",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/tune-file-size": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/tables/tune-file-size",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/delta/vacuum": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/tables/operations/vacuum",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/ci-cd": {
+   "date": "2026-10-07",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/ci-cd",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/deployment-modes",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types": {
+   "date": "2026-10-20",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/job-task-types",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/library-dependencies": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/library-dependencies",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/python-wheel": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/python-wheel",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/python/": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/python/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/settings": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/settings",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/bundles/templates": {
+   "date": "2026-10-16",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/bundles/templates",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/ci-cd/github": {
+   "date": "2026-10-30",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/ci-cd/github",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/jobs-commands",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/cli/reference/pipelines-commands": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/cli/reference/pipelines-commands",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/testing": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/testing",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/external-access/external-for-pipelines": {
+   "date": "2026-10-30",
+   "final": "https://docs.databricks.com/aws/en/external-access/external-for-pipelines",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/iceberg/": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/iceberg/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-events-explained": {
+   "date": "2026-10-07",
+   "final": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-events-explained",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode": {
+   "date": "2026-10-07",
+   "final": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/file-notification-mode",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/spark/api-options",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/production": {
+   "date": "2026-09-18",
+   "final": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/production",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/cdc-overview",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/faq": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/faq",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/mysql-source-setup": {
+   "date": "2026-10-18",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/mysql-source-setup",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/query-based-overview": {
+   "date": "2026-09-17",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/query-based-overview",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-integrated-pipeline": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-integrated-pipeline",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-limits": {
+   "date": "2026-10-19",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-limits",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview": {
+   "date": "2026-09-16",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-overview",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-pipeline",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/sql-server-source-setup",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/streaming-overview",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/overview": {
+   "date": "2026-10-07",
+   "final": "https://docs.databricks.com/aws/en/ingestion/overview",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ingestion/variant": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ingestion/variant",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/compute": {
+   "date": "2026-09-15",
+   "final": "https://docs.databricks.com/aws/en/jobs/compute",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/configure-job": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/jobs/configure-job",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/diagnose-job-performance": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/diagnose-job-performance",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/for-each": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/tasks/for-each",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/git": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/jobs/git",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/if-else": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/jobs/tasks/if-else",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/job-parameters": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/jobs/job-parameters",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/monitor": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/monitor",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/notifications": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/jobs/notifications",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/repair-job-failures": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/jobs/repair-job-failures",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/run-if": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/run-if",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/jobs/run-serverless-jobs",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/task-values": {
+   "date": "2026-10-08",
+   "final": "https://docs.databricks.com/aws/en/jobs/task-values",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/tasks/alert": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/jobs/tasks/alert",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/tasks/for-each": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/jobs/tasks/for-each",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/jobs/triggers": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/jobs/triggers",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/large-language-models/ai-functions": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/large-language-models/ai-functions",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/large-language-models/batch-inference-pipelines": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/large-language-models/batch-inference-pipelines",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/cdc": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/cdc",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/": {
+   "date": "2026-10-13",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/flows": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/flows",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/materialized-views": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/materialized-views",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/pipeline-mode": {
+   "date": "2026-09-14",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/pipeline-mode",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/spark-declarative-pipelines",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/standalone-pipelines": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/standalone-pipelines",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/concepts/streaming-tables",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/developer/external-dependencies": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ldp/developer/external-dependencies",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes": {
+   "date": "2026-10-05",
+   "final": "https://docs.databricks.com/aws/en/ldp/developer/ldp-python-ref-apply-changes",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into": {
+   "date": "2026-10-05",
+   "final": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-apply-changes-into",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/ldp/developer/ldp-sql-ref-create-flow",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/developer/python-ref": {
+   "date": "2026-10-25",
+   "final": "https://docs.databricks.com/aws/en/ldp/developer/python-ref",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/event-hooks": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/event-hooks",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/expectation-patterns": {
+   "date": "2026-10-26",
+   "final": "https://docs.databricks.com/aws/en/ldp/expectation-patterns",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/expectations": {
+   "date": "2026-10-26",
+   "final": "https://docs.databricks.com/aws/en/ldp/expectations",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/incremental-refresh": {
+   "date": "2026-10-28",
+   "final": "https://docs.databricks.com/aws/en/ldp/incremental-refresh",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/load": {
+   "date": "2026-10-19",
+   "final": "https://docs.databricks.com/aws/en/ldp/load",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/monitor-and-query-events",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/ldp/monitor-event-log-schema",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/monitor-event-logs": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/ldp/monitor-event-logs",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/multi-file-editor": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/multi-file-editor",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/serverless": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/ldp/serverless",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/unit-testing": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/ldp/unit-testing",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/unity-catalog": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/unity-catalog",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/updates": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/ldp/updates",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture": {
+   "date": "2026-10-05",
+   "final": "https://docs.databricks.com/aws/en/data-engineering/what-is-cdc",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/libraries/": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/libraries/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/libraries/notebooks-python-libraries": {
+   "date": "2026-10-22",
+   "final": "https://docs.databricks.com/aws/en/libraries/notebooks-python-libraries",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/notebooks/testing": {
+   "date": "2025-01-21",
+   "final": "https://docs.databricks.com/aws/en/notebooks/testing",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/": {
+   "date": "2026-10-27",
+   "final": "https://docs.databricks.com/aws/en/opensharing/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/create-recipient": {
+   "date": "2026-09-22",
+   "final": "https://docs.databricks.com/aws/en/opensharing/create-recipient",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/create-recipient-token": {
+   "date": "2026-09-22",
+   "final": "https://docs.databricks.com/aws/en/opensharing/create-recipient-token",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/create-share": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/opensharing/create-share",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/grant-access": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/opensharing/grant-access",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/opensharing/read-data-databricks": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/opensharing/read-data-databricks",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/optimizations/aqe": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/optimizations/aqe",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/optimizations/disk-cache": {
+   "date": "2026-10-22",
+   "final": "https://docs.databricks.com/aws/en/optimizations/disk-cache",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/optimizations/predictive-optimization": {
+   "date": "2026-10-26",
+   "final": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/spark-memory-issues": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/optimizations/spark-ui-guide/spark-memory-issues",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/query-federation/": {
+   "date": "2026-09-29",
+   "final": "https://docs.databricks.com/aws/en/query-federation/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/query-federation/catalog-federation": {
+   "date": "2026-09-29",
+   "final": "https://docs.databricks.com/aws/en/query-federation/catalog-federation",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/query-federation/database-federation": {
+   "date": "2026-09-18",
+   "final": "https://docs.databricks.com/aws/en/query-federation/database-federation",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/query/formats/binary": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/query/formats/binary",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/reference/jobs-api-2-2-updates": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/reference/jobs-api-2-2-updates",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/dlt/2026": {
+   "date": "2026-10-23",
+   "final": "https://docs.databricks.com/aws/en/release-notes/dlt/2026",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/2026/april": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/2026/april",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/2026/june": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/2026/june",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/2026/may": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/2026/may",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/2026/october": {
+   "date": "2026-11-04",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/2026/october",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/product/2026/september": {
+   "date": "2026-11-01",
+   "final": "https://docs.databricks.com/aws/en/release-notes/product/2026/september",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/": {
+   "date": "2026-10-18",
+   "final": "https://docs.databricks.com/aws/en/release-notes/serverless/environment-version/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/repos/ci-cd",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/repos/what-happened-repos": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/repos/what-happened-repos",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/security/auth/access-control/": {
+   "date": "2026-10-20",
+   "final": "https://docs.databricks.com/aws/en/security/auth/access-control/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/ldp/gdpr",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/semi-structured/": {
+   "date": "2026-06-11",
+   "final": "https://docs.databricks.com/aws/en/semi-structured/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/semi-structured/variant": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/semi-structured/variant",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/semi-structured/variant-json-diff",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/delta-copy-into",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/delta-optimize": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/delta-optimize",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/aes_encrypt": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/aes_encrypt",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_mask": {
+   "date": "2026-11-02",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_mask",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query": {
+   "date": "2026-10-06",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_query",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/mask": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/mask",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/secret": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/secret",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/sha2": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/sha2",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/table_changes": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/table_changes",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/try_cast": {
+   "date": "2026-10-28",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/try_cast",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/functions/variant_get": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/functions/variant_get",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/information-schema/column_tags": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/information-schema/column_tags",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-comment": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-comment",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-governed-tag": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-governed-tag",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-materialized-view": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-materialized-view",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-sql-function",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-streaming-table": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-streaming-table",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-hints",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-join": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-join",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions": {
+   "date": "2026-10-05",
+   "final": "https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-window-functions",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/user/alerts/": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/sql/user/alerts/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/user/alerts/create": {
+   "date": "2026-11-03",
+   "final": "https://docs.databricks.com/aws/en/sql/user/alerts/create",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights": {
+   "date": "2026-10-08",
+   "final": "https://docs.databricks.com/aws/en/sql/user/queries/performance-insights",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/sql/user/queries/query-profile": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/sql/user/queries/query-profile",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/checkpoints": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/delta-lake": {
+   "date": "2026-10-15",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/delta-lake",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/foreach": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/foreach",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/output-mode": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/output-mode",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/triggers": {
+   "date": "2026-10-19",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/triggers",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/structured-streaming/watermarks": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/structured-streaming/watermarks",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/tables/features/variant": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/tables/features/variant",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/tables/managed": {
+   "date": "2026-10-30",
+   "final": "https://docs.databricks.com/aws/en/tables/managed",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/tables/partitions": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/tables/partitions",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/uc-semantics/metric-views/": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/uc-semantics/metric-views/create": {
+   "date": "2026-10-12",
+   "final": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/create",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/uc-semantics/metric-views/joins": {
+   "date": "2026-10-29",
+   "final": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/joins",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization": {
+   "date": "2026-10-28",
+   "final": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/uc-semantics/metric-views/query": {
+   "date": "2026-10-09",
+   "final": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/query",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/udf/": {
+   "date": "2026-09-22",
+   "final": "https://docs.databricks.com/aws/en/udf/",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/udf/pandas": {
+   "date": "2026-09-11",
+   "final": "https://docs.databricks.com/aws/en/udf/pandas",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/udf/unity-catalog": {
+   "date": "2026-10-01",
+   "final": "https://docs.databricks.com/aws/en/udf/unity-catalog",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/views/dynamic": {
+   "date": "2026-10-06",
+   "final": "https://docs.databricks.com/aws/en/views/dynamic",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.databricks.com/aws/en/views/materialized": {
+   "date": "2026-10-28",
+   "final": "https://docs.databricks.com/aws/en/sql/mv-st/materialized",
+   "hash": null,
+   "status": 200
+  },
+  "https://docs.delta.io/latest/delta-clustering.html": {
+   "date": null,
+   "final": "https://docs.delta.io/delta-clustering/",
+   "hash": null,
+   "status": 200
+  },
+  "https://gdpr-info.eu/art-17-gdpr/": {
+   "date": null,
+   "final": "https://gdpr-info.eu/art-17-gdpr/",
+   "hash": null,
+   "status": 200
+  },
+  "https://gdpr-info.eu/art-4-gdpr/": {
+   "date": null,
+   "final": "https://gdpr-info.eu/art-4-gdpr/",
+   "hash": null,
+   "status": 200
+  },
+  "https://gdpr-info.eu/recitals/no-26/": {
+   "date": null,
+   "final": "https://gdpr-info.eu/recitals/no-26/",
+   "hash": null,
+   "status": 200
+  },
+  "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python": {
+   "date": null,
+   "final": "https://github.com/databricks/cli/tree/main/acceptance/bundle/templates/default-python/serverless/output/my_default_python",
+   "hash": null,
+   "status": 200
+  },
+  "https://github.com/pypa/packaging.python.org/blob/main/source/discussions/package-formats.rst": {
+   "date": null,
+   "final": "https://github.com/pypa/packaging.python.org/blob/main/source/discussions/package-formats.rst",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/4.0.0/api/python/reference/api/pyspark.testing.assertDataFrameEqual.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/4.1.0/declarative-pipelines-programming-guide.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/4.1.0/declarative-pipelines-programming-guide.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/4.3.0/declarative-pipelines-programming-guide.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/4.3.0/declarative-pipelines-programming-guide.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/latest/api/python/getting_started/testing_pyspark.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/latest/api/python/getting_started/testing_pyspark.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.testing.assertSchemaEqual.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.testing.assertSchemaEqual.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.transform.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.transform.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-hints.html": {
+   "date": null,
+   "final": "https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-hints.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://spark.apache.org/news/index.html": {
+   "date": null,
+   "final": "https://spark.apache.org/news/index.html",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.alexcole.net/databricks-certified-data-engineer-professional-comprehensive-resource-guide/": {
+   "date": null,
+   "final": "https://www.alexcole.net/databricks-certified-data-engineer-professional-comprehensive-resource-guide/",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.alexcole.net/databricks-data-engineer-professional-oct-2026-syllabus-changes/": {
+   "date": null,
+   "final": "https://www.alexcole.net/databricks-data-engineer-professional-oct-2026-syllabus-changes/",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.certlake.com/exam/data-engineer-professional": {
+   "date": null,
+   "final": "https://www.certlake.com/exam/data-engineer-professional",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/abac-row-filtering-and-column-masking-policies-governed-tags-and-data-classification-are-now": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/abac-row-filtering-and-column-masking-policies-governed-tags-and-data-classification-are-now",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/announcing-new-opensharing-and-marketplace-capabilities-ai-era": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/announcing-new-opensharing-and-marketplace-capabilities-ai-era",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/bringing-declarative-pipelines-apache-spark-open-source-project": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/bringing-declarative-pipelines-apache-spark-open-source-project",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/debunking-8-data-layout-myths-why-liquid-clustering-outperforms-partitioning": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/debunking-8-data-layout-myths-why-liquid-clustering-outperforms-partitioning",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/evolution-data-engineering-how-serverless-compute-transforming-notebooks-lakeflow-jobs": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/evolution-data-engineering-how-serverless-compute-transforming-notebooks-lakeflow-jobs",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/how-observability-lakeflow-helps-you-build-reliable-data-pipelines": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/how-observability-lakeflow-helps-you-build-reliable-data-pipelines",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/whats-new-lakeflow-declarative-pipelines-july-2025": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/whats-new-lakeflow-declarative-pipelines-july-2025",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/blog/whats-new-lakeflow-jobs-provides-more-efficient-data-orchestration": {
+   "date": null,
+   "final": "https://www.databricks.com/blog/whats-new-lakeflow-jobs-provides-more-efficient-data-orchestration",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/company/newsroom/press-releases/databricks-announces-opensharing": {
+   "date": null,
+   "final": "https://www.databricks.com/company/newsroom/press-releases/databricks-announces-opensharing",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/learn/certification/data-engineer-professional": {
+   "date": null,
+   "final": "https://www.databricks.com/learn/certification/data-engineer-professional",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/learn/free-edition": {
+   "date": null,
+   "final": "https://www.databricks.com/learn/free-edition",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/sites/default/files/2026-06/ai-prep-guide-any-databricks-certification.pdf": {
+   "date": null,
+   "final": "https://www.databricks.com/sites/default/files/2026-06/ai-prep-guide-any-databricks-certification.pdf",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf": {
+   "date": null,
+   "final": "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/training/catalog/advanced-data-engineering-with-databricks-971": {
+   "date": null,
+   "final": "https://www.databricks.com/training/catalog/advanced-data-engineering-with-databricks-971",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/training/catalog/advanced-techniques-with-apache-spark-declarative-pipelines-2973": {
+   "date": null,
+   "final": "https://www.databricks.com/training/catalog/advanced-techniques-with-apache-spark-declarative-pipelines-2973",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/training/catalog/automated-deployment-with-declarative-automation-bundles-3489": {
+   "date": null,
+   "final": "https://www.databricks.com/training/catalog/automated-deployment-with-declarative-automation-bundles-3489",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/training/catalog/databricks-data-privacy-3767": {
+   "date": null,
+   "final": "https://www.databricks.com/training/catalog/databricks-data-privacy-3767",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.databricks.com/training/catalog/databricks-performance-optimization-1809": {
+   "date": null,
+   "final": "https://www.databricks.com/training/catalog/databricks-performance-optimization-1809",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.examtopics.com/exams/databricks/certified-data-engineer-professional/": {
+   "date": null,
+   "final": "https://www.examtopics.com/exams/databricks/certified-data-engineer-professional/",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.waitingforcode.com/databricks/lakeflow-spark-declarative-pipelines-flows-private-tables-configuration/read": {
+   "date": null,
+   "final": "https://www.waitingforcode.com/databricks/lakeflow-spark-declarative-pipelines-flows-private-tables-configuration/read",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=-MdRv8WzbVM": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=-MdRv8WzbVM",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=26cCZvJjSsw": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=26cCZvJjSsw",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=36PKwX60yLQ": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=36PKwX60yLQ",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=4Q5YCIl2Zko": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=4Q5YCIl2Zko",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=4mG__Lh2aCM": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=4mG__Lh2aCM",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=8_V1FbM8fJI": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=8_V1FbM8fJI",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=EH208ljANzo": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=EH208ljANzo",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=Qux8E-L1mk8": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=Qux8E-L1mk8",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=Um9UPt3RRbA": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=Um9UPt3RRbA",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=WdraYJoEgqg": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=WdraYJoEgqg",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=fWdxF7nL3YI": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=fWdxF7nL3YI",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=hDFNI7i6J60": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=hDFNI7i6J60",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=kStRXqCznHA": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=kStRXqCznHA",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=kpUNTU7iy5M": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=kpUNTU7iy5M",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=mMwprgB-sIU": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=mMwprgB-sIU",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=qIz0QM-L_p0": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=qIz0QM-L_p0",
+   "hash": null,
+   "status": 200
+  },
+  "https://www.youtube.com/watch?v=r8v31p682vw": {
+   "date": null,
+   "final": "https://www.youtube.com/watch?v=r8v31p682vw",
+   "hash": null,
+   "status": 200
+  }
+ }
+}
