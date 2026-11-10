@@ -892,8 +892,8 @@
        "url": "https://gdpr-info.eu/art-4-gdpr/"
       },
       {
-       "label": "GDPR and CCPA compliance with Delta Lake",
-       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+       "label": "Prepare your data for GDPR compliance",
+       "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
       },
       {
        "label": "Databricks Community, PII redact at ingestion vs dynamic masking (09/2026)",
@@ -1148,7 +1148,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "PII lọt qua đường ít ai để ý",
-     "md": "- File của materialized view có thể chứa cột upstream ngoài định nghĩa, gồm PII, để refresh incremental; không share storage cho consumer không tin cậy\n- Data Classification scan table, ST, MV; scan view là Beta và không gắn tag `class.*` lên cột của view",
+     "md": "- File của materialized view có thể chứa cột upstream ngoài định nghĩa, gồm PII, để refresh incremental; không share storage cho consumer không tin cậy\n- Data Classification scan table, ST, MV; scan view là Beta; mặc định không gắn tag `class.*` lên cột của view, chỉ gắn khi bật thêm ABAC on Views (Beta)",
      "src": [
       {
        "label": "Use Unity Catalog with pipelines",
@@ -1195,20 +1195,20 @@
      ],
      "src": [
       {
-       "label": "GDPR and CCPA compliance with Delta Lake",
-       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+       "label": "Prepare your data for GDPR compliance",
+       "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
       },
       {
        "label": "Deletion vectors in Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+       "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
       },
       {
        "label": "REORG TABLE",
        "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table"
       },
       {
-       "label": "Use Delta Lake change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "label": "Use change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       },
       {
        "label": "GDPR Art. 17, right to erasure",
@@ -1245,8 +1245,8 @@
      ],
      "src": [
       {
-       "label": "GDPR and CCPA compliance with Delta Lake",
-       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+       "label": "Prepare your data for GDPR compliance",
+       "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
       },
       {
        "label": "REORG TABLE",
@@ -1270,15 +1270,15 @@
      "src": [
       {
        "label": "Deletion vectors in Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+       "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
       },
       {
-       "label": "Use Delta Lake change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "label": "Use change data feed on Databricks",
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       },
       {
-       "label": "GDPR and CCPA compliance with Delta Lake",
-       "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+       "label": "Prepare your data for GDPR compliance",
+       "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
       },
       {
        "label": "YouTube, Databricks: Becoming GDPR and CCPA Compliant Using DLT (07/2024)",

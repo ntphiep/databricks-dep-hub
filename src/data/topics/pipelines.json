@@ -1068,7 +1068,7 @@
       [
        "`STORED AS BITEMPORAL` + `SYSTEM SEQUENCE BY`",
        "`stored_as_scd_type=\"bitemporal\"` + `system_sequence_by`",
-       "Beta; theo dõi cả business time và system time"
+       "Theo dõi cả business time (`SEQUENCE BY`) và system time (`SYSTEM SEQUENCE BY`)"
       ]
      ],
      "src": [
@@ -1082,7 +1082,11 @@
       },
       {
        "label": "Change data capture and snapshots",
-       "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+       "url": "https://docs.databricks.com/aws/en/data-engineering/what-is-cdc"
+      },
+      {
+       "label": "Bitemporal AUTO CDC",
+       "url": "https://docs.databricks.com/aws/en/ldp/cdc-bitemporal"
       }
      ]
     },
@@ -1150,7 +1154,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Ràng buộc dễ bị hỏi",
-     "md": "- Target AUTO CDC là streaming table và chỉ nhận AUTO CDC flow khác\n- Nguồn phải là streaming source, kể cả flow `ONCE`\n- Giá trị `SEQUENCE BY` NULL không được hỗ trợ\n- Cần serverless hoặc edition Pro, Advanced\n- Delete giữ dạng tombstone, mặc định 2 ngày, chỉnh bằng `pipelines.cdc.tombstoneGCThresholdInSeconds`",
+     "md": "- Target AUTO CDC là streaming table và chỉ nhận AUTO CDC flow khác\n- Nhiều AUTO CDC flow ghi được vào cùng một target\n- Giá trị `SEQUENCE BY` NULL không được hỗ trợ\n- Cần serverless hoặc edition Pro, Advanced\n- Delete giữ dạng tombstone, mặc định 2 ngày, chỉnh bằng `pipelines.cdc.tombstoneGCThresholdInSeconds`",
      "src": [
       {
        "label": "Pipeline flows",
@@ -1166,7 +1170,7 @@
       },
       {
        "label": "Change data capture and snapshots",
-       "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+       "url": "https://docs.databricks.com/aws/en/data-engineering/what-is-cdc"
       },
       {
        "label": "What is Auto Loader?",
@@ -1641,7 +1645,7 @@
       ],
       [
        "Đổi số hoặc thứ tự source",
-       "Không, trừ khi bật source evolution: Databricks Runtime 18.2+, đặt tên mọi source bằng `.name()`"
+       "Không, trừ khi query bật source evolution ngay từ checkpoint mới: Databricks Runtime 18.2+, đặt tên mọi source bằng `.name()`"
       ]
      ],
      "src": [

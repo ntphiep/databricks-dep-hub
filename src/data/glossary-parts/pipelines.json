@@ -241,7 +241,8 @@
   "what": "Tính năng Structured Streaming cho đặt tên source để thêm hoặc đổi thứ tự source mà giữ checkpoint.",
   "means": [
    "Cần Databricks Runtime 18.2 trở lên và `.name()` trên mọi source.",
-   "Không bật thì đổi số hoặc thứ tự source cần checkpoint mới."
+   "Không bật thì đổi số hoặc thứ tự source cần checkpoint mới.",
+   "Chỉ bật được khi query bắt đầu với checkpoint mới."
   ],
   "related": [],
   "src": {
@@ -257,7 +258,7 @@
    "BITEMPORAL"
   ],
   "cat": "Lakeflow & Streaming",
-  "what": "Kiểu lưu AUTO CDC (Beta) theo dõi thay đổi theo cả business time và system time.",
+  "what": "Kiểu lưu AUTO CDC theo dõi thay đổi theo cả business time và system time.",
   "means": [
    "Khai báo `STORED AS BITEMPORAL` và `SYSTEM SEQUENCE BY`.",
    "Bổ sung cho SCD Type 1 và Type 2, không thay thế."
@@ -267,8 +268,8 @@
    "sequence-by"
   ],
   "src": {
-   "label": "Change data capture and snapshots",
-   "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+   "label": "Bitemporal AUTO CDC",
+   "url": "https://docs.databricks.com/aws/en/ldp/cdc-bitemporal"
   }
  }
 ]

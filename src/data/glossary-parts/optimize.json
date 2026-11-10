@@ -44,7 +44,7 @@
   ],
   "src": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -69,7 +69,7 @@
   ],
   "src": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -90,7 +90,7 @@
   ],
   "src": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -114,7 +114,7 @@
   ],
   "src": {
    "label": "Deletion vectors in Databricks",
-   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+   "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
   }
  },
  {
@@ -161,7 +161,7 @@
   "related": [],
   "src": {
    "label": "Use change data feed on Databricks",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  },
  {
@@ -228,7 +228,7 @@
   ],
   "src": {
    "label": "Data skipping",
-   "url": "https://docs.databricks.com/aws/en/delta/data-skipping"
+   "url": "https://docs.databricks.com/aws/en/tables/data-skipping"
   }
  },
  {
@@ -249,7 +249,7 @@
   "related": [],
   "src": {
    "label": "Control data file size",
-   "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+   "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
   }
  },
  {

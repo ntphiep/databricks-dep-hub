@@ -800,12 +800,12 @@
        "File mới vào Unity Catalog storage location"
       ],
       [
-       "Model update",
+       "Model update (Beta)",
        "Unity Catalog model được tạo hoặc cập nhật"
       ],
       [
-       "Upstream job completion",
-       "Job upstream chạy xong"
+       "Job completion (Beta)",
+       "Một hoặc nhiều job upstream chạy xong với kết quả khớp điều kiện"
       ],
       [
        "Continuous",
@@ -978,12 +978,12 @@
      ],
      "src": [
       {
-       "label": "Add branching logic with the If/else task",
-       "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+       "label": "Add branching logic to a job with the If/else task",
+       "url": "https://docs.databricks.com/aws/en/jobs/tasks/if-else"
       },
       {
        "label": "Use a For each task to run another task in a loop",
-       "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+       "url": "https://docs.databricks.com/aws/en/jobs/tasks/for-each"
       },
       {
        "label": "Configure task dependencies",
@@ -1076,12 +1076,12 @@
      ],
      "src": [
       {
-       "label": "Add branching logic with the If/else task",
-       "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+       "label": "Add branching logic to a job with the If/else task",
+       "url": "https://docs.databricks.com/aws/en/jobs/tasks/if-else"
       },
       {
        "label": "Use a For each task to run another task in a loop",
-       "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+       "url": "https://docs.databricks.com/aws/en/jobs/tasks/for-each"
       }
      ]
     }
@@ -1118,7 +1118,7 @@
       {
        "says": "Notebook task hits out-of-memory errors in Python (driver REPL) code",
        "pick": "High memory trong Environment side pane của notebook",
-       "why": "Tăng REPL từ 16 GB lên 32 GB, không đổi memory của Spark session; chỉ cho notebook task.",
+       "why": "Public Preview: tăng REPL từ 16 GB lên 32 GB, không đổi memory của Spark session; chỉ cho notebook task.",
        "src": {
         "label": "Configure the serverless environment",
         "url": "https://docs.databricks.com/aws/en/compute/serverless/dependencies"

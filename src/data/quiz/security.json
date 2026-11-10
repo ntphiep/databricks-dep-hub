@@ -422,8 +422,8 @@
     "url": "https://gdpr-info.eu/art-4-gdpr/"
    },
    {
-    "label": "GDPR and CCPA compliance with Delta Lake",
-    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+    "label": "Prepare your data for GDPR compliance",
+    "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
    }
   ]
  },
@@ -604,15 +604,15 @@
   "refs": [
    {
     "label": "Deletion vectors in Databricks",
-    "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+    "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
    },
    {
     "label": "REORG TABLE",
     "url": "https://docs.databricks.com/aws/en/sql/language-manual/delta-reorg-table"
    },
    {
-    "label": "GDPR and CCPA compliance with Delta Lake",
-    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+    "label": "Prepare your data for GDPR compliance",
+    "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
    }
   ]
  },
@@ -653,8 +653,8 @@
   },
   "refs": [
    {
-    "label": "GDPR and CCPA compliance with Delta Lake",
-    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+    "label": "Prepare your data for GDPR compliance",
+    "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
    },
    {
     "label": "Use Unity Catalog with pipelines",
@@ -704,12 +704,12 @@
   },
   "refs": [
    {
-    "label": "GDPR and CCPA compliance with Delta Lake",
-    "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+    "label": "Prepare your data for GDPR compliance",
+    "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
    },
    {
-    "label": "Use Delta Lake change data feed on Databricks",
-    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+    "label": "Use change data feed on Databricks",
+    "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
    },
    {
     "label": "VACUUM",
@@ -1068,7 +1068,7 @@
   "explain": "- Tín hiệu: share storage path của MV, MV đọc từ table có PII.\n- Docs: file của MV có thể chứa data upstream ngoài định nghĩa để refresh incremental.\n- Data Classification mặc định scan table, ST, MV; scan view là Beta.",
   "wrong": {
    "B": "Docs nêu rõ file có thể chứa cột upstream không có trong định nghĩa.",
-   "D": "View được classify nhưng cột của view không được gắn tag `class.*`.",
+   "D": "Mặc định view được classify nhưng cột không được gắn tag `class.*`; chỉ gắn khi bật thêm ABAC on Views (Beta).",
    "E": "Đọc thẳng storage bỏ qua Unity Catalog nên mask không áp."
   },
   "refs": [

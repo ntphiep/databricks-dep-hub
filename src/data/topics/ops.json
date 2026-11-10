@@ -58,7 +58,7 @@
        "`system.compute.clusters`, `node_timeline`",
        "`cluster_id`, `owned_by`, `cluster_source`, `dbr_version`; `cpu_user_percent`, `mem_used_percent`",
        "Owner và config compute, utilization theo phút",
-       "`clusters` là SCD2; `node_timeline` giữ 90 ngày"
+       "`clusters` là SCD2; `node_timeline` giữ 395 ngày"
       ],
       [
        "`system.compute.warehouse_events`",
@@ -130,7 +130,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Bẫy khi query system tables",
-     "md": "- **Access**: chỉ user vừa là account admin vừa là metastore admin đọc được mặc định; user khác cần `USE CATALOG`, `USE SCHEMA`, `SELECT`\n- **Regional**: `system.lakeflow`, `system.access.audit` (workspace event), `system.query.history` chỉ chứa workspace cùng region\n- **SCD2**: `jobs`, `job_tasks`, `pipelines`, `clusters`: lấy dòng `change_time` mới nhất rồi mới lọc `delete_time IS NULL`; lọc trước thì job đã xoá vẫn hiện\n- **Retention**: phần lớn 365 ngày, `node_timeline` 90 ngày; configurable retention (Beta) cho 30 tới 3.650 ngày",
+     "md": "- **Access**: chỉ user vừa là account admin vừa là metastore admin đọc được mặc định; user khác cần `USE CATALOG`, `USE SCHEMA`, `SELECT`\n- **Regional**: `system.lakeflow`, `system.access.audit` (workspace event), `system.query.history` chỉ chứa workspace cùng region\n- **SCD2**: `jobs`, `job_tasks`, `pipelines`, `clusters`: lấy dòng `change_time` mới nhất rồi mới lọc `delete_time IS NULL`; lọc trước thì job đã xoá vẫn hiện\n- **Retention**: phần lớn 395 ngày; `billing.usage`, `list_prices`, `lakeflow.pipelines` giữ vô thời hạn; `query.history` 365 ngày; configurable retention (Beta) cho 30 tới 3.650 ngày, không áp cho table giữ 365 ngày hoặc vô thời hạn",
      "src": [
       {
        "label": "System tables reference",
@@ -403,11 +403,11 @@
       },
       {
        "label": "Jobs API 2.2, Get a single job run",
-       "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+       "url": "https://docs.databricks.com/api/jobs/v2/get-run"
       },
       {
        "label": "Pipelines API, List pipeline events",
-       "url": "https://docs.databricks.com/api/workspace/pipelines/listpipelineevents"
+       "url": "https://docs.databricks.com/api/pipelines/v2/events"
       },
       {
        "label": "Databricks SDK for Python, w.jobs",
@@ -461,11 +461,11 @@
      "type": "callout",
      "tone": "trap",
      "title": "Giới hạn của API",
-     "md": "- **60 ngày**: run history và output tự xoá sau 60 ngày; cần lâu hơn thì dùng `system.lakeflow` (365 ngày)\n- **Phân trang**: `runs/get` trả 100 phần tử đầu của `tasks`, `job_clusters`, `job_parameters`, `repair_history`, phần còn lại qua `next_page_token`\n- **Một workspace**: API chỉ thấy workspace đang gọi; báo cáo nhiều workspace dùng system tables",
+     "md": "- **60 ngày**: run history và output tự xoá sau 60 ngày; cần lâu hơn thì dùng `system.lakeflow` (395 ngày)\n- **Phân trang**: `runs/get` trả 100 phần tử đầu của `tasks`, `job_clusters`, `job_parameters`, `repair_history`, phần còn lại qua `next_page_token`\n- **Một workspace**: API chỉ thấy workspace đang gọi; báo cáo nhiều workspace dùng system tables",
      "src": [
       {
        "label": "Jobs API 2.2, Get a single job run",
-       "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+       "url": "https://docs.databricks.com/api/jobs/v2/get-run"
       },
       {
        "label": "Monitor Lakeflow Jobs",
@@ -709,7 +709,7 @@
      "type": "callout",
      "tone": "new",
      "title": "Thay đổi 2026",
-     "md": "- Bản mới của Databricks SQL alerts GA ngày 14/05/2026; SQL alert task trong Lakeflow Jobs GA ngày 29/06/2026\n- Trạng thái chỉ còn `OK`, `TRIGGERED`, `ERROR`; bỏ `UNKNOWN` của legacy alerts\n- Alert không nhận query có parameter và không dùng lại saved query\n- `system.alert.alerts` và `system.alert.alert_evaluation_history` ghi config và từng lần evaluate, giữ 365 ngày\n- Exam guide gọi là Databricks Lakehouse alerts; docs dùng tên Databricks SQL alerts (suy luận: cùng một feature)",
+     "md": "- Bản mới của Databricks SQL alerts GA ngày 14/05/2026; SQL alert task trong Lakeflow Jobs GA ngày 29/06/2026\n- Trạng thái chỉ còn `OK`, `TRIGGERED`, `ERROR`; bỏ `UNKNOWN` của legacy alerts\n- Alert không dùng lại saved query; SQL alert task truyền giá trị cho parameter của alert query, kể cả `{{job.parameters.<name>}}`\n- `system.alert.alerts` và `system.alert.alert_evaluation_history` ghi config và từng lần evaluate, giữ 395 ngày\n- Exam guide gọi là Databricks Lakehouse alerts; docs dùng tên Databricks SQL alerts (suy luận: cùng một feature)",
      "src": [
       {
        "label": "Databricks release notes, May 2026",
@@ -878,7 +878,7 @@
       {
        "says": "which runs failed across all workspaces this week",
        "pick": "`system.lakeflow.job_run_timeline`",
-       "why": "`result_state` và `termination_code` cho mọi run trong region, giữ 365 ngày.",
+       "why": "`result_state` và `termination_code` cho mọi run trong region, giữ 395 ngày.",
        "src": {
         "label": "Jobs system table reference",
         "url": "https://docs.databricks.com/aws/en/admin/system-tables/jobs"
@@ -929,11 +929,15 @@
      "type": "callout",
      "tone": "trap",
      "title": "Serverless khác classic",
-     "md": "- Serverless không có Spark UI, Spark log, compute event log\n- Log ứng dụng của serverless job gửi tới Unity Catalog volume theo task run\n- Query profile cho tối ưu hiệu năng nằm ở topic optimize; ở đây dùng để tìm operator lỗi",
+     "md": "- Serverless không có Spark UI, Spark log, compute event log\n- Log ứng dụng của serverless job gửi tới Unity Catalog volume theo task run (Beta, 10/2026)\n- Query profile cho tối ưu hiệu năng nằm ở topic optimize; ở đây dùng để tìm operator lỗi",
      "src": [
       {
        "label": "Serverless compute limitations",
        "url": "https://docs.databricks.com/aws/en/compute/serverless/limitations"
+      },
+      {
+       "label": "Databricks release notes, October 2026",
+       "url": "https://docs.databricks.com/aws/en/release-notes/product/2026/october"
       }
      ]
     }
@@ -1023,7 +1027,7 @@
      "src": [
       {
        "label": "Jobs API 2.2, Repair a job run",
-       "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+       "url": "https://docs.databricks.com/api/jobs/v2/repair"
       },
       {
        "label": "jobs command group (Databricks CLI)",
@@ -1332,7 +1336,7 @@
      "src": [
       {
        "label": "CI/CD on Databricks",
-       "url": "https://docs.databricks.com/aws/en/dev-tools/bundles/ci-cd"
+       "url": "https://docs.databricks.com/aws/en/dev-tools/ci-cd"
       },
       {
        "label": "GitHub Actions",
@@ -1340,7 +1344,7 @@
       },
       {
        "label": "CI/CD with Databricks Git folders",
-       "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+       "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
       },
       {
        "label": "Databricks Community, CI/CD on Databricks with Asset Bundles and GitHub Actions (03/2026)",
@@ -1396,7 +1400,7 @@
        "why": "Databricks khuyên dùng bundle cho CI/CD; resource và code cùng version trong Git.",
        "src": {
         "label": "CI/CD with Databricks Git folders",
-        "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+        "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
        }
       },
       {
@@ -1405,7 +1409,7 @@
        "why": "Admin tạo folder ngoài /Workspace/Users; automation chạy `databricks repos update --branch` khi PR merge.",
        "src": {
         "label": "CI/CD with Databricks Git folders",
-        "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+        "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
        }
       },
       {
@@ -1431,7 +1435,7 @@
       },
       {
        "label": "CI/CD with Databricks Git folders",
-       "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+       "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
       }
      ]
     }

@@ -23,7 +23,7 @@
   "back": "Unity Catalog managed table, predictive optimization enabled, DBR 15.4 LTS+. External table chỉ dùng được clustering key thủ công.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -32,7 +32,7 @@
   "back": "4. Với table dưới 10 TB, nhiều key hơn làm filter một cột chậm hơn.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -41,7 +41,7 @@
   "back": "Existing data is not rewritten; run `OPTIMIZE ... FULL` to recluster. Write và OPTIMIZE sau đó dùng key mới.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -50,7 +50,7 @@
   "back": "`ALTER TABLE t REPLACE PARTITIONED BY WITH CLUSTER BY (...)` on DBR 18.1+, then OPTIMIZE. Partition column trở thành hierarchical clustering key.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -59,7 +59,7 @@
   "back": "DELETE, UPDATE and MERGE, by marking changed rows instead of rewriting whole Parquet files. Row cũ chỉ bị xoá vật lý khi file được rewrite.",
   "ref": {
    "label": "Deletion vectors in Databricks",
-   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+   "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
   }
  },
  {
@@ -68,7 +68,7 @@
   "back": "`REORG TABLE t APPLY (PURGE)`, then VACUUM after the retention period. Dùng cho yêu cầu xoá vĩnh viễn data.",
   "ref": {
    "label": "Remove unused data files with vacuum",
-   "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+   "url": "https://docs.databricks.com/aws/en/tables/operations/vacuum"
   }
  },
  {
@@ -95,7 +95,7 @@
   "back": "Automatic CDF computes changes at read time from row tracking (Delta) or row lineage (Iceberg v3), with no per-table setting; Databricks recommends migrating from legacy. Một table không dùng cả hai loại.",
   "ref": {
    "label": "Change data feed",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  },
  {
@@ -113,7 +113,7 @@
   "back": "Returns the current table snapshot as insert records, then subsequent changes. Đặt `startingVersion` nếu target đã có data tới version đó.",
   "ref": {
    "label": "Use change data feed",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  },
  {
@@ -122,7 +122,7 @@
   "back": "DBR 19+, Unity Catalog table: Delta with row tracking or managed Iceberg v3. Không cần bật từng table, không dùng chung với legacy CDF.",
   "ref": {
    "label": "Use change data feed",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  },
  {
@@ -167,7 +167,7 @@
   "back": "256 MB under 2.56 TB, growing linearly to 1 GB at 10 TB, 1 GB above. Đặt `delta.targetFileSize` để cố định.",
   "ref": {
    "label": "Control data file size",
-   "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+   "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
   }
  },
  {
@@ -194,7 +194,7 @@
   "back": "`OPTIMIZE t FULL WHERE <predicate>` on DBR 18.1+; files whose range overlaps the predicate are reclustered. Tránh rewrite cả table lớn.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {
@@ -203,7 +203,7 @@
   "back": "Without `CLUSTER BY AUTO` in the statement, automatic clustering is turned off and selected keys are lost. Luôn lặp lại `CLUSTER BY AUTO` khi replace.",
   "ref": {
    "label": "Use liquid clustering for tables",
-   "url": "https://docs.databricks.com/aws/en/delta/clustering"
+   "url": "https://docs.databricks.com/aws/en/tables/clustering"
   }
  },
  {

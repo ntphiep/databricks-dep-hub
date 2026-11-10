@@ -133,6 +133,10 @@
       {
        "label": "Predictive optimization for Unity Catalog managed tables",
        "url": "https://docs.databricks.com/aws/en/optimizations/predictive-optimization"
+      },
+      {
+       "label": "Data skipping",
+       "url": "https://docs.databricks.com/aws/en/tables/data-skipping"
       }
      ]
     },
@@ -190,7 +194,7 @@
       },
       {
        "label": "Control data file size",
-       "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+       "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
       }
      ]
     },
@@ -228,7 +232,7 @@
      "type": "callout",
      "tone": "new",
      "title": "Predictive Optimization bật mặc định",
-     "md": "- Account tạo từ 11/11/2024 bật sẵn; account cũ được bật dần, dự kiến xong 08/2026\n- Chạy trên serverless compute for jobs, tính tiền theo serverless jobs SKU",
+     "md": "- Bật mặc định; kiểm tra trạng thái bằng `DESCRIBE (CATALOG | SCHEMA | TABLE) EXTENDED`\n- DBR 18 LTS+: lý do bỏ qua table xem bằng `DESCRIBE TABLE EXTENDED ... AS JSON` hoặc tab History, trễ tối đa 24 giờ\n- Chạy trên serverless compute for jobs, tính tiền theo serverless jobs SKU",
      "src": [
       {
        "label": "Predictive optimization for Unity Catalog managed tables",
@@ -240,7 +244,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Predictive Optimization không làm",
-     "md": "- Không chạy trên external table hay table nhận qua OpenSharing\n- Không chạy `ZORDER BY`; file đã Z-order bị bỏ qua\n- `delta.deletedFileRetentionDuration` dưới 7 ngày: VACUUM của Predictive Optimization vẫn giữ file tối thiểu 7 ngày\n- Lịch sử operation và cost nằm ở `system.storage.predictive_optimization_operations_history`, giữ 180 ngày\n- Đề có external table và cụm LEAST operational overhead: chuyển sang managed table trước",
+     "md": "- Không chạy trên external table hay table nhận qua OpenSharing\n- Không chạy `ZORDER BY`; file đã Z-order bị bỏ qua\n- `delta.deletedFileRetentionDuration` dưới 7 ngày: VACUUM của Predictive Optimization vẫn giữ file tối thiểu 7 ngày\n- Lịch sử operation và cost nằm ở `system.storage.predictive_optimization_operations_history`, giữ 395 ngày\n- Đề có external table và cụm LEAST operational overhead: chuyển sang managed table trước",
      "src": [
       {
        "label": "Predictive optimization for Unity Catalog managed tables",
@@ -301,11 +305,11 @@
      "src": [
       {
        "label": "Deletion vectors in Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+       "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
       },
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       }
      ]
     },
@@ -319,7 +323,7 @@
        "why": "Tránh rewrite cả file cho vài row; Photon dùng deletion vectors cho predictive I/O.",
        "src": {
         "label": "Deletion vectors in Databricks",
-        "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+        "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
        }
       },
       {
@@ -328,7 +332,7 @@
        "why": "Key được chọn và đổi theo workload; cần Predictive Optimization.",
        "src": {
         "label": "Automatic liquid clustering",
-        "url": "https://docs.databricks.com/aws/en/delta/clustering"
+        "url": "https://docs.databricks.com/aws/en/tables/clustering"
        }
       },
       {
@@ -337,7 +341,7 @@
        "why": "Automatic liquid clustering không có cho external table; key thủ công vẫn data skip tốt.",
        "src": {
         "label": "Use liquid clustering for tables",
-        "url": "https://docs.databricks.com/aws/en/delta/clustering"
+        "url": "https://docs.databricks.com/aws/en/tables/clustering"
        }
       },
       {
@@ -346,7 +350,7 @@
        "why": "Row-level concurrency giảm conflict; tắt deletion vectors hoặc row tracking thì mất row-level concurrency.",
        "src": {
         "label": "Use liquid clustering for tables",
-        "url": "https://docs.databricks.com/aws/en/delta/clustering"
+        "url": "https://docs.databricks.com/aws/en/tables/clustering"
        }
       }
      ]
@@ -359,11 +363,11 @@
      "src": [
       {
        "label": "Deletion vectors in Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+       "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
       },
       {
        "label": "Remove unused data files with vacuum",
-       "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+       "url": "https://docs.databricks.com/aws/en/tables/operations/vacuum"
       }
      ]
     }
@@ -413,7 +417,7 @@
      "src": [
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       },
       {
        "label": "OPTIMIZE",
@@ -454,7 +458,7 @@
      "src": [
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       }
      ]
     },
@@ -466,7 +470,7 @@
      "src": [
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       },
       {
        "label": "OPTIMIZE",
@@ -482,7 +486,7 @@
      "src": [
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       }
      ]
     }
@@ -572,7 +576,7 @@
       },
       {
        "label": "Remove unused data files with vacuum",
-       "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+       "url": "https://docs.databricks.com/aws/en/tables/operations/vacuum"
       },
       {
        "label": "Serverless compute limitations",
@@ -614,7 +618,7 @@
      "src": [
       {
        "label": "Use change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       },
       {
        "label": "table_changes table-valued function",
@@ -662,7 +666,7 @@
      "src": [
       {
        "label": "Use change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       }
      ]
     },
@@ -674,11 +678,11 @@
      "src": [
       {
        "label": "Use change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       },
       {
        "label": "Remove unused data files with vacuum",
-       "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+       "url": "https://docs.databricks.com/aws/en/tables/operations/vacuum"
       }
      ]
     }
@@ -752,7 +756,7 @@
       },
       {
        "label": "Data skipping",
-       "url": "https://docs.databricks.com/aws/en/delta/data-skipping"
+       "url": "https://docs.databricks.com/aws/en/tables/data-skipping"
       }
      ]
     },
@@ -949,7 +953,7 @@
        "why": "Partition column thành hierarchical clustering key; giữ cột ZORDER làm key thường.",
        "src": {
         "label": "Use liquid clustering for tables",
-        "url": "https://docs.databricks.com/aws/en/delta/clustering"
+        "url": "https://docs.databricks.com/aws/en/tables/clustering"
        }
       }
      ]
@@ -1006,7 +1010,7 @@
       },
       {
        "label": "Delta Lake liquid clustering",
-       "url": "https://docs.delta.io/latest/delta-clustering.html"
+       "url": "https://docs.delta.io/delta-clustering/"
       }
      ]
     },
@@ -1058,11 +1062,11 @@
       },
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       },
       {
        "label": "Control data file size",
-       "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+       "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
       }
      ]
     },
@@ -1114,7 +1118,7 @@
      "src": [
       {
        "label": "Control data file size",
-       "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+       "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
       },
       {
        "label": "OPTIMIZE",
@@ -1122,7 +1126,7 @@
       },
       {
        "label": "Remove unused data files with vacuum",
-       "url": "https://docs.databricks.com/aws/en/delta/vacuum"
+       "url": "https://docs.databricks.com/aws/en/tables/operations/vacuum"
       }
      ]
     },
@@ -1134,7 +1138,7 @@
      "src": [
       {
        "label": "Control data file size",
-       "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+       "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
       }
      ]
     },
@@ -1146,7 +1150,7 @@
      "src": [
       {
        "label": "Use liquid clustering for tables",
-       "url": "https://docs.databricks.com/aws/en/delta/clustering"
+       "url": "https://docs.databricks.com/aws/en/tables/clustering"
       },
       {
        "label": "When to partition tables",
@@ -1187,7 +1191,7 @@
        "icon": "calendar-event",
        "label": "dim_date",
        "sub": "many-to-one",
-       "info": "- Join thêm tầng (snowflake schema) cần DBR 18.0+"
+       "info": "- Join thêm tầng (snowflake schema) cần DBR 17.3+"
       },
       {
        "id": "mv",
@@ -1309,6 +1313,10 @@
       {
        "label": "Materialization for metric views",
        "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/materialization"
+      },
+      {
+       "label": "Metric view feature availability",
+       "url": "https://docs.databricks.com/aws/en/uc-semantics/metric-views/feature-availability"
       }
      ]
     },
@@ -1344,7 +1352,7 @@
       },
       {
        "line": 21,
-       "md": "Mọi measure phải bọc `MEASURE()`; không dùng `SELECT *`."
+       "md": "Mọi measure phải bọc `MEASURE()` (DBR 18.1+ dùng được `agg`); không dùng `SELECT *`."
       }
      ],
      "src": [
@@ -1386,7 +1394,7 @@
      "src": [
       {
        "label": "Use standalone materialized views",
-       "url": "https://docs.databricks.com/aws/en/views/materialized"
+       "url": "https://docs.databricks.com/aws/en/sql/mv-st/materialized"
       },
       {
        "label": "Unity Catalog metric views",

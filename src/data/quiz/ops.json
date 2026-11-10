@@ -28,11 +28,11 @@
   "answer": [
    "B"
   ],
-  "explain": "- Tín hiệu: cost USD, 90 ngày, mọi workspace, job đã xoá, refresh bằng SQL.\n- `system.billing.usage` là global, giữ 365 ngày, có `usage_metadata.job_id` cho jobs compute và serverless.\n- `list_prices.pricing.default` đổi DBU sang USD theo khoảng `price_start_time`, `price_end_time`.",
+  "explain": "- Tín hiệu: cost USD, 90 ngày, mọi workspace, job đã xoá, refresh bằng SQL.\n- `system.billing.usage` là global, giữ vô thời hạn, có `usage_metadata.job_id` cho jobs compute và serverless.\n- `list_prices.pricing.default` đổi DBU sang USD theo khoảng `price_start_time`, `price_end_time`.",
   "wrong": {
    "A": "Jobs UI chỉ giữ run 60 ngày, từng workspace một và không có DBU thực tế.",
    "C": "Jobs API chỉ trả run trong 60 ngày của một workspace và không có số DBU đã tính tiền.",
-   "D": "`node_timeline` là utilization theo phút, không phải billable usage, và chỉ giữ 90 ngày."
+   "D": "`node_timeline` là utilization theo phút, không phải billable usage, nên không ra cost USD theo job."
   },
   "refs": [
    {
@@ -226,7 +226,7 @@
   "refs": [
    {
     "label": "Jobs API 2.2, Get a single job run",
-    "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+    "url": "https://docs.databricks.com/api/jobs/v2/get-run"
    },
    {
     "label": "jobs command group (Databricks CLI)",
@@ -276,7 +276,7 @@
   "refs": [
    {
     "label": "Pipelines API, List pipeline events",
-    "url": "https://docs.databricks.com/api/workspace/pipelines/listpipelineevents"
+    "url": "https://docs.databricks.com/api/pipelines/v2/events"
    },
    {
     "label": "Databricks SDK for Python, w.pipelines",
@@ -501,7 +501,7 @@
   "explain": "- Tín hiệu: kiểm tra trong job rồi rẽ nhánh task sau.\n- SQL alert task chạy query của alert, trả trạng thái evaluation làm task output để task sau rẽ nhánh.\n- Cần quyền CAN RUN trên alert và serverless hoặc pro SQL warehouse.",
   "wrong": {
    "A": "SQL alert task chỉ hỗ trợ Databricks SQL alerts bản mới, không hỗ trợ legacy alerts.",
-   "B": "SQL alert task không nhận parameter; query có parameter thì dùng SQL task.",
+   "B": "Alert query không có parameter `run_date`; key không khớp parameter nào của alert thì SQL alert task bỏ qua, nên không lọc được partition.",
    "D": "Schedule của alert độc lập với job; `depends_on` chỉ trỏ tới task trong job."
   },
   "refs": [
@@ -834,7 +834,7 @@
   "refs": [
    {
     "label": "Jobs API 2.2, Repair a job run",
-    "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+    "url": "https://docs.databricks.com/api/jobs/v2/repair"
    }
   ]
  },
@@ -1011,7 +1011,7 @@
   "refs": [
    {
     "label": "CI/CD with Databricks Git folders",
-    "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+    "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
    },
    {
     "label": "GitHub Actions",
@@ -1061,7 +1061,7 @@
    },
    {
     "label": "CI/CD with Databricks Git folders",
-    "url": "https://docs.databricks.com/aws/en/repos/ci-cd-techniques-with-repos"
+    "url": "https://docs.databricks.com/aws/en/repos/ci-cd"
    }
   ]
  },
@@ -1145,7 +1145,7 @@
   "refs": [
    {
     "label": "Get a single job run",
-    "url": "https://docs.databricks.com/api/workspace/jobs/getrun"
+    "url": "https://docs.databricks.com/api/jobs/v2/get-run"
    }
   ]
  },

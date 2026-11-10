@@ -56,8 +56,8 @@
      ],
      "src": [
       {
-       "label": "Auto Loader options",
-       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+       "label": "Spark API options reference (Auto Loader)",
+       "url": "https://docs.databricks.com/aws/en/spark/api-options"
       },
       {
        "label": "read_files table-valued function",
@@ -92,7 +92,7 @@
       {
        "says": "CDC from SQL Server, MySQL or PostgreSQL with the LEAST operational overhead",
        "pick": "Lakeflow Connect database connector",
-       "why": "Managed: gateway, CDC, retry, schema evolution. Docs khuyên bắt đầu ở tầng managed nhất.",
+       "why": "Managed: gateway, CDC, retry, schema evolution; docs nêu managed connector giảm maintenance cost dài hạn.",
        "src": {
         "label": "What is Lakeflow Connect?",
         "url": "https://docs.databricks.com/aws/en/ingestion/overview"
@@ -112,8 +112,8 @@
        "pick": "Auto Loader vào streaming table",
        "why": "Mỗi file xử lý đúng một lần, schema inference và evolution có sẵn.",
        "src": {
-        "label": "Auto Loader options",
-        "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+        "label": "Spark API options reference (Auto Loader)",
+        "url": "https://docs.databricks.com/aws/en/spark/api-options"
        }
       },
       {
@@ -161,8 +161,8 @@
      "md": "- `cloudFiles.format` chỉ nhận avro, binaryFile, csv, json, orc, parquet, text, xml\n- Option chọn `cloudFiles.format = delta` là distractor\n- Delta table nguồn đọc bằng `readStream.table()`; Iceberg đọc qua Unity Catalog",
      "src": [
       {
-       "label": "Auto Loader options",
-       "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+       "label": "Spark API options reference (Auto Loader)",
+       "url": "https://docs.databricks.com/aws/en/spark/api-options"
       },
       {
        "label": "What is Apache Iceberg in Databricks?",
@@ -174,7 +174,7 @@
      "type": "callout",
      "tone": "new",
      "title": "Streaming connector mới của Lakeflow Connect",
-     "md": "- Managed Kafka connector (Beta) và RabbitMQ ghi thẳng vào streaming table trên serverless\n- Credential nằm trong Unity Catalog connection, cần `USE CONNECTION` để tạo pipeline",
+     "md": "- Managed Kafka connector và RabbitMQ connector, cả hai đang Beta, ghi thẳng vào streaming table trên serverless\n- Credential nằm trong Unity Catalog connection, cần `USE CONNECTION` để tạo pipeline",
      "src": [
       {
        "label": "Lakeflow Connect streaming connectors",
@@ -183,6 +183,10 @@
       {
        "label": "Lakeflow Connect Kafka connector",
        "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/kafka"
+      },
+      {
+       "label": "Lakeflow Connect RabbitMQ connector",
+       "url": "https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/rabbitmq"
       }
      ]
     }
@@ -231,7 +235,7 @@
       },
       {
        "label": "Use change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       },
       {
        "label": "Managed database connectors",
@@ -325,7 +329,7 @@
      "src": [
       {
        "label": "Use change data feed on Databricks",
-       "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+       "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
       }
      ]
     }
@@ -1013,11 +1017,11 @@
       },
       {
        "says": "Restrict shared rows per recipient",
-       "pick": "Share dynamic view (D2D)",
-       "why": "Dynamic view lọc row và column theo recipient property.",
+       "pick": "Share dynamic view dùng `CURRENT_RECIPIENT()`",
+       "why": "Dynamic view lọc row và column theo property khai báo trên recipient.",
        "src": {
-        "label": "What is OpenSharing?",
-        "url": "https://docs.databricks.com/aws/en/opensharing/"
+        "label": "Create shares for OpenSharing",
+        "url": "https://docs.databricks.com/aws/en/opensharing/create-share"
        }
       }
      ]
@@ -1104,8 +1108,8 @@
        "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
       },
       {
-       "label": "Unity Catalog privileges and securable objects",
-       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+       "label": "Unity Catalog privileges reference",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference"
       }
      ]
     },
@@ -1141,8 +1145,8 @@
      ],
      "src": [
       {
-       "label": "Unity Catalog privileges and securable objects",
-       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+       "label": "Unity Catalog privileges reference",
+       "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference"
       },
       {
        "label": "What is query federation?",
@@ -1552,6 +1556,10 @@
       {
        "label": "Deploy batch inference pipelines",
        "url": "https://docs.databricks.com/aws/en/large-language-models/batch-inference-pipelines"
+      },
+      {
+       "label": "Transform unstructured data using AI Functions",
+       "url": "https://docs.databricks.com/aws/en/large-language-models/ai-functions"
       }
      ]
     },
@@ -1601,7 +1609,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Yêu cầu compute và cost",
-     "md": "- Không chạy trên Classic SQL warehouse; cần Databricks Runtime 15.4 LTS trở lên\n- Query compute luôn tính tiền; inference tính thêm qua Model Serving hoặc product `AI_FUNCTIONS`\n- Theo dõi cost trong `system.billing.usage`",
+     "md": "- Không chạy trên Classic SQL warehouse; cần Databricks Runtime 15.4 LTS trở lên, docs báo mức tối thiểu sắp nâng lên 17.3 LTS\n- Query compute luôn tính tiền; inference tính thêm qua Model Serving hoặc product `AI_FUNCTIONS`\n- Theo dõi cost trong `system.billing.usage`",
      "src": [
       {
        "label": "Transform unstructured data using AI Functions",

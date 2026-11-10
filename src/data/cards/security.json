@@ -131,7 +131,7 @@
   "back": "`DELETE`, then `REORG TABLE ... APPLY (PURGE)`, then `VACUUM` after the retention window. Deletion vector chỉ soft-delete.",
   "ref": {
    "label": "Deletion vectors in Databricks",
-   "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+   "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
   }
  },
  {
@@ -139,8 +139,8 @@
   "front": "Stream from a Delta table that receives GDPR deletes",
   "back": "Delete downstream rows with DML and read the source with `skipChangeCommits`. Materialized view tự xử lý delete.",
   "ref": {
-   "label": "GDPR and CCPA compliance with Delta Lake",
-   "url": "https://docs.databricks.com/aws/en/security/privacy/gdpr-delta"
+   "label": "Prepare your data for GDPR compliance",
+   "url": "https://docs.databricks.com/aws/en/ldp/gdpr"
   }
  },
  {

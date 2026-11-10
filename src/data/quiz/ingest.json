@@ -30,7 +30,7 @@
   ],
   "explain": "- Tín hiệu: Kinesis, declarative pipeline, không tự quản lý checkpoint.\n- Lakeflow Connect chưa có managed connector cho Kinesis; docs hướng dẫn dùng Structured Streaming hoặc Lakeflow pipeline.\n- Trong Lakeflow pipeline, checkpoint do pipeline quản lý.",
   "wrong": {
-   "A": "Managed streaming connector hiện chỉ có Kafka (Beta) và RabbitMQ.",
+   "A": "Managed streaming connector hiện chỉ có Kafka và RabbitMQ, cả hai đang Beta; Kinesis không có.",
    "B": "`cloudFiles.format` chỉ nhận file format như json, csv, parquet; Kinesis không phải file.",
    "D": "Lakehouse Federation dành cho database và catalog bên ngoài, không đọc message bus."
   },
@@ -137,8 +137,8 @@
     "url": "https://docs.databricks.com/aws/en/query/formats/binary"
    },
    {
-    "label": "Auto Loader options",
-    "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+    "label": "Spark API options reference (Auto Loader)",
+    "url": "https://docs.databricks.com/aws/en/spark/api-options"
    },
    {
     "label": "read_files table-valued function",
@@ -607,8 +607,8 @@
     "url": "https://docs.databricks.com/aws/en/query-federation/database-federation"
    },
    {
-    "label": "Unity Catalog privileges and securable objects",
-    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+    "label": "Unity Catalog privileges reference",
+    "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference"
    }
   ]
  },
@@ -1201,7 +1201,7 @@
   "refs": [
    {
     "label": "Change data feed",
-    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+    "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
    }
   ]
  }

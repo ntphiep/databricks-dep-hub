@@ -281,8 +281,8 @@
    "lakeflow-connect"
   ],
   "src": {
-   "label": "Unity Catalog privileges and securable objects",
-   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges"
+   "label": "Unity Catalog privileges reference",
+   "url": "https://docs.databricks.com/aws/en/data-governance/unity-catalog/access-control/privileges-reference"
   }
  },
  {
@@ -410,7 +410,7 @@
   "related": [],
   "src": {
    "label": "Change data feed",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  }
 ]

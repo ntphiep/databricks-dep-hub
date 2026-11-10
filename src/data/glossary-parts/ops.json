@@ -11,7 +11,7 @@
   "what": "Schema chỉ đọc trong catalog `system` do Databricks quản lý, chứa dữ liệu billing, compute, audit, Lakeflow của account.",
   "means": [
    "Cần Unity Catalog; mặc định chỉ account admin kiêm metastore admin đọc được.",
-   "Miễn phí, chỉ trả compute khi query; phần lớn giữ 365 ngày.",
+   "Miễn phí, chỉ trả compute khi query; phần lớn giữ 395 ngày.",
    "Đề hỏi bảng nào trả lời câu hỏi cost, audit, workload."
   ],
   "related": [
@@ -85,7 +85,7 @@
   "means": [
    "`jobs`, `job_tasks`, `pipelines` là SCD2, dedupe theo `change_time`.",
    "Timeline cắt run dài thành slice tối đa 1 giờ.",
-   "Regional, giữ 365 ngày, record có trong khoảng 1 giờ."
+   "Regional, phần lớn giữ 395 ngày (`pipelines` giữ vô thời hạn), record có trong khoảng 1 giờ."
   ],
   "related": [
    "billing-usage",
@@ -133,7 +133,7 @@
   "what": "Schema system tables về classic compute, node utilization và SQL warehouse event.",
   "means": [
    "`clusters` có `owned_by`, `cluster_source`, `dbr_version`, là SCD2.",
-   "`node_timeline` cho CPU, memory theo phút, giữ 90 ngày.",
+   "`node_timeline` cho CPU, memory theo phút, giữ 395 ngày.",
    "`warehouse_events` ghi scale up, scale down, start, stop."
   ],
   "related": [
@@ -249,7 +249,7 @@
   "cat": "DevOps & Ops",
   "what": "Alert chạy query theo schedule, so condition với kết quả và gửi notification khi condition thoả.",
   "means": [
-   "Trạng thái `OK`, `TRIGGERED`, `ERROR`; không nhận query có parameter.",
+   "Trạng thái `OK`, `TRIGGERED`, `ERROR`; SQL alert task truyền được giá trị cho parameter của alert query.",
    "SQL alert task chạy alert trong Lakeflow Jobs để rẽ nhánh.",
    "Exam guide gọi là Databricks Lakehouse alerts."
   ],

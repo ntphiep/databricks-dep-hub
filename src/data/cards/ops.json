@@ -56,7 +56,7 @@
  {
   "id": "ops-c07",
   "front": "Retention of run history in the Jobs UI and Jobs API",
-  "back": "60 days; use `system.lakeflow` tables (365 days) or export results for longer history. Run và output tự xoá sau 60 ngày.",
+  "back": "60 days; use `system.lakeflow` tables (395 days) or export results for longer history. Run và output tự xoá sau 60 ngày.",
   "ref": {
    "label": "Monitor Lakeflow Jobs",
    "url": "https://docs.databricks.com/aws/en/jobs/monitor"
@@ -101,7 +101,7 @@
  {
   "id": "ops-c12",
   "front": "Databricks SQL alert evaluation states",
-  "back": "`OK`, `TRIGGERED`, `ERROR`; the legacy `UNKNOWN` state is gone and alert queries cannot take parameters. Bản mới GA ngày 14/05/2026.",
+  "back": "`OK`, `TRIGGERED`, `ERROR`; the legacy `UNKNOWN` state is gone; a SQL alert task can pass values to the alert query parameters. Bản mới GA ngày 14/05/2026.",
   "ref": {
    "label": "Databricks SQL alerts",
    "url": "https://docs.databricks.com/aws/en/sql/user/alerts/"
@@ -122,7 +122,7 @@
   "back": "Not needed on the first repair, required on every later repair of the same run; take it from the returned `repair_id`. Đảm bảo các lần repair diễn ra tuần tự.",
   "ref": {
    "label": "Jobs API 2.2, Repair a job run",
-   "url": "https://docs.databricks.com/api/workspace/jobs/repairrun"
+   "url": "https://docs.databricks.com/api/jobs/v2/repair"
   }
  },
  {
@@ -191,7 +191,7 @@
  {
   "id": "ops-c22",
   "front": "System tables for SQL alerts",
-  "back": "`system.alert.alerts` (configuration history) and `system.alert.alert_evaluation_history` (each evaluation and delivery status), 365 days. Dùng để audit alert.",
+  "back": "`system.alert.alerts` (configuration history) and `system.alert.alert_evaluation_history` (each evaluation and delivery status), 395 days. Dùng để audit alert.",
   "ref": {
    "label": "System tables reference",
    "url": "https://docs.databricks.com/aws/en/admin/system-tables/"

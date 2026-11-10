@@ -4,8 +4,8 @@
   "front": "Valid values of `cloudFiles.format`",
   "back": "avro, binaryFile, csv, json, orc, parquet, text, xml. Delta và Iceberg không phải file format của Auto Loader.",
   "ref": {
-   "label": "Auto Loader options",
-   "url": "https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/options"
+   "label": "Spark API options reference (Auto Loader)",
+   "url": "https://docs.databricks.com/aws/en/spark/api-options"
   }
  },
  {
@@ -194,7 +194,7 @@
   "back": "Databricks Runtime 19+, Unity Catalog table with row tracking (Delta) or Iceberg v3; no per-table property. Đọc bằng `readChangeFeed` hoặc `table_changes()` như CDF cũ.",
   "ref": {
    "label": "Change data feed",
-   "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+   "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
   }
  },
  {

@@ -1174,7 +1174,7 @@
   "task": "1.7",
   "source": "original",
   "select": 2,
-  "stem": "A team reviews the design of an AUTO CDC target `customers` in a Lakeflow pipeline. The change feed sometimes contains rows where the sequencing column `commit_ts` is NULL. Another engineer wants to load a one-time historical backfill from a batch query into the same target, and a third wants to add a plain append flow from a second source.\nWhich two statements about this design are correct? (Select two.)",
+  "stem": "A team reviews the design of an AUTO CDC target `customers` in a Lakeflow pipeline. The change feed sometimes contains rows where the sequencing column `commit_ts` is NULL. Another engineer wants a CDC feed from a second ERP system to update the same target, and a third wants to add a plain append flow from a clickstream source.\nWhich two statements about this design are correct? (Select two.)",
   "options": [
    {
     "k": "A",
@@ -1182,7 +1182,7 @@
    },
    {
     "k": "B",
-    "t": "The source of an AUTO CDC flow must be a streaming source, even for a `ONCE` flow."
+    "t": "A second AUTO CDC flow can write into `customers` alongside the existing one."
    },
    {
     "k": "C",
@@ -1201,7 +1201,7 @@
    "A",
    "B"
   ],
-  "explain": "- Docs ghi rõ: NULL sequencing values không được hỗ trợ.\n- Nguồn AUTO CDC phải là streaming source, kể cả flow `ONCE`.\n- Target AUTO CDC chỉ nhận AUTO CDC flow khác.",
+  "explain": "- Docs ghi rõ: NULL sequencing values không được hỗ trợ.\n- Nhiều AUTO CDC flow ghi được vào cùng một streaming table.\n- Target AUTO CDC chỉ nhận AUTO CDC flow khác.",
   "wrong": {
    "C": "Streaming table là target AUTO CDC chỉ nhận AUTO CDC flow khác, không nhận append flow.",
    "D": "Docs không xếp NULL như giá trị nhỏ nhất; NULL không được hỗ trợ.",
@@ -1210,7 +1210,7 @@
   "refs": [
    {
     "label": "Change data capture and snapshots",
-    "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+    "url": "https://docs.databricks.com/aws/en/data-engineering/what-is-cdc"
    },
    {
     "label": "Flows in Lakeflow pipelines",
@@ -1251,7 +1251,7 @@
   "answer": [
    "A"
   ],
-  "explain": "- Mặc định Structured Streaming nhận diện source theo vị trí trong query plan; đổi số hoặc thứ tự source cần checkpoint mới.\n- Source evolution (Databricks Runtime 18.2+) cho đặt tên source bằng `.name()`, rồi reorder và thêm source mà giữ checkpoint.",
+  "explain": "- Mặc định Structured Streaming nhận diện source theo vị trí trong query plan; đổi số hoặc thứ tự source cần checkpoint mới.\n- Source evolution (Databricks Runtime 18.2+) cho đặt tên source bằng `.name()`, rồi reorder và thêm source mà giữ checkpoint.\n- Source evolution chỉ bật được khi query bắt đầu với checkpoint mới; checkpoint cũ tạo khi chưa bật thì không chuyển được.",
   "wrong": {
    "B": "Source được nhận diện theo vị trí, không theo tên biến; thêm source vẫn làm checkpoint không tương thích nếu không bật source evolution.",
    "C": "Checkpoint mới làm mất state; đọc lại sink không dựng lại state của aggregation.",

@@ -194,13 +194,13 @@
   "back": "Not supported. Lọc hoặc sửa NULL trước khi vào flow AUTO CDC.",
   "ref": {
    "label": "Change data capture and snapshots",
-   "url": "https://docs.databricks.com/aws/en/ldp/what-is-change-data-capture"
+   "url": "https://docs.databricks.com/aws/en/data-engineering/what-is-cdc"
   }
  },
  {
   "id": "pip-c24",
   "front": "Add or reorder streaming sources without a new checkpoint",
-  "back": "Source evolution on Databricks Runtime 18.2+: enable `spark.sql.streaming.queryEvolution.enableSourceEvolution` and name every source with `.name()`. Mặc định source được nhận diện theo vị trí.",
+  "back": "Source evolution on Databricks Runtime 18.2+: enable `spark.sql.streaming.queryEvolution.enableSourceEvolution` and name every source with `.name()`, starting from a new checkpoint. Mặc định source được nhận diện theo vị trí.",
   "ref": {
    "label": "Structured Streaming checkpoints",
    "url": "https://docs.databricks.com/aws/en/structured-streaming/checkpoints"

@@ -172,7 +172,7 @@
   "refs": [
    {
     "label": "Deletion vectors in Databricks",
-    "url": "https://docs.databricks.com/aws/en/delta/deletion-vectors"
+    "url": "https://docs.databricks.com/aws/en/tables/features/deletion-vectors"
    }
   ]
  },
@@ -214,7 +214,7 @@
   "refs": [
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    }
   ]
  },
@@ -256,7 +256,7 @@
   "refs": [
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    },
    {
     "label": "When to partition tables",
@@ -386,7 +386,7 @@
   "refs": [
    {
     "label": "Use change data feed on Databricks",
-    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+    "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
    }
   ]
  },
@@ -479,7 +479,7 @@
    },
    {
     "label": "Use change data feed on Databricks",
-    "url": "https://docs.databricks.com/aws/en/delta/delta-change-data-feed"
+    "url": "https://docs.databricks.com/aws/en/tables/features/change-data-feed"
    }
   ]
  },
@@ -525,7 +525,7 @@
    },
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    }
   ]
  },
@@ -706,7 +706,7 @@
    },
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    }
   ]
  },
@@ -794,7 +794,7 @@
    },
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    }
   ]
  },
@@ -836,7 +836,7 @@
   "refs": [
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    },
    {
     "label": "When to partition tables",
@@ -891,7 +891,7 @@
    },
    {
     "label": "Control data file size",
-    "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+    "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
    }
   ]
  },
@@ -933,7 +933,7 @@
   "refs": [
    {
     "label": "Control data file size",
-    "url": "https://docs.databricks.com/aws/en/delta/tune-file-size"
+    "url": "https://docs.databricks.com/aws/en/tables/tune-file-size"
    }
   ]
  },
@@ -1148,7 +1148,7 @@
   "refs": [
    {
     "label": "Use liquid clustering for tables",
-    "url": "https://docs.databricks.com/aws/en/delta/clustering"
+    "url": "https://docs.databricks.com/aws/en/tables/clustering"
    }
   ]
  },

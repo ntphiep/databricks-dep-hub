@@ -203,8 +203,8 @@
    "task-values"
   ],
   "src": {
-   "label": "Add branching logic with the If/else task",
-   "url": "https://docs.databricks.com/aws/en/jobs/if-else"
+   "label": "Add branching logic to a job with the If/else task",
+   "url": "https://docs.databricks.com/aws/en/jobs/tasks/if-else"
   }
  },
  {
@@ -229,7 +229,7 @@
   ],
   "src": {
    "label": "Use a For each task to run another task in a loop",
-   "url": "https://docs.databricks.com/aws/en/jobs/for-each"
+   "url": "https://docs.databricks.com/aws/en/jobs/tasks/for-each"
   }
  },
  {
