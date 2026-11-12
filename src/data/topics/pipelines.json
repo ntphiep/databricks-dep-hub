@@ -1154,7 +1154,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Ràng buộc dễ bị hỏi",
-     "md": "- Target AUTO CDC là streaming table và chỉ nhận AUTO CDC flow khác\n- Nhiều AUTO CDC flow ghi được vào cùng một target\n- Giá trị `SEQUENCE BY` NULL không được hỗ trợ\n- Cần serverless hoặc edition Pro, Advanced\n- Delete giữ dạng tombstone, mặc định 2 ngày, chỉnh bằng `pipelines.cdc.tombstoneGCThresholdInSeconds`",
+     "md": "- Target AUTO CDC là streaming table và chỉ nhận AUTO CDC flow khác\n- Nhiều AUTO CDC flow ghi được vào cùng một target, trừ target bitemporal\n- Target SCD Type 1 ghép được 1 flow AUTO CDC FROM SNAPSHOT với nhiều flow AUTO CDC; pipeline phải ở triggered mode\n- Giá trị `SEQUENCE BY` NULL không được hỗ trợ\n- Cần serverless hoặc edition Pro, Advanced\n- Delete giữ dạng tombstone, mặc định 2 ngày, chỉnh bằng `pipelines.cdc.tombstoneGCThresholdInSeconds`",
      "src": [
       {
        "label": "Pipeline flows",
@@ -1332,7 +1332,7 @@
       {
        "says": "sub-second end-to-end latency for operational events",
        "pick": "Real-time mode",
-       "why": "Latency tail dưới 1 giây; continuous processing của Spark không được Databricks hỗ trợ.",
+       "why": "Latency tail dưới 1 giây; dùng được trong Structured Streaming và trong Lakeflow pipeline; continuous processing của Spark không được Databricks hỗ trợ.",
        "src": {
         "label": "Trigger intervals",
         "url": "https://docs.databricks.com/aws/en/structured-streaming/triggers"

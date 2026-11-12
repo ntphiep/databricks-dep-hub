@@ -267,7 +267,7 @@
   "means": [
    "Tạo bằng `CREATE VIEW ... WITH METRICS LANGUAGE YAML`.",
    "Query bằng `MEASURE()`; không `SELECT *`, không join trực tiếp.",
-   "Materialization cần serverless, DBR 17.3+, source không có row filter hay mask."
+   "Materialization cần serverless, DBR 17.3+; source không có row filter, mask, ABAC hay `current_user()`."
   ],
   "related": [],
   "src": {

@@ -1205,7 +1205,7 @@
        "icon": "dbx-spark-declarative-pipelines",
        "label": "materializations",
        "sub": "materialized views",
-       "info": "- Block `materialization` trong YAML; Databricks tạo managed Lakeflow pipeline\n- Không dùng được khi source có row filter, column mask hoặc ABAC"
+       "info": "- Block `materialization` trong YAML; Databricks tạo managed Lakeflow pipeline\n- Không dùng được khi source có row filter, column mask, ABAC hoặc `current_user()`, `is_member()`"
       },
       {
        "id": "dash",
@@ -1406,7 +1406,7 @@
      "type": "callout",
      "tone": "exam",
      "title": "Tín hiệu chọn metric view",
-     "md": "- \"Single governed definition\", \"reuse across dashboards and BI tools\", \"group by any dimension\": metric view\n- \"Pre-computed aggregation\" mà không sửa query: thêm `materialization` vào metric view, cần serverless và DBR 17.3+\n- Measure non-additive như `COUNT(DISTINCT)` chỉ dùng materialization khi exact match; query không khớp đọc source\n- Không materialize được khi view hoặc source có row filter, column mask, ABAC policy",
+     "md": "- \"Single governed definition\", \"reuse across dashboards and BI tools\", \"group by any dimension\": metric view\n- \"Pre-computed aggregation\" mà không sửa query: thêm `materialization` vào metric view, cần serverless và DBR 17.3+\n- Measure non-additive như `COUNT(DISTINCT)` chỉ dùng materialization khi exact match; query không khớp đọc source\n- Không materialize được khi view hoặc source có row filter, column mask, ABAC policy, hoặc expression phụ thuộc người query như `current_user()`, `is_member()`",
      "src": [
       {
        "label": "Materialization for metric views",

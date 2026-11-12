@@ -1394,7 +1394,7 @@
      "type": "callout",
      "tone": "trap",
      "title": "Giới hạn của tag",
-     "md": "- Tag lưu dạng plain text và có thể được replicate toàn cầu: không đặt PII vào tag\n- Key phân biệt hoa thường; tối đa 50 tag mỗi object, 1.000 tag cột mỗi table; 1.000 governed tag mỗi account, 500 value mỗi tag\n- Tag ở catalog, schema kế thừa xuống table khi search và khi đánh giá ABAC, nhưng không xuống cột\n- Tag propagation (Beta) dùng lineage gắn governed tag sang table và cột dẫn xuất qua CTAS, `INSERT ... SELECT`, MERGE",
+     "md": "- Tag lưu dạng plain text và có thể được replicate toàn cầu: không đặt PII vào tag\n- Key phân biệt hoa thường; tối đa 50 tag mỗi object, 1.000 tag cột mỗi table; 1.000 governed tag mỗi account, 500 value mỗi tag\n- Tag ở catalog, schema kế thừa xuống table khi search và khi đánh giá ABAC, nhưng không xuống cột\n- Tag propagation (Beta) dùng lineage gắn governed tag sang table, view và cột dẫn xuất qua CTAS, `CREATE VIEW`, `INSERT ... SELECT`, MERGE chạy trên serverless",
      "src": [
       {
        "label": "Apply tags to Unity Catalog securable objects",
@@ -1403,6 +1403,10 @@
       {
        "label": "Governed tags",
        "url": "https://docs.databricks.com/aws/en/admin/governed-tags/"
+      },
+      {
+       "label": "Tag propagation",
+       "url": "https://docs.databricks.com/aws/en/admin/governed-tags/tag-propagation"
       },
       {
        "label": "Databricks release notes, October 2026",
